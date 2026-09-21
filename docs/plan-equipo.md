@@ -4,7 +4,7 @@
 
 MediFlow es un agente autónomo que recibe documentos clínicos (texto, PDF o imagen), los clasifica, extrae los datos con un LLM multimodal, calcula un puntaje de confianza, detecta urgencias médicas y enruta cada documento al destino correcto. Los casos ambiguos van a una cola de revisión humana. El detalle completo del proyecto está en [`mediflow-agente-autonomo.md`](mediflow-agente-autonomo.md).
 
-**Equipo:** 8 integrantes de varios países — 2 backend, 2 frontend, 2 full stack, 1 PM y 1 software engineer / tech lead.
+**Equipo:** 6 integrantes activos de varios países — 1 frontend, 1 PM y 4 backend (uno de ellos, el tech lead, dueño de la cuenta de OCI). Nos organizamos directamente por las 4 áreas de "Resultados esperados" del instructivo oficial en vez de por stack — ver [Roles](#roles).
 
 ---
 
@@ -29,13 +29,13 @@ Cada requisito obligatorio tiene un responsable y un sprint, así ninguno queda 
 
 | Requisito mínimo | Componente | Responsable | Sprint |
 |---|---|---|---|
-| Ingesta de texto, PDF e imagen | API de ingesta + nodo `ingesta` | FS1 | S1 (texto), S2 (archivos) |
-| Clasificación del documento con LLM | Nodo `extraccion` | BE1 | S1 |
-| Extracción de datos clínicos en JSON | Schemas Pydantic + salida estructurada | BE1 | S1 |
-| Decisión condicional (ambiguo / urgente) | Grafo + reglas | BE2 | S1–S2 |
-| OCI Object Storage | Módulo de almacenamiento | FS1 + tech lead | S2 |
-| 3 escenarios de demostración | Documentos sintéticos + golden set | BE1 + PM | S0–S2 |
-| README con diagrama del flujo | Diagrama generado desde el grafo | PM + BE2 | S4 |
+| Ingesta de texto, PDF e imagen | API de ingesta + nodo `ingesta` | Back 3 | S1 (texto), S2 (archivos) |
+| Clasificación del documento con LLM | Nodo `extraccion` | Back 1 | S1 |
+| Extracción de datos clínicos en JSON | Schemas Pydantic + salida estructurada | Back 1 | S1 |
+| Decisión condicional (ambiguo / urgente) | Grafo + reglas | Back 2 | S1–S2 |
+| OCI Object Storage | Módulo de almacenamiento | Tech lead + Back 3 | S2 |
+| 3 escenarios de demostración | Documentos sintéticos + golden set | Back 1 + PM | S0–S2 |
+| README con diagrama del flujo | Diagrama generado desde el grafo | PM + Back 2 | S4 |
 
 Los diferenciales, ordenados por lo que suman frente a lo que cuestan:
 
@@ -59,7 +59,7 @@ flowchart LR
 
 | Capa | Elección | Por qué |
 |---|---|---|
-| Frontend | React + TypeScript (Vite) | Somos 4 con perfil frontend. El tablero y la vista de revisión necesitan más interacción de la que da un panel básico |
+| Frontend | React + TypeScript (Vite) | Ahora hay un solo perfil frontend en el equipo: a revisar en el kickoff si conviene mantener React o simplificar a Streamlit para bajar la carga de una sola persona (ver [Decisiones a validar](#decisiones-a-validar-en-el-kickoff)) |
 | API | FastAPI + Pydantic v2 | Genera la documentación OpenAPI sola, y de ahí el frontend genera sus tipos de TypeScript |
 | Orquestación | LangGraph | Sugerido por el instructivo. El grafo queda explícito y exporta su propio diagrama, así el del README nunca queda desactualizado |
 | LLM | Detrás de un único módulo | Empezamos con el modelo gratuito de Gemini. Si falla o cambia, se reemplaza ese módulo y nada más |
@@ -132,18 +132,16 @@ docs/        este plan, decisiones y evidencia
 
 ## Roles
 
-Cada frente tiene un responsable y un suplente. Con integrantes en husos horarios distintos, nada puede depender de una sola persona conectada.
+Bajamos de 8 a **6 integrantes activos** y quedó un solo perfil frontend. En vez de repartir por stack (backend / frontend / full stack), nos organizamos directamente por las **4 áreas de "Resultados esperados"** del instructivo oficial: así el trabajo de cada quien coincide 1 a 1 con lo que se evalúa.
 
-| Integrante | Frente principal | Responsabilidad adicional | Suplente |
+| Área del instructivo | Qué entrega | Responsable(s) | Apoyo |
 |---|---|---|---|
-| Tech lead | Arquitectura, contrato de la API, revisión de PRs, cuenta de OCI, integración | Enlace técnico con el Team Leader | FS1 |
-| PM | Backlog, sprints, ceremonias, riesgos, guion de las demos y del Demo Day, video, README | Scrum master; coordina las pruebas con el golden set | Tech lead |
-| BE1 | Módulo del LLM, prompts, extracción multimodal, generador de documentos sintéticos | — | BE2 |
-| BE2 | Grafo, score, urgencia, reglas, batería de evaluación | QA de backend (casos borde) | BE1 |
-| FS1 | Endpoints, almacenamiento local y en OCI, API de revisión humana, historial | — | Tech lead |
-| FS2 | Docker, integración continua, despliegue en OCI, workflow de n8n | DevOps | FS1 |
-| FE1 | Setup del proyecto, tipos desde OpenAPI, carga de documentos, vista de resultado | QA de frontend (prueba del flujo completo) | FE2 |
-| FE2 | Tablero por colas, vista de revisión humana, editor de reglas | Diseño de interfaz (bocetos en la Semana 0) | FE1 |
+| **1. IA Multimodal, Agentes & Lógica de Decisión** | Pipeline de ingesta/extracción con LLM multimodal, grafo de decisión (LangGraph o condicional en Python), score de confianza y detección de urgencia | Back 1 (extracción) + Back 2 (grafo y score) | Tech lead revisa el diseño del grafo |
+| **2. Automatización de Flujos & Back-End** | Endpoint/pantalla de envío de documentos, ejecución del triaje y enrutamiento, fallback a revisión humana, validación con Pydantic/JSON Schema | Back 3 | Frontend arma la pantalla de envío y el tablero de triaje |
+| **3. Oracle Cloud Infrastructure (OCI)** | Buckets segregados por estado (obligatorio); despliegue en OCI Compute (diferencial) | Tech lead — es quien tiene la tenancy | Back 3 integra el cliente de storage en el backend |
+| **4. Documentación & Demostración** | Commits bien documentados, README con arquitectura y diagrama del flujo, guion y grabación de la demo | PM | Cada responsable de área documenta su parte; el PM arma el README final |
+
+Frontend y PM son un solo perfil cada uno: son punto único de falla del área 2 (pantallas) y del área 4 (documentación/demo) — ver [Riesgos](#riesgos). Los 4 backend se cubren entre sí: cualquiera de los 3 restantes puede tomar una tarea si alguien queda bloqueado.
 
 ## Cronograma
 
@@ -186,6 +184,8 @@ Cada frente tiene un responsable y un suplente. Con integrantes en husos horario
 7. Horario de la daily.
 8. Asignación concreta de los roles.
 9. Fechas oficiales y criterios de evaluación del manual del hackathon.
+10. Con un solo frontend, ¿mantenemos React + TypeScript o simplificamos a Streamlit/Gradio para bajar la carga de una sola persona?
+11. Con 6 activos en vez de 8, qué diferenciales del Sprint 3 recortamos si el MVP del Sprint 2 se atrasa.
 
 ## Riesgos
 
@@ -197,3 +197,6 @@ Cada frente tiene un responsable y un suplente. Con integrantes en husos horario
 | Husos horarios y disponibilidad despareja | Responsable y suplente por frente; daily por escrito |
 | Se agregan funcionalidades antes de tener el MVP | El MVP completo es el hito del Sprint 2; los diferenciales recién empiezan en el Sprint 3 |
 | Uso de datos reales de pacientes | Prohibido; todos los documentos salen de nuestro generador |
+| Un solo frontend: si se bloquea, el área 2 (pantallas) se frena | Backend 3 conoce el contrato y puede avanzar con una pantalla mínima si hace falta |
+| Un solo PM: si se bloquea, la documentación y la demo se atrasan | Cada responsable de área documenta su propia parte a medida que avanza, no todo al final |
+| Equipo más chico (6 en vez de 8) con el mismo alcance obligatorio | El MVP del Sprint 2 no se toca; los diferenciales del Sprint 3 se priorizan o recortan según cómo venga el Sprint 2 |
