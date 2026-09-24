@@ -6,7 +6,7 @@ from app.api.triajes import router as triajes_router
 from app.core.config import get_settings
 
 app = FastAPI(title="MediFlow API")
-app.include_router(triajes_router)
+app.include_router(triajes_router, prefix="/api/v1")
 
 
 @app.get("/health")
