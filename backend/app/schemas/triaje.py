@@ -54,6 +54,14 @@ class AlmacenamientoOci(BaseModel):
     status_backup: str
 
 
+class ResultadoGrafo(BaseModel):
+    """Lo que el grafo de IA devuelve: contrato con el área de IA."""
+
+    clasificacion: Clasificacion
+    datos_extraidos: DatosExtraidos
+    decision_enrutamiento: DecisionEnrutamiento
+
+
 class TriajeResponse(BaseModel):
     status: str
     documento_id: str
