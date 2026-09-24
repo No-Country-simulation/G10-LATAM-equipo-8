@@ -1,4 +1,5 @@
 import { House, Files, TriangleAlert, type LucideIcon } from "lucide-react";
+import logoMediflow from "@/assets/mediflow-logo.jpg"
 
 type NavItem = {
   label: string;
@@ -15,6 +16,9 @@ const Sidebar = () => {
 
   return (
     <aside className="w-64 h-screen p-4 flex flex-col gap-2 border">
+      <header>
+        <img src={logoMediflow} alt="Logo MediFlow" className=""/>
+      </header>
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;

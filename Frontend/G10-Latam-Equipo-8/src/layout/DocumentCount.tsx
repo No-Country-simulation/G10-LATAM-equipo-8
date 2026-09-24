@@ -6,7 +6,7 @@ type Props = {
   count: number;
 };
 
-const DocumentCount = () => {
+export const DocumentCount = () => {
   const documentAlerts: Props[] = [
     { title: "Total Documentos", icon: Files, count: 24150 },
     { title: "Alertas Críticas", icon: TriangleAlert, count: 32 },
@@ -33,5 +33,3 @@ const DocumentCount = () => {
     </div>
   );
 };
-
-export default DocumentCount;

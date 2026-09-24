@@ -5,7 +5,7 @@ type Props = {
     children: React.ReactNode
 };
 
-function DashboardLayout({children}: Props) {
+export function DashboardLayout({children}: Props) {
   return (
     <div className="flex min-h-screen">
       <Sidebar></Sidebar>
@@ -16,5 +16,3 @@ function DashboardLayout({children}: Props) {
     </div>
   );
 }
-
-export default DashboardLayout;
