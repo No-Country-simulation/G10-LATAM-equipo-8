@@ -46,9 +46,69 @@ export function CriticalCasesQueue() {
       date: "27-10-2026",
       alert: "Dosis Ambigua",
     },
+    {
+      id: "DOC-007",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-008",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-009",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-010",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-011",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-012",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-013",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-014",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-015",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
+    {
+      id: "DOC-016",
+      patient: "L.Fernandez",
+      date: "27-10-2026",
+      alert: "Dosis Ambigua",
+    },
   ];
   return (
-    <div>
+    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
       <Table className="bg-white border-solid rounded-lg">
         <TableHeader>
           <TableRow>

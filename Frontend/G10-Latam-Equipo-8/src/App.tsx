@@ -2,6 +2,7 @@ import { CriticalCasesQueue } from "./components/dashboard/CriticalCasesQueue";
 import { DocumentUpload } from "./components/dashboard/DocumentUpload";
 import { DashboardLayout } from "./layout/DashboardLayout";
 import { DocumentCount } from "./layout/DocumentCount";
+import { DashboardFooter } from "./components/dashboard/DashboardFooter";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <DocumentCount />
         <DocumentUpload />
         <CriticalCasesQueue />
+        <DashboardFooter></DashboardFooter>
       </DashboardLayout>
     </>
   );
