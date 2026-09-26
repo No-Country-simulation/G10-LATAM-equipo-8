@@ -1,3 +1,4 @@
+import type { TriajeDocumento } from "@/types/triaje";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import {
@@ -8,10 +9,15 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { mockTriajes } from "@/mocks/triaje";
 
-export function CriticalCasesQueue() {
-  const criticalCases = mockTriajes.filter(
+interface Props {
+  cases: TriajeDocumento[];
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+}
+
+export function CriticalCasesQueue({cases, onApprove, onReject}: Props) {
+  const criticalCases = cases.filter(
     (item) => item.decision_enrutamiento.requiere_auditoria_humana,
   );
   return (
@@ -37,10 +43,10 @@ export function CriticalCasesQueue() {
                 </p>
               </CardContent>
               <CardFooter className="flex gap-3">
-                <Button size="sm" className="flex-1">
+                <Button size="sm" className="flex-1" onClick={() => onApprove(documento_id)}>
                   Aprobar
                 </Button>
-                <Button size="sm" variant="destructive" className="flex-1">
+                <Button size="sm" variant="destructive" className="flex-1" onClick={() => onReject(documento_id)}>
                   Rechazar
                 </Button>
               </CardFooter>
@@ -71,8 +77,8 @@ export function CriticalCasesQueue() {
                   <TableCell>{fecha_ingesta}</TableCell>
                   <TableCell>{motivo_alerta}</TableCell>
                   <TableCell className="space-x-2">
-                    <Button size="sm">Aprobar</Button>
-                    <Button size="sm" variant="destructive">
+                    <Button size="sm" onClick={() => onApprove(documento_id)}>Aprobar</Button>
+                    <Button size="sm" variant="destructive" onClick={() => onReject(documento_id)}>
                       Rechazar
                     </Button>
                   </TableCell>

@@ -6,10 +6,15 @@ type Props = {
   count: number;
 };
 
-export const DocumentCount = () => {
+interface DocumentCountProps {
+  total: number;
+  criticalAlerts: number;
+}
+
+export const DocumentCount = ({total, criticalAlerts}: DocumentCountProps) => {
   const documentAlerts: Props[] = [
-    { title: "Total Documentos", icon: Files, count: 24150 },
-    { title: "Alertas Críticas", icon: TriangleAlert, count: 32 },
+    { title: "Total Documentos", icon: Files, count: total },
+    { title: "Alertas Críticas", icon: TriangleAlert, count: criticalAlerts },
   ];
   return (
     <div className="w-full">
