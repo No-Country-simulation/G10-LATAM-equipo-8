@@ -7,7 +7,7 @@ type NavItem = {
   badge?: number;
 };
 
-const Sidebar = () => {
+export const Sidebar = () => {
   const navItems: NavItem[] = [
     { label: "Inicio", icon: House },
     { label: "Ingesta de Documentos", icon: Files },
@@ -37,5 +37,3 @@ const Sidebar = () => {
     </aside>
   );
 };
-
-export default Sidebar;
