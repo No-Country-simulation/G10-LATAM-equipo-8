@@ -14,6 +14,7 @@ export function DashboardLayout({ children }: Props) {
 
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
         <Header title="Mediflow - Administración de Documentación Médica"></Header>
+        {/* Inyeccion de componentes en main (children) */}
         <main className="flex-1 flex flex-col min-h-0 gap-4 p-2 bg-gray-100">
           {children}
         </main>
