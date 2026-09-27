@@ -44,6 +44,11 @@ function App() {
       ),
     );
   };
+  // Recibo del nuevoDoc con handleDocumentUploaded
+  const handleDocumentUploaded = (nuevoDoc: TriajeDocumento) => {
+    setTriajes((prev) =>
+    [nuevoDoc, ...prev])
+  }
   // Contador de la card DocumentCount
   const criticalAlertsCount = triajes.filter(
     (t) => t.decision_enrutamiento.requiere_auditoria_humana,
@@ -55,7 +60,7 @@ function App() {
           total={triajes.length}
           criticalAlerts={criticalAlertsCount}
         />
-        <DocumentUpload />
+        <DocumentUpload onUpload={handleDocumentUploaded}/>
         <CriticalCasesQueue
           cases={triajes}
           onApprove={handleApprove}
