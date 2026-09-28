@@ -1,0 +1,67 @@
+# === Secretos y credenciales — NUNCA subir ===
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials.json
+service-account*.json
+
+# Oracle Cloud Infrastructure (OCI)
+.oci/
+oci_api_key*.pem
+**/oci_config
+
+# === Python (backend) ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# === Node / React / Vite (frontend) ===
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# === Base de datos ===
+*.sqlite3
+pgdata/
+postgres-data/
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Datasets locales grandes (si no van versionados) ===
+data/tmp/
+
+# === Herramientas locales / editores ===
+.atl/
+.vscode/
+.idea/
+*.swp
+
+# === Sistema operativo ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
