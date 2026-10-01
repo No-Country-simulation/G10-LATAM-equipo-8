@@ -11,7 +11,7 @@
 |---|---|
 | Arquitectura | **Monolito modular con arquitectura hexagonal** (Ports & Adapters) en un solo backend FastAPI. No microservicios. |
 | Orquestación IA | **LangGraph**, grafo *stateless* por request, con aristas condicionales. El HITL **no** vive en LangGraph: vive en la máquina de estados del dominio + PostgreSQL. |
-| Modelo | **Gemini 3.5 Flash** principal, **Gemini 3.1 Flash-Lite** como fallback. Nada de Gemini 2.5 (retiro el 16/10/2026). MedGemma y MedASR descartados (ver sección 2). |
+| Modelo | **Gemini 3.8 Flash** (`gemini-3.8-flash`) principal, **Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`) para tareas simples y como respaldo. Nada de Gemini 2.5 (acceso limitado a usuarios previos; retiro anunciado para mediados de octubre en Vertex). MedGemma y MedASR descartados (ver sección 1.3). Un solo API key sirve para todos; el modelo se elige por llamada desde el adaptador. |
 | Técnicas de fiabilidad | System instructions + salida estructurada con esquema Pydantic + `thinking_level` variable + safety settings ajustados + **verificación de citas** + **red flags deterministas** + **segunda opinión en urgencias**. Temperatura por defecto, validada con el set dorado. |
 | Base de datos | **PostgreSQL 16** en contenedor dentro de la VM OCI Ampere A1 (todo en OCI). Plan B: Postgres gestionado externo si no hay capacidad A1. |
 | Frontend | **React + TypeScript + Vite + Tailwind + TanStack Query + React Hook Form + Zod**. Sin cambios de stack. |
@@ -72,7 +72,7 @@
 | ADR-03 | HITL en dominio + PostgreSQL con bloqueo de fila | HITL en memoria o en el framework | Concurrencia segura (`SELECT … FOR UPDATE`), historial auditable |
 | ADR-04 | `requiere_auditoria_humana` derivado de `status` | Guardarlo como columna | Un valor derivado almacenado se desincroniza |
 | ADR-05 | `audit_reasons` con ownership: semánticos (grafo) y técnicos (adaptador LLM) | Motivos genéricos emitidos por cualquiera | Cada componente reporta solo lo que puede observar |
-| ADR-06 | Gemini 3.5 Flash + 3.1 Flash-Lite de fallback | Gemini 2.5 | La familia 2.5 se retira el 16/10/2026, dentro de la ventana del proyecto |
+| ADR-06 | Gemini 3.8 Flash + 3.5 Flash-Lite (nombres por variable de entorno; reconfirmar el GA vigente en la Semana 1) | Gemini 2.5 | Google limita 2.5 a usuarios previos y recomienda 3.8 Flash / 3.5 Flash-Lite para proyectos nuevos; el retiro (mediados de octubre) cae dentro de la ventana del proyecto |
 | ADR-07 | Temperatura por defecto, validada empíricamente | Temperatura 0.0 por costumbre | Google recomienda no bajarla en Gemini 3; la determinación la dan el esquema y las validaciones |
 | ADR-08 | Verificación de citas contra la fuente | Confiar en la extracción | Detecta alucinaciones de forma determinista y barata |
 | ADR-09 | Red flags deterministas + segunda opinión en urgencias | Solo la prioridad que dice el LLM | Reduce falsos negativos, que son el error más peligroso |
@@ -127,13 +127,13 @@
 
 | Llamada | Modelo | `thinking_level` | Esquema de salida |
 |---|---|---|---|
-| Leer documento (texto fuente) | 3.5 Flash | `low` | `{ texto_fuente, legible, idioma }` |
-| Clasificar | 3.5 Flash | `low` | `{ tipo_documento, especialidad, nivel_prioridad, confianza, motivo }` |
-| Extraer | 3.5 Flash | `low` | Esquema por tipo con `evidencia` por campo |
-| Segunda opinión (solo urgentes) | 3.5 Flash | `high` | `{ es_urgente, justificacion, hallazgos_criticos }` |
-| Transcribir audio | 3.5 Flash | `low` | `{ segmentos: [{ id, hablante, inicio, fin, texto }] }` |
-| Nota SOAP | 3.5 Flash | `low` | Nota SOAP con `evidencia_segmentos` por campo |
-| Indicaciones al paciente | 3.1 Flash-Lite | `minimal` | `{ indicaciones: [...] }` |
+| Leer documento (texto fuente) | 3.8 Flash | `low` | `{ texto_fuente, legible, idioma }` |
+| Clasificar | 3.8 Flash | `low` | `{ tipo_documento, especialidad, nivel_prioridad, confianza, motivo }` |
+| Extraer | 3.8 Flash | `low` | Esquema por tipo con `evidencia` por campo |
+| Segunda opinión (solo urgentes) | 3.8 Flash | `high` | `{ es_urgente, justificacion, hallazgos_criticos }` |
+| Transcribir audio | 3.8 Flash | `low` | `{ segmentos: [{ id, hablante, inicio, fin, texto }] }` |
+| Nota SOAP | 3.8 Flash | `low` | Nota SOAP con `evidencia_segmentos` por campo |
+| Indicaciones al paciente | 3.5 Flash-Lite | `minimal` | `{ indicaciones: [...] }` |
 
 **Reglas de prompt (system instruction):**
 
