@@ -1,0 +1,17 @@
+# Framework web: define los endpoints y valida los datos de entrada/salida.
+fastapi>=0.115.0
+
+# Servidor que corre la app de FastAPI. "standard" trae extras útiles (recarga automática, etc.).
+uvicorn[standard]>=0.32.0
+
+# Settings tipados leídos desde variables de entorno / .env (mismo patrón que usamos
+# en el challenge anterior: un único lugar que sabe leer el .env).
+pydantic-settings>=2.6.0
+
+# Necesario para que FastAPI pueda recibir archivos (multipart/form-data),
+# lo vamos a usar en POST /triajes/archivo.
+python-multipart>=0.0.12
+
+# Tests
+pytest>=8.3.0
+httpx>=0.27.0
