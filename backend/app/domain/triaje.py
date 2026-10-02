@@ -6,6 +6,8 @@ from enum import StrEnum
 class Status(StrEnum):
     PROCESSED = "PROCESSED"
     NEEDS_AUDIT = "NEEDS_AUDIT"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 
 class Priority(StrEnum):
@@ -17,6 +19,8 @@ class Destination(StrEnum):
     HISTORY = "HISTORIA_CLINICA"
     EMERGENCY = "EMERGENCIA_MEDICA"
     REVIEW = "REVISION_HUMANA"
+    PHARMACY = "FARMACIA"
+    AUTHORIZATIONS = "AUDITORIA_AUTORIZACIONES"
 
 
 @dataclass(frozen=True)
