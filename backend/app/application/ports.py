@@ -1,0 +1,19 @@
+from collections.abc import Callable
+from typing import Protocol
+
+from app.domain.triaje import Extraction, Triage
+
+
+class Extractor(Protocol):
+    def extract(self, content: bytes, media_type: str) -> Extraction: ...
+
+
+class DocumentStorage(Protocol):
+    def save(self, object_key: str, content: bytes) -> None: ...
+    def read(self, object_key: str) -> bytes: ...
+
+
+class TriageRepository(Protocol):
+    def create(self, triage: Triage, save_document: Callable[[], None]) -> None: ...
+    def get(self, document_id: str) -> Triage: ...
+    def list(self) -> list[Triage]: ...
