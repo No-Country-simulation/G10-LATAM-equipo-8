@@ -46,8 +46,12 @@ etapa son historia clínica, emergencia y revisión humana; farmacia y autorizac
 se incorporarán con las reglas R1–R4 reales.
 
 `almacenamiento_oci=null`, `almacenamiento.proveedor=local`, `modo_ia=simulado`.
-No hay revisión humana por HTTP todavía: `PATCH /review` y el alias preliminar
-`POST /{id}/revision` quedan pendientes hasta tener persistencia y concurrencia transaccional.
+Revisión implementada en `POST /api/v1/triajes/{id}/revision` según la asignación del equipo,
+con acciones `aprobar`, `corregir_aprobar` y `rechazar`. Consultar eventos con
+`GET /api/v1/triajes/{id}/revisiones`. No se agregó un alias `PATCH /review`.
+Solo casos pendientes pasan a `APPROVED` o `REJECTED`; score, motivos y archivo original
+se conservan. El repositorio aplica estado y evento bajo un bloqueo dentro del proceso.
+Persistencia y concurrencia entre procesos siguen pendientes de PostgreSQL.
 No se implementaron settings ni voz.
 
 ## Secuencia de siguientes incrementos
@@ -59,7 +63,8 @@ No se implementaron settings ni voz.
    integración y conexión configurable a Neon para el equipo. Guardar estados,
    decisiones, referencias al documento y eventos de revisión. Aceptación: historial
    sobrevive al reinicio y las migraciones crean una base vacía correctamente.
-3. **Auditoría:** aprobar/rechazar/corregir con identidad declarada del revisor,
+3. **Auditoría persistente:** migrar la revisión en memoria ya implementada a PostgreSQL,
+   con identidad declarada del revisor,
    historial y bloqueo de fila. Aceptación: dos revisiones concurrentes no sobrescriben
    decisiones y la segunda recibe `409`. La identidad declarada no equivale a autenticación.
 4. **IA real por texto:** adaptar funciones reutilizables del prototipo; puertos de
@@ -97,6 +102,26 @@ Los valores 0.95/0.20 de las fixtures son constantes para probar respuestas y de
 no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entradas sintéticas.
 
 ## Verificación de esta entrega
+
+### Incremento del 02/10/2026: revisión humana sin BD
+
+- Alcance aceptado: completar revisión en memoria antes de configurar PostgreSQL,
+  manteniendo arquitectura y puertos. Las propuestas del score y evidencias no se aprobaron.
+- Aprobación exige nombre, tipo soportado y destino explícito; no valida matrícula,
+  dosis, evidencia ni todos los campos críticos por tipo. Son controles de una demo técnica.
+- Rechazo no autoriza destino final. Corregir/aprobar exige cambios efectivos;
+  campos no admitidos, valores inválidos y revisiones repetidas fallan sin modificar el caso.
+- La auditoría registra acción, identidad declarada, comentario, fecha UTC, estados,
+  destinos y extracción antes/después. No cambia artificialmente el score.
+- La identidad no está autenticada. No hay despacho real, alertas enviadas ni persistencia.
+- Fixture adicional `data/functional/baja_confianza.json` y demo reproducible
+  `backend/scripts/demo_revision.py`. Un score fijo de demo no prueba calibración del fallback real.
+- Verificación: 61 pruebas aprobadas; lint y formato aprobados para `app`, `tests`
+  y `scripts`; demo HTTP ejecutada contra localhost:8001 con las tres acciones y
+  repetición rechazada con `409`. Se mantiene la advertencia de Starlette/HTTPX
+  ya registrada en la base inicial.
+
+### Verificación de la base inicial
 
 - 28 pruebas aprobadas: escenarios, fixtures JSON documentadas, consultas, cola,
   paginación, validaciones, duplicados concurrentes, recuperación de originales,
