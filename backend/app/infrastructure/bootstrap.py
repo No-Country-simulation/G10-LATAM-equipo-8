@@ -1,11 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from app.adapters.inbound.http.review_routes import router as review_router
 from app.adapters.inbound.http.routes import router
 from app.adapters.outbound.local_storage import LocalDocumentStorage
 from app.adapters.outbound.memory import MemoryTriageRepository
 from app.adapters.outbound.simulated_ai import SimulatedExtractor
 from app.application.process_document import ProcessDocument
+from app.application.review_document import GetReviews, ReviewDocument
+from app.domain.review import InvalidReview, ReviewConflict
 from app.domain.triaje import DocumentNotFound, DuplicateDocument
 from app.infrastructure.settings import Settings
 
@@ -26,6 +29,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.storage,
     )
     app.include_router(router)
+    app.state.reviewer = ReviewDocument(app.state.repository)
+    app.state.get_reviews = GetReviews(app.state.repository)
+    app.include_router(review_router)
+
+    @app.exception_handler(ReviewConflict)
+    async def review_conflict_handler(request: Request, error: ReviewConflict):
+        return JSONResponse(status_code=409, content={"detail": str(error)})
+
+    @app.exception_handler(InvalidReview)
+    async def invalid_review_handler(request: Request, error: InvalidReview):
+        return JSONResponse(status_code=422, content={"detail": str(error)})
 
     @app.exception_handler(DuplicateDocument)
     async def duplicate_handler(request: Request, error: DuplicateDocument):

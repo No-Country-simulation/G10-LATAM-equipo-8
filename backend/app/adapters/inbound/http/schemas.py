@@ -85,8 +85,10 @@ class TriageResponse(BaseModel):
                 destino_principal=decision.destination,
                 requiere_auditoria_humana=decision.status == Status.NEEDS_AUDIT,
                 justificacion_enrutamiento=(
-                    "Requiere revision humana"
-                    if extraction.audit_reasons
+                    "Decision registrada por revision humana"
+                    if decision.status in {Status.APPROVED, Status.REJECTED}
+                    else "Requiere revision humana"
+                    if decision.status == Status.NEEDS_AUDIT
                     else "Resultado de fixture sintetico para pruebas funcionales"
                 ),
                 alerta_urgente=decision.urgent_alert,

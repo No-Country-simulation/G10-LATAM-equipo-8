@@ -4,6 +4,9 @@ from app.domain.triaje import Extraction, Priority
 ROUTINE = "CASO SINTETICO RUTINA: Paciente Ana Demo, 30 anos. Informe de laboratorio."
 URGENT = "CASO SINTETICO URGENTE: Paciente Luis Demo, 52 anos. Informe de imagen urgente."
 AMBIGUOUS = "CASO SINTETICO AMBIGUO: Receta con nombre y matricula ilegibles."
+LOW_CONFIDENCE = (
+    "CASO SINTETICO BAJA CONFIANZA: Paciente Eva Demo, 40 anos. Informe de laboratorio."
+)
 
 
 class SimulatedExtractor:
@@ -13,6 +16,15 @@ class SimulatedExtractor:
                 "No determinado", Priority.ROUTINE, 0.0, audit_reasons=("AI_UNAVAILABLE",)
             )
         text = content.decode("utf-8").strip()
+        if text == LOW_CONFIDENCE:
+            return Extraction(
+                "Informe de Laboratorio",
+                Priority.ROUTINE,
+                0.2,
+                "Eva Demo",
+                40,
+                ("LOW_CONFIDENCE",),
+            )
         if text == ROUTINE:
             return Extraction("Informe de Laboratorio", Priority.ROUTINE, 0.95, "Ana Demo", 30)
         if text == URGENT:
