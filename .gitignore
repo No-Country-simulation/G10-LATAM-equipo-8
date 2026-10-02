@@ -65,3 +65,8 @@ Thumbs.db
 
 # === Logs ===
 *.log
+
+# Entorno y almacenamiento de desarrollo
+.tools/
+.uv-cache/
+backend/storage/

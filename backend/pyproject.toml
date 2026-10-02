@@ -1,0 +1,25 @@
+[project]
+name = "mediflow-backend"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.32,<1",
+    "pydantic>=2.10,<3",
+    "pydantic-settings>=2.6,<3",
+    "python-multipart>=0.0.18,<1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3,<9", "httpx>=0.28,<1", "ruff>=0.9,<1"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
