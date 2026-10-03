@@ -27,8 +27,9 @@ export function CriticalCasesQueue({ cases, onApprove, onReject }: Props) {
       <h1 className="text-lg font-bold pb-3">Revisión de casos Críticos</h1>
       {criticalCases.length === 0 ? (
         <h2 className="flex flex-col items-center justify-center text-center gap-4 text-muted-foreground flex-1">
-          <CheckCircle2 className="size-10 text-emerald-600"/>
-          No hay alertas críticas pendientes. <br />El triaje clínico está al día.
+          <CheckCircle2 className="size-10 text-emerald-600" />
+          No hay alertas críticas pendientes. <br />
+          El triaje clínico está al día.
         </h2>
       ) : (
         <>
