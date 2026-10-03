@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Local Pi runtime state
+.atl/
+# Environments
+.env
+# Practice
+practica-async.js
