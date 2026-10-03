@@ -1,5 +1,25 @@
 import type { TriajeDocumento } from "@/types/triaje";
 
+export const fabricarPromesaTardia = (
+  dato: TriajeDocumento[],
+  latencia: number,
+  debeFallar: boolean,
+) => {
+  return new Promise<TriajeDocumento[]>((resolve, reject) => {
+    if (debeFallar) {
+      reject(new Error("Hubo un error"));
+    } else {
+      setTimeout(() => {
+        resolve(dato);
+      }, latencia);
+    }
+  });
+};
+
+export async function mockTriajesConLatencia() {
+  return fabricarPromesaTardia(mockTriajes, 1000, false);
+}
+
 export const mockTriajes: TriajeDocumento[] = [
   // Primer Caso
   {
