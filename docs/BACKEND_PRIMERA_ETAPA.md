@@ -179,4 +179,20 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 - IA sigue simulada, PDF/imagen sin OCR genera AI_UNAVAILABLE y revisión. Sin
   autenticación de revisores, despacho, OCI final ni seguridad clínica acreditada.
 - Guía PyCharm y generación de originales sintéticos en backend/README.md.
-  Commits y revisión independiente pendientes del coordinador; no se hizo push.
+  Checkpoint guardado: `b0236f1f83782e92bc28dbfb378e107924ca28d7`, con revisión nativa
+  aprobada y acknowledgement consumido. No se hizo push.
+
+### Cierre acotado de observaciones de revisión: reintento y recuperación
+
+- Reintento FAILED: se rechaza cambio de MIME, canal, nombre original o tamaño;
+  proveedor/bucket y hash ya se comprobaban. Un rechazo no ejecuta la subida ni
+  modifica la reserva. El reintento idéntico conserva sus metadatos originales.
+- Reconciliación: adaptador y proveedor/bucket deben coincidir; la reserva, hash y
+  ubicación se vuelven a comprobar después de leer, antes de habilitar el documento.
+- RED observado: 9 fallos/18 aprobadas en pruebas del repositorio antes del arreglo.
+  GREEN: 27 pruebas del repositorio y 90 totales aprobadas; Ruff y diff check aprobados.
+- Frontera de cinco minutos, hash incorrecto, lectura fallida, reserva reemplazada y
+  revocación de token por liberación se probaron localmente con SQLite/mocks. Estas
+  pruebas no acreditan concurrencia real de PostgreSQL/S3 ni seguridad clínica.
+- Sin operaciones Neon, cambios de entorno, Gemini ni migraciones en este incremento.
+  Nuevo commit y revisión del coordinador pendientes.

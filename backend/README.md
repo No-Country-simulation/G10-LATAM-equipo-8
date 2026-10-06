@@ -174,15 +174,21 @@ No hay pacientes maestros ni identidad verificada. No cambiar umbrales clínicos
 
 La subida tiene reserva `PENDING`, luego `READY` o `FAILED`: **S3 y PostgreSQL no
 comparten transacción**. Los pendientes/fallidos no aparecen en el historial público.
-Después de un fallo de subida marcado `FAILED`, reenviar ID y contenido idénticos
-permite reintentar; un documento completo conserva el 409 existente.
+Después de un fallo de subida marcado `FAILED`, reenviar ID, contenido y metadatos
+idénticos permite reintentar. MIME, canal, nombre original, tamaño, proveedor y bucket
+se conservan; cambiarlos devuelve `409` antes de subir o modificar la reserva.
+Un documento completo conserva el `409` existente.
 Si se interrumpe después de subir pero antes de finalizar, esperar cinco minutos:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\reconcile_storage.py ID-DEL-DOCUMENTO
 ```
 
-Comprueba hash antes de marcar `READY`. Si no se llegó a subir, **detener todos los
+Comprueba proveedor/bucket y hash antes de marcar `READY`; vuelve a comprobar la
+identidad de la reserva bajo bloqueo después de leer el objeto. Un objeto ilegible,
+hash diferente o reserva reemplazada no habilita el documento. El límite de cinco
+minutos admite recuperación exactamente al cumplirse, no antes.
+Si no se llegó a subir, **detener todos los
 servidores/procesos de ingesta**, esperar cinco minutos, liberar reserva y reenviar:
 
 ```powershell
@@ -192,6 +198,10 @@ servidores/procesos de ingesta**, esperar cinco minutos, liberar reserva y reenv
 No elimina objetos: un fallo ambiguo puede dejar originales huérfanos; limpieza con
 política de retención y autorización queda pendiente. No hay downgrade destructivo.
 No exponer API sin autenticación a Internet; esta configuración es solo demo sintética.
+
+Las pruebas deterministas de recuperación usan SQLite y mocks, con reloj controlado
+y cambios intercalados durante la lectura. No prueban bloqueos ni carreras reales
+entre procesos PostgreSQL/S3; complementan, no reemplazan, la demo externa existente.
 
 La corrección admite nombre, edad, tipo y prioridad. No permite editar score ni motivos
 originales de auditoría. Una alerta previa se conserva aunque cambie la prioridad.

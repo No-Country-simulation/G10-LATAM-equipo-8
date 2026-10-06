@@ -97,6 +97,10 @@ class PostgresTriageRepository:
                         or document.sha256 != triage.sha256
                         or document.provider != triage.storage_provider
                         or document.bucket != triage.storage_bucket
+                        or document.channel != triage.channel
+                        or document.media_type != triage.media_type
+                        or document.original_filename != triage.original_filename
+                        or document.size_bytes != triage.size_bytes
                     ):
                         raise DuplicateDocument(triage.document_id)
                     document.object_key = triage.object_key
@@ -246,12 +250,20 @@ class PostgresTriageRepository:
                 return "READY"
             if (datetime.now(UTC) - aware(document.updated_at)).total_seconds() < 300:
                 raise ReviewConflict("Esperar cinco minutos antes de reconciliar una reserva")
-            key, digest, token, state = (
-                document.object_key,
-                document.sha256,
+            if (document.provider, document.bucket) != (
+                getattr(storage, "provider", "local"),
+                getattr(storage, "bucket", None),
+            ):
+                raise ReviewConflict("El adaptador no corresponde al almacenamiento del original")
+            identity = (
                 document.upload_token,
                 document.storage_state,
+                document.object_key,
+                document.sha256,
+                document.provider,
+                document.bucket,
             )
+            key, digest = document.object_key, document.sha256
         content = storage.read(key)
         if sha256(content).hexdigest() != digest:
             raise ReviewConflict("El hash del original no coincide; no se habilita el documento")
@@ -259,10 +271,17 @@ class PostgresTriageRepository:
             document = session.scalar(
                 select(DocumentRow).where(DocumentRow.public_id == public_id).with_for_update()
             )
-            if (document.upload_token, document.storage_state, document.object_key) != (
-                token,
-                state,
-                key,
+            if (
+                document is None
+                or (
+                    document.upload_token,
+                    document.storage_state,
+                    document.object_key,
+                    document.sha256,
+                    document.provider,
+                    document.bucket,
+                )
+                != identity
             ):
                 raise ReviewConflict("La reserva cambio durante la reconciliacion")
             document.storage_state = "READY"
