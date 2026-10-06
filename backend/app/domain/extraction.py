@@ -16,6 +16,30 @@ class ProcessingStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class ProviderExtractionError(Exception):
+    """Safe, fixed provider error code; never stores raw provider response text."""
+
+    CODES = frozenset(
+        {
+            "GEMINI_INPUT_TOO_LARGE",
+            "GEMINI_UNSUPPORTED_MEDIA",
+            "GEMINI_QUOTA",
+            "GEMINI_AUTH",
+            "GEMINI_PROVIDER_ERROR",
+            "GEMINI_TIMEOUT",
+            "GEMINI_NETWORK",
+            "GEMINI_BLOCKED",
+            "GEMINI_BLOCKED_OR_INCOMPLETE",
+            "GEMINI_EMPTY_RESPONSE",
+            "GEMINI_INVALID_RESPONSE",
+        }
+    )
+
+    def __init__(self, code: str):
+        self.code = code if code in self.CODES else "GEMINI_PROVIDER_ERROR"
+        super().__init__(self.code)
+
+
 @dataclass(frozen=True)
 class SourceReference:
     field: str

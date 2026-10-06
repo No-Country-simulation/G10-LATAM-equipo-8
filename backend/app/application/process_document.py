@@ -3,7 +3,7 @@ from hashlib import sha256
 from uuid import uuid4
 
 from app.application.ports import DocumentStorage, Extractor, TriageRepository
-from app.domain.extraction import ExtractionProvenance, ProcessingStatus
+from app.domain.extraction import ExtractionProvenance, ProcessingStatus, ProviderExtractionError
 from app.domain.triaje import Extraction, Triage, decide
 
 
@@ -18,7 +18,10 @@ class ProcessDocument:
         self.extractor = extractor
         self.repository = repository
         self.storage = storage
-        self.provenance = provenance or ExtractionProvenance()
+        inferred = getattr(extractor, "provenance", None)
+        self.provenance = provenance or (
+            inferred if isinstance(inferred, ExtractionProvenance) else ExtractionProvenance()
+        )
 
     def execute(
         self,
@@ -51,6 +54,9 @@ class ProcessDocument:
             extraction = self.extractor.extract(content, media_type)
             if not isinstance(extraction, Extraction):
                 raise TypeError("Extractor must return the validated extraction contract")
+        except ProviderExtractionError as error:
+            failed = Extraction(None, None, None, audit_reasons=(error.code,))
+            return self.repository.finish_processing(document_id, token, failed, error.code)
         except Exception:  # noqa: BLE001 -- isolate this adapter boundary; never persist raw errors
             # Never persist upstream error text, credentials or invented confidence.
             failed = Extraction(None, None, None, audit_reasons=("EXTRACTION_FAILED",))

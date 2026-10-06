@@ -229,3 +229,20 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   Ruff/diff check aprobados. Advertencia Starlette/HTTPX previa sin cambios.
 - Sin Gemini, red, migraciones, instalaciones ni cambios de entorno. Revisión/commit
   del coordinador pendientes; migración 0003 sigue pendiente de verificación development.
+
+## Integración Gemini directo + LangGraph (sin llamadas vivas)
+
+- Base e265cb8; coordinador informó aplicación/verificación independiente de 0003 en
+  development. Este trabajador no ejecutó operaciones remotas ni leyó claves.
+- google-genai 2.28.0 y LangGraph 1.2.13 locked, requirements con hashes; pip preservado.
+- Grafo real stateless: extracción → validación → revisión. Original-first y auditoría
+  permanecen fuera del grafo; sin tools/URL retrieval/checkpoint de larga duración.
+- Gemini usa schema estricto y bytes inline PDF/PNG/JPEG/texto; proveniencia guardada.
+  Todos sus resultados requieren revisión; confianza autodeclarada no equivale a seguridad.
+- Evidencia textual literal/valor comprobada técnicamente; binaria no verificada.
+  Errores seguros/timeout/retries acotados, sin cambio de modelo o fallback simulado.
+- RED inicial: dos módulos ausentes. GREEN actual: 29 enfocadas y 173 totales aprobadas,
+  sin llamadas de proveedor. Verificaciones finales y commit/revisión pendientes.
+- GEMINI_API_KEY y modelo se agregarán localmente; modo sigue sin modificación. Free tier
+  de gemini-3.8-flash confirmado en documentación oficial, no acceso de cuenta ni costo real.
+- La dependencia httpx2 eliminó la advertencia Starlette anterior en esta suite.

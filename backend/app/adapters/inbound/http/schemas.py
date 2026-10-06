@@ -65,7 +65,8 @@ class TriageResponse(BaseModel):
     audit_reasons: list[str]
     almacenamiento: StorageInfo
     almacenamiento_oci: None = None
-    modo_ia: Literal["simulado"] = "simulado"
+    modo_ia: Literal["simulado", "gemini", "desconocido"] = "simulado"
+    confianza_tipo: Literal["fixture", "autodeclarada_modelo", "desconocida"] = "fixture"
     processing_status: ProcessingStatus
     processing_error: str | None = None
     extraction_schema_version: int
@@ -119,6 +120,16 @@ class TriageResponse(BaseModel):
             extraction_schema_version=extraction.schema_version,
             extraction_provenance=triage.provenance,
             extraction_evidence=extraction.evidence,
+            modo_ia="gemini"
+            if triage.provenance.provider == "google-gemini"
+            else "simulado"
+            if triage.provenance.provider == "simulated"
+            else "desconocido",
+            confianza_tipo="autodeclarada_modelo"
+            if triage.provenance.provider == "google-gemini"
+            else "fixture"
+            if triage.provenance.provider == "simulated"
+            else "desconocida",
         )
 
 

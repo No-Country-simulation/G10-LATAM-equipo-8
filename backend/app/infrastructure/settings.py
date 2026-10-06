@@ -19,7 +19,11 @@ class Settings(BaseSettings):
         env_file=("../.env.local", ".env"), extra="ignore", hide_input_in_errors=True
     )
     entorno: str = "dev"
-    ai_mode: Literal["simulated"] = "simulated"
+    ai_mode: Literal["simulated", "gemini"] = "simulated"
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str | None = None
+    gemini_timeout_seconds: float = Field(default=30, ge=1, le=60)
+    gemini_max_retries: int = Field(default=1, ge=0, le=2)
     storage_dir: Path = Path("storage")
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
     repository_mode: Literal["memory", "postgres"] = "memory"
@@ -40,6 +44,11 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_adapters(self):
+        if self.ai_mode == "gemini":
+            if not self.gemini_api_key or not self.gemini_api_key.get_secret_value().strip():
+                raise ValueError("GEMINI_API_KEY requerido en modo gemini")
+            if not self.gemini_model or not self.gemini_model.strip():
+                raise ValueError("GEMINI_MODEL explicito requerido en modo gemini")
         if self.repository_mode == "postgres" and not self.database_url:
             raise ValueError("DATABASE_URL es obligatorio para PostgreSQL")
         if self.storage_mode == "neon":

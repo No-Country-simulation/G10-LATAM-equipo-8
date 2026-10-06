@@ -11,6 +11,7 @@ from app.adapters.outbound.neon_storage import NeonDocumentStorage, StorageUnava
 from app.adapters.outbound.simulated_ai import SimulatedExtractor
 from app.application.process_document import ProcessDocument
 from app.application.review_document import GetReviews, ReviewDocument
+from app.application.triage_pipeline import TriagePipeline
 from app.domain.extraction import ExtractionProvenance
 from app.domain.review import InvalidReview, ReviewConflict
 from app.domain.triaje import DocumentNotFound, DuplicateDocument
@@ -26,11 +27,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         engine = getattr(app.state.repository, "engine", None)
         if engine is not None:
             engine.dispose()
+        close = getattr(app.state.processor.extractor, "close", None)
+        if close:
+            close()
 
     app = FastAPI(
         title="MediFlow API",
         version="0.1.0",
-        description="Pruebas funcionales sintéticas. IA simulada; sin seguridad clínica acreditada.",
+        description="Pruebas funcionales sintéticas; sin seguridad clínica acreditada.",
         lifespan=lifespan,
     )
     app.state.settings = settings
@@ -57,11 +61,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             settings.aws_access_key_id.get_secret_value(),
             settings.aws_secret_access_key.get_secret_value(),
         )
+    extractor = SimulatedExtractor()
+    provenance = ExtractionProvenance(provider="simulated", model="fixtures-v1")
+    if settings.ai_mode == "gemini":
+        from app.adapters.outbound.gemini_ai import GeminiExtractor
+
+        extractor = GeminiExtractor(
+            settings.gemini_api_key.get_secret_value(),
+            settings.gemini_model,
+            timeout_seconds=settings.gemini_timeout_seconds,
+            max_retries=settings.gemini_max_retries,
+        )
+        provenance = extractor.provenance
     app.state.processor = ProcessDocument(
-        SimulatedExtractor(),
+        TriagePipeline(extractor),
         app.state.repository,
         app.state.storage,
-        provenance=ExtractionProvenance(provider="simulated", model="fixtures-v1"),
+        provenance=provenance,
     )
     app.include_router(router)
     app.state.reviewer = ReviewDocument(app.state.repository)
@@ -93,7 +109,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {
             "status": "ok",
             "entorno": settings.entorno,
-            "ia": "simulada",
+            "ia": "simulada" if settings.ai_mode == "simulated" else "gemini",
             "repositorio": "memoria" if settings.repository_mode == "memory" else "postgres",
             "almacenamiento": settings.storage_mode,
         }

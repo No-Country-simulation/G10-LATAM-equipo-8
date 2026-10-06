@@ -245,6 +245,61 @@ Pruebas de memoria/SQLite y SQL generado offline verifican esta base sin red. No
 todavía el trigger 0003 ni su concurrencia en PostgreSQL real. La IA continúa simulada:
 no OCR, Gemini, Google SDK ni LangGraph en esta etapa.
 
+## Gemini directo y LangGraph: activación posterior
+
+Integración instalada y probada **con clientes falsos**, sin llamadas a Google.
+El modo de su `.env` local no se modificó. SDK locked: google-genai 2.28.0;
+LangGraph 1.2.13. El grafo real ejecuta extracción → validación → revisión, sin
+checkpointer, herramientas ni espera de revisión humana dentro del grafo. Se desactiva
+tracing LangSmith para no exportar contenido mediante configuración ambiental.
+
+Cuando el coordinador termine revisión/commit, agregar a `backend/.env`:
+
+```dotenv
+GEMINI_API_KEY=su_clave_local_de_google_ai_studio
+GEMINI_MODEL=gemini-3.8-flash
+GEMINI_TIMEOUT_SECONDS=30
+GEMINI_MAX_RETRIES=1
+AI_MODE=simulated
+```
+
+No pegar la clave en chat ni Git. No copiar esta clave placeholder como una clave real.
+`GEMINI_MODEL` es obligatorio, sin selección/cambio automático ni fallback a fixtures.
+Para iniciar una prueba de proveedor explícitamente autorizada, cambiar solo entonces
+`AI_MODE=gemini`, reiniciar FastAPI y comprobar `/health`; clave/modelo ausentes impiden
+arranque sin exponer valores en errores.
+
+La [tarifa oficial](https://ai.google.dev/gemini-api/docs/pricing) consultada el 06/10/2026
+incluye nivel gratuito para gemini-3.8-flash, pero acceso/cuotas dependen de cuenta y
+pueden cambiar. El nivel gratuito permite uso del contenido para mejorar productos:
+**solo sintéticos**, nunca expedientes reales. No se verificó disponibilidad de su cuenta
+ni se garantiza que una clave de proyecto con facturación activada produzca llamadas gratis.
+
+Modelo entrega datos no verificados y confianza autodeclarada, NO calibración clínica.
+Todo resultado real queda NEEDS_AUDIT/REVISION_HUMANA aunque confianza sea alta;
+alerta urgente se conserva separada y no envía/despacha nada. Texto: cita literal debe
+estar en original y contener el valor indicado; esto no prueba equivalencia/veracidad.
+PDF/PNG/JPEG: evidencia no verificada, requiere revisión. Los bytes se envían inline,
+sin Files API ni lectura de URLs indicadas dentro del documento.
+
+Errores quota/auth/network/timeout/bloqueo/JSON tienen códigos seguros y conservan el
+original; no se guardan excepciones/respuestas crudas. SDK retries desactivados; se
+permite un retry transitorio por defecto (429/5xx), nunca de auth/timeouts/modelo distinto.
+Timeout HTTP 30 segundos por solicitud y pausa 0.5 segundos; los límites de transporte
+no son un mecanismo de cancelación clínica. Máximo configurable: 60 segundos y 2 retries.
+
+Una futura demo real explícita usa un solo caso sintético, contra servidor gemini:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\demo_gemini.py --confirm-provider-call --base-url http://127.0.0.1:8002
+```
+
+No se ejecutó este comando durante implementación. El script informa estado técnico y
+confirma recuperación del original; un fallo de cuota no se interpreta como éxito de IA.
+Fuentes: [structured output y migración API](https://ai.google.dev/gemini-api/docs/migrate-to-interactions),
+[documentos](https://ai.google.dev/gemini-api/docs/document-processing),
+[Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api).
+
 La corrección admite nombre, edad, tipo y prioridad. No permite editar score ni motivos
 originales de auditoría. Una alerta previa se conserva aunque cambie la prioridad.
 Las decisiones finales conservan el original y eventos inmutables durante la ejecución;
