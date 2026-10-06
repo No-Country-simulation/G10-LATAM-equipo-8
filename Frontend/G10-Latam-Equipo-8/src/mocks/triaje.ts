@@ -1,4 +1,4 @@
-import type { TriajeDocumento } from "@/types/triaje";
+import type { StatusTriaje, TriajeDocumento } from "@/types/triaje";
 
 export const fabricarPromesaTardia = (
   dato: TriajeDocumento[],
@@ -13,6 +13,46 @@ export const fabricarPromesaTardia = (
         resolve(dato);
       }, latencia);
     }
+  });
+};
+
+export const revisionDocumento = (
+  documento_id: string,
+  accion: "aprobar" | "rechazar",
+) => {
+  return new Promise<TriajeDocumento>((resolve, reject) => {
+    setTimeout(() => {
+      const documento = mockTriajes.find(
+        (documento) => documento.documento_id === documento_id,
+      );
+      if (documento === undefined) {
+        return reject(new Error("Documento no existe"));
+      }
+      if (documento.status !== "pendiente_revision") {
+        return reject(new Error("El documento ya está resuelto"));
+      }
+      let nuevoStatus: StatusTriaje;
+      if (accion === "aprobar") {
+        nuevoStatus = "aprobado";
+      } else {
+        nuevoStatus = "rechazado";
+      }
+      let nuevaBandera: boolean;
+      if (accion === "aprobar") {
+        nuevaBandera = false;
+      } else {
+        nuevaBandera = true;
+      }
+      const copia = {
+        ...documento,
+        status: nuevoStatus,
+        decision_enrutamiento: {
+          ...documento.decision_enrutamiento,
+          requiere_auditoria_humana: nuevaBandera,
+        },
+      };
+      resolve(copia);
+    }, 1000);
   });
 };
 
