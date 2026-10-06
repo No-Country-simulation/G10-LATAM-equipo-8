@@ -147,7 +147,11 @@ def test_upload_size_limit(tmp_path):
 
 
 def test_urgent_with_audit_reason_alerts_without_routing():
-    result = decide(Extraction("Informe", Priority.URGENT, 0.2, audit_reasons=("LOW_CONFIDENCE",)))
+    result = decide(
+        Extraction(
+            "Informe de Laboratorio", Priority.URGENT, 0.2, audit_reasons=("LOW_CONFIDENCE",)
+        )
+    )
     assert result.status == Status.NEEDS_AUDIT
     assert result.destination == Destination.REVIEW
     assert result.urgent_alert

@@ -213,3 +213,19 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   locales. Token obsoleto/doble finalización, interrupción, contrato legacy y auditoría
   nullable cubiertos. SQL offline no prueba triggers/concurrencia PostgreSQL reales.
 - Revisión y commit del coordinador pendientes; ninguna operación remota ejecutada.
+
+### Validación runtime de salida de extracción
+
+- Checkpoint de la base de ingesta: `325d549b4d173665b7e09ce8c967af48562e78be`.
+- Tipos opcionales, edad técnica existente (entero 0..130), confianza finita,
+  evidencia/proveniencia y colecciones se validan en dataclasses sin frameworks.
+  Se conservan strings opcionales vacíos; no se agregan reglas clínicas.
+- Tipos documentales reutilizan el conjunto ya existente y el sentinel de simulación
+  No determinado. Fixture genérica Informe se corrigió a Informe de Laboratorio,
+  conservando las mismas comprobaciones de alerta urgente y revisión.
+- Una salida malformada (estudio numérico o tipo desconocido) produce fallo técnico
+  seguro/revisión, confianza null y original disponible; no SUCCEEDED seguido de HTTP500.
+- RED observado: 28 fallos/24 aprobadas. GREEN: 54 enfocadas/144 totales aprobadas;
+  Ruff/diff check aprobados. Advertencia Starlette/HTTPX previa sin cambios.
+- Sin Gemini, red, migraciones, instalaciones ni cambios de entorno. Revisión/commit
+  del coordinador pendientes; migración 0003 sigue pendiente de verificación development.

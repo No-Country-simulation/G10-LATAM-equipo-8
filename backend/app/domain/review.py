@@ -3,7 +3,15 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import uuid4
 
-from app.domain.triaje import Decision, Destination, Extraction, Priority, Status, Triage
+from app.domain.triaje import (
+    DOCUMENT_TYPES,
+    Decision,
+    Destination,
+    Extraction,
+    Priority,
+    Status,
+    Triage,
+)
 
 
 class ReviewAction(StrEnum):
@@ -44,16 +52,6 @@ class ReviewEvent:
     corrections: tuple[Correction, ...]
 
 
-DOCUMENT_TYPES = frozenset(
-    {
-        "Informe de Laboratorio",
-        "Informe de Imagenes",
-        "Receta Medica",
-        "Orden de Procedimiento",
-        "Epicrisis",
-        "Certificado Medico",
-    }
-)
 CORRECTABLE_FIELDS = frozenset({"patient_name", "patient_age", "document_type", "priority"})
 
 
@@ -87,7 +85,10 @@ def review_triage(
                 changes = changes | {"priority": Priority(changes["priority"])}
             except (ValueError, TypeError):
                 raise InvalidReview("Prioridad invalida") from None
-        extraction = replace(triage.extraction, **changes)
+        try:
+            extraction = replace(triage.extraction, **changes)
+        except ValueError:
+            raise InvalidReview("Correccion incompatible con el contrato de extraccion") from None
         if not isinstance(extraction.patient_name, str) or not extraction.patient_name.strip():
             raise InvalidReview("Indicar el nombre del paciente antes de aprobar")
         if extraction.patient_age is not None and (

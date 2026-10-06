@@ -213,3 +213,40 @@ def test_http_failure_original_and_null_safe_review_audit(tmp_path):
         events = client.get("/api/v1/triajes/HTTP-FAILURE/revisiones")
         assert events.status_code == 200
         assert events.json()[0]["before"]["confidence"] is None
+
+
+@pytest.mark.parametrize("malformed", [{"study": 123}, {"document_type": "unsupported type"}])
+def test_malformed_optional_output_is_archived_failure_not_serialization_error(tmp_path, malformed):
+    from fastapi.testclient import TestClient
+
+    from app.infrastructure.bootstrap import create_app
+    from app.infrastructure.settings import Settings
+
+    class MalformedExtractor:
+        def extract(self, content, media_type):
+            values = {
+                "document_type": "Informe de Laboratorio",
+                "priority": Priority.ROUTINE,
+                "confidence": 0.8,
+                "patient_name": "Demo",
+            }
+            return Extraction(**(values | malformed))
+
+    app = create_app(Settings(_env_file=None, storage_dir=tmp_path))
+    app.state.processor.extractor = MalformedExtractor()
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.post(
+            "/api/v1/triajes",
+            json={
+                "documento_id": "MALFORMED",
+                "canal_origen": "web",
+                "documento_texto": "synthetic",
+            },
+        )
+        assert response.status_code == 201
+        assert response.json()["processing_status"] == "FAILED"
+        assert response.json()["processing_error"] == "EXTRACTION_FAILED"
+        assert response.json()["status"] == "NEEDS_AUDIT"
+        assert response.json()["clasificacion"]["score_confianza_clasificacion"] is None
+        assert client.get("/api/v1/triajes/MALFORMED/documento").content == b"synthetic"
+        assert app.state.repository.get("MALFORMED").processing_status == ProcessingStatus.FAILED

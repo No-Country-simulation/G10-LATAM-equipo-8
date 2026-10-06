@@ -1,8 +1,25 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
+from math import isfinite
 
-from app.domain.extraction import ExtractionProvenance, ProcessingStatus, SourceReference
+from app.domain.extraction import (
+    ExtractionProvenance,
+    ProcessingStatus,
+    SourceReference,
+    validate_optional_text,
+)
+
+DOCUMENT_TYPES = frozenset(
+    {
+        "Informe de Laboratorio",
+        "Informe de Imagenes",
+        "Receta Medica",
+        "Orden de Procedimiento",
+        "Epicrisis",
+        "Certificado Medico",
+    }
+)
 
 
 class Status(StrEnum):
@@ -43,15 +60,42 @@ class Extraction:
     evidence: tuple[SourceReference, ...] = ()
 
     def __post_init__(self):
-        if self.schema_version not in (1, 2):
+        if type(self.schema_version) is not int or self.schema_version not in (1, 2):
             raise ValueError("Unsupported extraction schema")
+        if self.document_type is not None and (
+            not isinstance(self.document_type, str)
+            or self.document_type not in DOCUMENT_TYPES | {"No determinado"}
+        ):
+            raise ValueError("Invalid document type contract")
+        for value in (
+            self.patient_name,
+            self.professional_name,
+            self.professional_registration,
+            self.study,
+            self.indication,
+            self.diagnosis,
+            self.cie10_suggested,
+        ):
+            validate_optional_text(value)
+        if self.patient_age is not None and (
+            type(self.patient_age) is not int or not 0 <= self.patient_age <= 130
+        ):
+            raise ValueError("Invalid technical age contract")
         if self.priority is not None and not isinstance(self.priority, Priority):
             raise ValueError("Invalid priority contract")
         if self.confidence is not None and (
-            type(self.confidence) not in (int, float) or not 0 <= self.confidence <= 1
+            type(self.confidence) not in (int, float)
+            or not isfinite(self.confidence)
+            or not 0 <= self.confidence <= 1
         ):
             raise ValueError("Invalid confidence contract")
-        if any(not isinstance(item, SourceReference) for item in self.evidence):
+        if not isinstance(self.audit_reasons, tuple) or any(
+            not isinstance(item, str) for item in self.audit_reasons
+        ):
+            raise ValueError("Invalid audit reasons contract")
+        if not isinstance(self.evidence, tuple) or any(
+            not isinstance(item, SourceReference) for item in self.evidence
+        ):
             raise ValueError("Invalid evidence contract")
 
 

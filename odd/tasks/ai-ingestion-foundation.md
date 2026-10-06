@@ -36,3 +36,21 @@ PROCESSING; tokens obsoletos no finalizan. Errores públicos no almacenan texto 
 Campos opcionales/evidencia no son reglas clínicas ni validación de identidad.
 Próximo: coordinador revisa candidato normalizado y decide migración development.
 Commit propuesto pendiente: `feat(ingesta): conservar originales antes de extraer`.
+
+## Corrección acotada: validación de campos opcionales
+Checkpoint confirmado: `325d549b4d173665b7e09ce8c967af48562e78be`; revisión nativa
+aprobada/acknowledgement consumido por el coordinador. Lo anterior se conserva como
+evidencia histórica, no como commit aún pendiente.
+- [x] A4: validar tipos opcionales/evidencia/proveniencia en dominio; salida malformada
+  no puede finalizar SUCCEEDED y fallar después al serializar HTTP.
+Ruta delegada por código+tests+documentación. Solo SQLite/mocks; sin Gemini, red,
+migraciones, instalaciones ni cambios de entorno. RED→GREEN y suite completa.
+No imponer nuevas categorías clínicas ni umbrales: reutilizar contratos técnicos existentes.
+
+Evidencia A4: RED 28 fallos/24 aprobadas; GREEN 54 enfocadas/144 totales aprobadas.
+Ruff check/format (40 archivos) y diff check aprobados. Fixture Informe genérica se
+cambió a tipo soportado sin cambiar la prueba de urgencia/auditoría. Conjunto de tipos
+compartido con revisión, sin aliases nuevos; ValueError de corrección se traduce a
+InvalidReview existente (422). Strings opcionales vacíos conservados.
+Propuesto, aún no creado: `fix(extraccion): validar tipos antes de finalizar el procesamiento`.
+Migración 0003 no aplicada por este trabajador; ninguna operación remota o de proveedor.
