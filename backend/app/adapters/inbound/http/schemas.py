@@ -47,7 +47,7 @@ class Routing(BaseModel):
 
 
 class StorageInfo(BaseModel):
-    proveedor: Literal["local"] = "local"
+    proveedor: Literal["local", "neon"] = "local"
     ruta_objeto: str
     status_backup: Literal["exito"] = "exito"
 
@@ -94,7 +94,9 @@ class TriageResponse(BaseModel):
                 alerta_urgente=decision.urgent_alert,
             ),
             audit_reasons=list(extraction.audit_reasons),
-            almacenamiento=StorageInfo(ruta_objeto=triage.object_key),
+            almacenamiento=StorageInfo(
+                proveedor=triage.storage_provider, ruta_objeto=triage.object_key
+            ),
         )
 
 

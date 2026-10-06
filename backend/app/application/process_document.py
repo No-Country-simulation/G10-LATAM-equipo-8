@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from hashlib import sha256
 from uuid import uuid4
 
 from app.application.ports import DocumentStorage, Extractor, TriageRepository
@@ -13,7 +14,14 @@ class ProcessDocument:
         self.repository = repository
         self.storage = storage
 
-    def execute(self, document_id: str, channel: str, content: bytes, media_type: str) -> Triage:
+    def execute(
+        self,
+        document_id: str,
+        channel: str,
+        content: bytes,
+        media_type: str,
+        original_filename: str | None = None,
+    ) -> Triage:
         extraction = self.extractor.extract(content, media_type)
         triage = Triage(
             document_id=document_id,
@@ -23,6 +31,11 @@ class ProcessDocument:
             created_at=datetime.now(UTC),
             extraction=extraction,
             decision=decide(extraction),
+            storage_provider=getattr(self.storage, "provider", "local"),
+            storage_bucket=getattr(self.storage, "bucket", None),
+            size_bytes=len(content),
+            sha256=sha256(content).hexdigest(),
+            original_filename=original_filename,
         )
         self.repository.create(triage, lambda: self.storage.save(triage.object_key, content))
-        return triage
+        return self.repository.get(document_id)

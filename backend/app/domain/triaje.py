@@ -58,6 +58,11 @@ class Triage:
     created_at: datetime
     extraction: Extraction
     decision: Decision
+    storage_provider: str = "local"
+    size_bytes: int = 0
+    sha256: str = ""
+    original_filename: str | None = None
+    storage_bucket: str | None = None
 
 
 class DuplicateDocument(Exception):

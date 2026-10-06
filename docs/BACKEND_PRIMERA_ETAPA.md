@@ -103,6 +103,38 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 
 ## Verificación de esta entrega
 
+### Configuración Neon del 03/10/2026
+
+- Actualización posterior: por solicitud del usuario, el entorno local se vinculó
+  a `development` (`br-broad-bread-b4sii0lv`), creada desde `production`.
+  `.neon` y las siete variables gestionadas de `.env.local` ahora corresponden
+  a desarrollo. Se verificó el bucket `mediflow-pruebas` privado en esta rama.
+  No se modificó ni eliminó la rama `production` en esta actualización.
+- Se consultó la skill oficial en la URL `.well-known/agent-skills/neon/SKILL.md`
+  indicada por el usuario y se actualizaron las ocho skills instaladas mediante
+  `neon skills update -y`. MCP ya estaba instalado y limitado al proyecto:
+  se preservó su configuración. Esa limitación es por proyecto, no por rama;
+  las operaciones deben dirigirse explícitamente a `development`.
+
+- Alcance autorizado: CLI Neon, skills oficiales, MCP de Codex, vínculo del
+  proyecto `wandering-voice-40276879` a su rama Neon `production` y despliegue
+  del bucket privado `mediflow-pruebas`. La rama Git sigue siendo
+  `feature/backend-foundation`; ambas ramas pertenecen a sistemas diferentes.
+- CLI verificada: 8.0.3. Proyecto en `aws-us-east-2`, PostgreSQL 16.
+- Configuración declarada en `neon.ts`; dependencias de estas herramientas en
+  `package.json` y `package-lock.json`. El backend continúa usando Python.
+- MCP limitado a este proyecto; credencial guardada fuera del repositorio.
+  `.env.local` y `.neon` están excluidos de Git. No copiar sus valores a esta bitácora.
+- `neon config plan` y `neon deploy` finalizaron sin cambios pendientes:
+  el bucket ya coincidía con la configuración. `neon bucket list` confirmó
+  `mediflow-pruebas` con acceso `private`. Neon acepta `preview.buckets`,
+  aunque recomienda moverlo al nivel superior por disponibilidad general.
+- Pendiente: prueba de subida/descarga de archivos sintéticos e integración
+  mediante el puerto de documentos. Swagger sigue usando almacenamiento local.
+  No se implementaron tablas, migraciones ni persistencia PostgreSQL.
+- Neon Object Storage es una opción temporal para pruebas; OCI continúa como
+  objetivo del plan. Esta configuración no demuestra seguridad clínica.
+
 ### Incremento del 02/10/2026: revisión humana sin BD
 
 - Alcance aceptado: completar revisión en memoria antes de configurar PostgreSQL,
@@ -131,3 +163,20 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 - Una advertencia de deprecación de Starlette sobre su integración de TestClient con
   HTTPX; no afecta los resultados de esta ejecución. Revisar la migración del cliente
   de pruebas al actualizar esas dependencias.
+
+## Incremento Neon development — 2026-10-05
+
+- PostgreSQL real detrás del puerto: documents, triages y review_events; migraciones
+  aditivas 0001/0002 aplicadas solo a development. Extracción original y auditoría
+  protegidas contra sobrescritura por triggers. Creación/actualización en UTC.
+- Documentos en bucket privado mediflow-pruebas; API conserva IDs públicos y devuelve
+  proveedor neon. Hash de integridad, reserva PENDING/READY/FAILED y reconciliación.
+  No existe transacción distribuida con S3 ni limpieza automática de objetos huérfanos.
+- Revisión y evento atómicos; dos revisiones concurrentes producen 200/409.
+- Configuración local ignorada activa postgres/neon. No se cambia production.
+- 66 pruebas unitarias/API aprobadas; Alembic check no detecta drift. Demo real
+  confirma hash/texto/PDF, nueva instancia recupera historial, duplicado y auditoría.
+- IA sigue simulada, PDF/imagen sin OCR genera AI_UNAVAILABLE y revisión. Sin
+  autenticación de revisores, despacho, OCI final ni seguridad clínica acreditada.
+- Guía PyCharm y generación de originales sintéticos en backend/README.md.
+  Commits y revisión independiente pendientes del coordinador; no se hizo push.

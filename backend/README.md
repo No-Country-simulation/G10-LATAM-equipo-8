@@ -6,18 +6,18 @@ en `uv.lock`. `requirements.txt` es una exportación de runtime para pip, no se 
 Desde `backend/`, con [uv](https://docs.astral.sh/uv/getting-started/installation/) instalado:
 
 ```powershell
-uv sync --locked
+uv sync --locked --inexact
 Copy-Item .env.example .env
-uv run --locked uvicorn app.main:app --reload
+uv run --locked --no-sync uvicorn app.main:app --reload
 ```
 
 Swagger: <http://127.0.0.1:8000/docs>. OpenAPI: <http://127.0.0.1:8000/openapi.json>.
 Ejecutar con un solo proceso: el repositorio en memoria no se comparte entre workers.
 
 ```powershell
-uv run --locked pytest -q
-uv run --locked ruff check app tests
-uv run --locked ruff format --check app tests
+uv run --locked --no-sync pytest -q
+uv run --locked --no-sync ruff check app tests
+uv run --locked --no-sync ruff format --check app tests
 ```
 
 En la máquina donde Codex preparó el entorno también se puede ejecutar directamente:
@@ -33,13 +33,13 @@ En la máquina donde Codex preparó el entorno también se puede ejecutar direct
   No llama a Gemini, no interpreta texto arbitrario, no realiza OCR y no calcula un score real.
 - Texto desconocido o PDF/imagen: se conserva el documento y devuelve `NEEDS_AUDIT`
   con `AI_UNAVAILABLE`. No se inventan paciente, clasificación ni diagnóstico.
-- Documentos en disco, bajo `STORAGE_DIR`; estados e historial **en memoria**.
+- Por defecto: documentos en disco, bajo `STORAGE_DIR`; estados e historial **en memoria**.
   Al reiniciar se pierde el historial, aunque los archivos siguen en disco.
-- `almacenamiento_oci` es `null`; `almacenamiento.proveedor` informa `local`.
+- `almacenamiento_oci` es `null`; `almacenamiento.proveedor` informa `local` o `neon` según modo.
 - `alerta_urgente` indica la decisión; no envía Slack/email. `notificacion_generada` es `null`.
 - La ingesta binaria comprueba MIME, firma inicial y tamaño (10 MiB por defecto).
   No es todavía un parser completo de PDF o imágenes.
-- Revisión humana implementada en memoria; sin autenticación, base de datos ni integración OCI.
+- Revisión humana en memoria por defecto o persistente al activar PostgreSQL; sin autenticación ni OCI.
   Solo pruebas con datos sintéticos. No exponer esta instancia como servicio clínico.
 
 ## Prueba manual de los tres escenarios
@@ -97,6 +97,101 @@ soportado y destino explícito distinto de revisión humana; prioridad urgente e
 Edad opcional: entero entre 0 y 130 (validación técnica, no clínica); puede corregirse a `null`.
 Estos controles no verifican matrícula, dosis, evidencia ni reglas clínicas completas.
 No autorizan uso con pacientes reales. La identidad del revisor es declarada, no autenticada.
+
+## Neon development: persistencia y documentos privados
+
+No crear otro entorno ni instalar desde una segunda lista de dependencias.
+Desde `backend/`, sincronizar con `uv sync --locked --inexact`. `--inexact` conserva
+herramientas locales como `pip`; un sync exacto puede eliminarlas. Para PyCharm:
+
+```powershell
+.\.venv\Scripts\python.exe -m ensurepip --upgrade
+```
+
+Seleccionar el intérprete existente `backend\.venv\Scripts\python.exe` (Python 3.12.14).
+Neon CLI dejó credenciales de **development** en el `.env.local` de la raíz, ignorado
+por Git. El backend lee ese archivo primero y luego `backend/.env`; no copiar secretos
+a README, chat ni `.env.example`. `DATABASE_URL_UNPOOLED` sirve para migraciones;
+`DATABASE_URL` pooled para la API. No usar credenciales production.
+
+Antes de iniciar, ejecutar desde `backend/`:
+
+```powershell
+.\.venv\Scripts\python.exe -m alembic upgrade head
+```
+
+En `backend/.env`, activar explícitamente:
+
+```dotenv
+REPOSITORY_MODE=postgres
+STORAGE_MODE=neon
+NEON_BRANCH=development
+STORAGE_BUCKET=mediflow-pruebas
+```
+
+Luego, en PyCharm Terminal:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --reload --port 8002
+```
+
+Swagger: <http://127.0.0.1:8002/docs>. `/health` muestra adaptadores configurados;
+no es una prueba de conectividad. La prueba real crea casos sintéticos y los conserva:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\demo_neon.py --confirm-development
+```
+
+El script verifica almacenamiento/hash, duplicado 409, recuperación desde otra
+instancia, dos revisores concurrentes (200/409), evento único y score sin incremento.
+No borra sus casos ni prueba seguridad clínica. `--migrate` aplica la migración inicial.
+
+### Qué subir y cómo
+
+Usar los textos ficticios existentes de `../data/functional`, nunca documentos reales
+ni capturas de pacientes. Para un PDF y una imagen válidos de prueba:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\create_synthetic_documents.py
+```
+
+En Swagger usar `POST /api/v1/triajes/archivo`: ID nuevo, canal `web` y archivo
+`storage/synthetic/demo-synthetic.pdf` o `.png`. La API sube al bucket y registra
+su relación en la BD. **No subir manualmente al bucket** si se quiere un triaje:
+una subida manual no crea historial. El PNG es un píxel técnico, no un documento clínico.
+La IA simulada no lee PDF/imágenes: estos casos devuelven `AI_UNAVAILABLE` y revisión.
+No se requieren etiquetas clínicas en el bucket; los casos esperados pertenecen a pruebas.
+
+### Modelo y límites de esta etapa
+
+Tres tablas: `documents` (ID público/interno, original, MIME, tamaño, hash, proveedor,
+bucket, clave, estado, fechas), `triages` (extracción original/current versionada,
+clasificación/decisión, versión de fila, fechas) y `review_events` (actor declarado,
+acción, comentario, antes/después, correcciones, fecha). Timestamps UTC; auditoría
+append-only mediante trigger PostgreSQL. Una revisión y su evento comparten transacción.
+No hay pacientes maestros ni identidad verificada. No cambiar umbrales clínicos.
+
+La subida tiene reserva `PENDING`, luego `READY` o `FAILED`: **S3 y PostgreSQL no
+comparten transacción**. Los pendientes/fallidos no aparecen en el historial público.
+Después de un fallo de subida marcado `FAILED`, reenviar ID y contenido idénticos
+permite reintentar; un documento completo conserva el 409 existente.
+Si se interrumpe después de subir pero antes de finalizar, esperar cinco minutos:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\reconcile_storage.py ID-DEL-DOCUMENTO
+```
+
+Comprueba hash antes de marcar `READY`. Si no se llegó a subir, **detener todos los
+servidores/procesos de ingesta**, esperar cinco minutos, liberar reserva y reenviar:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\reconcile_storage.py ID-DEL-DOCUMENTO --release-for-retry-after-stopping-server
+```
+
+No elimina objetos: un fallo ambiguo puede dejar originales huérfanos; limpieza con
+política de retención y autorización queda pendiente. No hay downgrade destructivo.
+No exponer API sin autenticación a Internet; esta configuración es solo demo sintética.
 
 La corrección admite nombre, edad, tipo y prioridad. No permite editar score ni motivos
 originales de auditoría. Una alerta previa se conserva aunque cambie la prioridad.

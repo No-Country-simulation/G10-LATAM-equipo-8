@@ -1,7 +1,9 @@
+from hashlib import sha256
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import Response
+from starlette.concurrency import run_in_threadpool
 
 from app.adapters.inbound.http.schemas import (
     Channel,
@@ -10,6 +12,7 @@ from app.adapters.inbound.http.schemas import (
     TextRequest,
     TriageResponse,
 )
+from app.adapters.outbound.neon_storage import StorageUnavailable
 from app.domain.triaje import Destination, Status
 
 router = APIRouter(prefix="/api/v1", tags=["triajes"])
@@ -48,11 +51,13 @@ async def process_file(
             raise HTTPException(413, "Archivo demasiado grande")
         if not content.startswith(signatures[archivo.content_type]):
             raise HTTPException(415, "La firma del archivo no coincide con su tipo MIME")
-        triage = request.app.state.processor.execute(
+        triage = await run_in_threadpool(
+            request.app.state.processor.execute,
             documento_id,
             canal_origen,
             content,
             archivo.content_type,
+            archivo.filename,
         )
         return TriageResponse.from_domain(triage)
     finally:
@@ -102,6 +107,8 @@ def detail(documento_id: DocumentId, request: Request):
 def original_document(documento_id: DocumentId, request: Request):
     triage = request.app.state.repository.get(documento_id)
     content = request.app.state.storage.read(triage.object_key)
+    if triage.sha256 and sha256(content).hexdigest() != triage.sha256:
+        raise StorageUnavailable("El original no supera la verificacion de integridad")
     return Response(
         content,
         media_type=triage.media_type,
