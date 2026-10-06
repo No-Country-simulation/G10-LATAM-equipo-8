@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from app.domain.extraction import SourceReference
 from app.domain.review import ReviewAction, ReviewEvent
 from app.domain.triaje import Destination, Priority, Status
 
@@ -53,12 +54,20 @@ class ReviewRequest(BaseModel):
 
 
 class ExtractionSnapshot(BaseModel):
-    document_type: str
-    priority: Priority
-    confidence: float
+    document_type: str | None
+    priority: Priority | None
+    confidence: float | None
     patient_name: str | None
     patient_age: int | None
     audit_reasons: list[str]
+    schema_version: int = 1
+    professional_name: str | None = None
+    professional_registration: str | None = None
+    study: str | None = None
+    indication: str | None = None
+    diagnosis: str | None = None
+    cie10_suggested: str | None = None
+    evidence: tuple[SourceReference, ...] = ()
 
 
 class FieldChange(BaseModel):

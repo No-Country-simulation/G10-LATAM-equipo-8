@@ -11,6 +11,7 @@ from app.adapters.outbound.neon_storage import NeonDocumentStorage, StorageUnava
 from app.adapters.outbound.simulated_ai import SimulatedExtractor
 from app.application.process_document import ProcessDocument
 from app.application.review_document import GetReviews, ReviewDocument
+from app.domain.extraction import ExtractionProvenance
 from app.domain.review import InvalidReview, ReviewConflict
 from app.domain.triaje import DocumentNotFound, DuplicateDocument
 from app.infrastructure.settings import Settings
@@ -60,6 +61,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         SimulatedExtractor(),
         app.state.repository,
         app.state.storage,
+        provenance=ExtractionProvenance(provider="simulated", model="fixtures-v1"),
     )
     app.include_router(router)
     app.state.reviewer = ReviewDocument(app.state.repository)

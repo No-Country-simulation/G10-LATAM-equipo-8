@@ -3,6 +3,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+from app.domain.extraction import ExtractionProvenance, ProcessingStatus, SourceReference
 from app.domain.triaje import Destination, Priority, Status, Triage
 
 DocumentId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{1,100}$")]
@@ -19,10 +20,10 @@ class TextRequest(BaseModel):
 
 
 class Classification(BaseModel):
-    tipo_documento: str
+    tipo_documento: str | None
     especialidad: str | None = None
-    nivel_prioridad: Priority
-    score_confianza_clasificacion: float = Field(ge=0, le=1)
+    nivel_prioridad: Priority | None
+    score_confianza_clasificacion: float | None = Field(ge=0, le=1)
 
 
 class Patient(BaseModel):
@@ -34,6 +35,7 @@ class ExtractedData(BaseModel):
     paciente: Patient
     medico_solicitante: dict | None = None
     estudio_realizado: str | None = None
+    indicacion: str | None = None
     diagnostico_principal: str | None = None
     cie10_sugerido: str | None = None
 
@@ -64,6 +66,11 @@ class TriageResponse(BaseModel):
     almacenamiento: StorageInfo
     almacenamiento_oci: None = None
     modo_ia: Literal["simulado"] = "simulado"
+    processing_status: ProcessingStatus
+    processing_error: str | None = None
+    extraction_schema_version: int
+    extraction_provenance: ExtractionProvenance
+    extraction_evidence: tuple[SourceReference, ...] = ()
 
     @classmethod
     def from_domain(cls, triage: Triage) -> "TriageResponse":
@@ -79,7 +86,17 @@ class TriageResponse(BaseModel):
                 score_confianza_clasificacion=extraction.confidence,
             ),
             datos_extraidos=ExtractedData(
-                paciente=Patient(nombre=extraction.patient_name, edad=extraction.patient_age)
+                paciente=Patient(nombre=extraction.patient_name, edad=extraction.patient_age),
+                medico_solicitante={
+                    "nombre": extraction.professional_name,
+                    "matricula": extraction.professional_registration,
+                }
+                if extraction.professional_name or extraction.professional_registration
+                else None,
+                estudio_realizado=extraction.study,
+                indicacion=extraction.indication,
+                diagnostico_principal=extraction.diagnosis,
+                cie10_sugerido=extraction.cie10_suggested,
             ),
             decision_enrutamiento=Routing(
                 destino_principal=decision.destination,
@@ -97,6 +114,11 @@ class TriageResponse(BaseModel):
             almacenamiento=StorageInfo(
                 proveedor=triage.storage_provider, ruta_objeto=triage.object_key
             ),
+            processing_status=triage.processing_status,
+            processing_error=triage.processing_error,
+            extraction_schema_version=extraction.schema_version,
+            extraction_provenance=triage.provenance,
+            extraction_evidence=extraction.evidence,
         )
 
 

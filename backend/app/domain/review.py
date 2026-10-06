@@ -96,6 +96,8 @@ def review_triage(
             raise InvalidReview("Edad fuera del rango de validacion tecnica")
         if extraction.document_type not in DOCUMENT_TYPES:
             raise InvalidReview("Confirmar un tipo documental soportado")
+        if extraction.priority is None:
+            raise InvalidReview("Confirmar la prioridad antes de aprobar")
         if extraction.priority == Priority.URGENT and destination != Destination.EMERGENCY:
             raise InvalidReview("La prioridad urgente requiere el destino de emergencia")
         decision = Decision(

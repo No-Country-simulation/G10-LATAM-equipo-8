@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from uuid import uuid4
 
@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.adapters.outbound.persistence_models import DocumentRow, ReviewRow, TriageRow
+from app.domain.extraction import ExtractionProvenance, ProcessingStatus, SourceReference
 from app.domain.review import Correction, ReviewAction, ReviewConflict, ReviewEvent
 from app.domain.triaje import (
     Decision,
@@ -21,16 +22,21 @@ from app.domain.triaje import (
     Priority,
     Status,
     Triage,
+    decide,
 )
 
 
-def decode_extraction(value: dict) -> Extraction:
+def decode_extraction(value: dict | None) -> Extraction:
+    if value is None:
+        return Extraction(None, None, None, audit_reasons=("PROCESSING_PENDING",))
     return Extraction(
         **(
             value
             | {
-                "priority": Priority(value["priority"]),
+                "priority": Priority(value["priority"]) if value["priority"] is not None else None,
                 "audit_reasons": tuple(value["audit_reasons"]),
+                "schema_version": value.get("schema_version", 1),
+                "evidence": tuple(SourceReference(**item) for item in value.get("evidence", [])),
             }
         )
     )
@@ -54,11 +60,16 @@ def decode_triage(document: DocumentRow, row: TriageRow) -> Triage:
         document.sha256,
         document.original_filename,
         document.bucket,
+        ProcessingStatus(row.processing_status),
+        row.processing_error,
+        ExtractionProvenance(**row.provenance),
     )
 
 
 def initial_row(triage: Triage, document_id: str) -> TriageRow:
-    extraction = asdict(triage.extraction)
+    extraction = (
+        None if triage.processing_status == ProcessingStatus.PENDING else asdict(triage.extraction)
+    )
     return TriageRow(
         id=uuid4().hex,
         document_id=document_id,
@@ -73,7 +84,9 @@ def initial_row(triage: Triage, document_id: str) -> TriageRow:
         created_at=triage.created_at,
         updated_at=triage.created_at,
         version=1,
-        schema_version=1,
+        schema_version=triage.extraction.schema_version,
+        processing_status=triage.processing_status,
+        provenance=asdict(triage.provenance),
     )
 
 
@@ -179,6 +192,8 @@ class PostgresTriageRepository:
             if pair is None:
                 raise DocumentNotFound(document_id)
             document, row = pair
+            if row.processing_status in {ProcessingStatus.PENDING, ProcessingStatus.PROCESSING}:
+                raise ReviewConflict("Extraccion aun no finalizada")
             updated, event = transition(decode_triage(document, row))
             row.extraction_current = asdict(updated.extraction)
             row.document_type = updated.extraction.document_type
@@ -239,6 +254,60 @@ class PostgresTriageRepository:
                 )
                 for row in rows
             )
+
+    def begin_processing(self, document_id: str, previous_token: str | None = None) -> str:
+        with Session(self.engine) as session, session.begin():
+            pair = session.execute(self._query(document_id).with_for_update()).first()
+            if pair is None:
+                raise DocumentNotFound(document_id)
+            _, row = pair
+            now = datetime.now(UTC)
+            if row.processing_status == ProcessingStatus.PROCESSING:
+                if previous_token != row.processing_token or now < aware(
+                    row.processing_lease_until
+                ):
+                    raise ReviewConflict("Procesamiento activo o token obsoleto")
+            elif row.processing_status != ProcessingStatus.PENDING or previous_token is not None:
+                raise ReviewConflict("Procesamiento ya finalizado")
+            token = uuid4().hex
+            row.processing_status = ProcessingStatus.PROCESSING
+            row.processing_token = token
+            row.processing_lease_until = now + timedelta(minutes=5)
+            row.updated_at = now
+            return token
+
+    def finish_processing(
+        self, document_id: str, token: str, extraction: Extraction, error_code: str | None = None
+    ) -> Triage:
+        with Session(self.engine) as session, session.begin():
+            pair = session.execute(self._query(document_id).with_for_update()).first()
+            if pair is None:
+                raise DocumentNotFound(document_id)
+            document, row = pair
+            if (
+                row.processing_status != ProcessingStatus.PROCESSING
+                or row.processing_token != token
+            ):
+                raise ReviewConflict("Token de procesamiento obsoleto")
+            decision = decide(extraction)
+            row.extraction_original = asdict(extraction)
+            row.extraction_current = asdict(extraction)
+            row.document_type = extraction.document_type
+            row.priority = extraction.priority
+            row.confidence = extraction.confidence
+            row.schema_version = extraction.schema_version
+            row.status = decision.status
+            row.destination = decision.destination
+            row.urgent_alert = decision.urgent_alert
+            row.processing_status = (
+                ProcessingStatus.FAILED if error_code else ProcessingStatus.SUCCEEDED
+            )
+            row.processing_error = error_code
+            row.processing_token = None
+            row.processing_lease_until = None
+            row.updated_at = datetime.now(UTC)
+            row.version += 1
+            return decode_triage(document, row)
 
     def reconcile(self, storage, public_id: str) -> str:
         # Never hold a database lock while reading a remote object.

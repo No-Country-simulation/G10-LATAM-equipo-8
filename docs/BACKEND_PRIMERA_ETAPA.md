@@ -196,3 +196,20 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   pruebas no acreditan concurrencia real de PostgreSQL/S3 ni seguridad clínica.
 - Sin operaciones Neon, cambios de entorno, Gemini ni migraciones en este incremento.
   Nuevo commit y revisión del coordinador pendientes.
+
+## Base local de ingesta IA original primero
+
+- Base confirmada: `9b5097ca260008257cbede56657c720d0c6ae0a3`. Incremento acotado,
+  sin Gemini/Google SDK/LangGraph ni llamadas a proveedores.
+- Original se conserva y confirma antes de extraer; procesamiento PENDING/PROCESSING/
+  SUCCEEDED/FAILED separado del almacenamiento. Fallo conserva original y marca revisión
+  con confianza null, nunca un score inventado ni mensaje crudo del proveedor.
+- Contrato v2 con campos comunes opcionales, proveniencia y referencias de evidencia;
+  JSON v1 sigue legible. No se agregan reglas/pesos clínicos ni se acredita identidad.
+- Migración 0003 local/aditiva pendiente de aplicación development. Permite inicializar
+  original de extracción una vez; protege filas históricas ya finalizadas. No arrancar
+  este adaptador PostgreSQL actualizado contra schema 0002.
+- RED inicial: dos errores de colección por contrato ausente; GREEN enfocado: 24 casos
+  locales. Token obsoleto/doble finalización, interrupción, contrato legacy y auditoría
+  nullable cubiertos. SQL offline no prueba triggers/concurrencia PostgreSQL reales.
+- Revisión y commit del coordinador pendientes; ninguna operación remota ejecutada.

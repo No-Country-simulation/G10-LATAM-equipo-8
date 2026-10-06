@@ -203,6 +203,48 @@ Las pruebas deterministas de recuperación usan SQLite y mocks, con reloj contro
 y cambios intercalados durante la lectura. No prueban bloqueos ni carreras reales
 entre procesos PostgreSQL/S3; complementan, no reemplazan, la demo externa existente.
 
+## Base de extracción v2: original primero
+
+**Migración 0003 preparada localmente, todavía no aplicada a Neon.** El adaptador
+PostgreSQL actualizado requiere esa migración antes de servir solicitudes; no usar
+esta versión contra el schema 0002. Aplicación y verificación development se acuerdan
+por separado. No se modificaron SDKs, claves ni proveedores de IA.
+
+Orden actual: reservar registro → guardar original → confirmar almacenamiento READY
+→ reclamar procesamiento → extraer sin transacción ni bloqueo de repositorio abiertos
+→ finalizar con token vigente. Un fallo de extracción ya no pierde el original.
+Almacenamiento y procesamiento son estados independientes:
+
+| Procesamiento | Resultado consultable |
+|---|---|
+| PENDING | Original disponible; extracción aún no iniciada. |
+| PROCESSING | Original descargable; resultado pendiente, revisión humana bloqueada. |
+| SUCCEEDED | Contrato extraído disponible; decisión técnica existente. |
+| FAILED | Original disponible, EXTRACTION_FAILED, revisión y confianza desconocida. |
+
+El código público del error es `EXTRACTION_FAILED`, sin texto crudo de excepciones,
+credenciales o respuestas del proveedor. Confianza desconocida es `null`, no cero.
+Una aprobación humana conserva ese `null`; debe confirmar prioridad cuando falte.
+Las fixtures simuladas existentes conservan sus resultados y respuestas exitosas 201.
+
+Contrato v2 conserva paciente, tipo, prioridad y confianza; agrega profesional/matrícula,
+estudio, indicación, diagnóstico y CIE10 sugerido opcionales. Ausente significa `null`,
+no una inferencia. Proveniencia: proveedor/modelo/versión de prompt; schema versionado.
+Evidencia: campo, página opcional y cita opcional, enlazada al original del triaje.
+Una cita no demuestra veracidad clínica ni validación del diagnóstico/código CIE10.
+JSON v1 se sigue leyendo como versión 1, sin inventar proveniencia ni evidencia.
+
+La finalización técnica inicial establece extraction_original una sola vez. La migración
+mantiene inmutables los originales de filas históricas y de resultados finalizados.
+El token y la reserva de cinco minutos admiten reclamación explícita después de una
+interrupción; **no hay reintento automático de proveedor ni endpoint de reprocesamiento**.
+El trabajador que reclama debe conocer el token anterior; uno obsoleto no puede finalizar.
+Una interrupción puede quedar PROCESSING hasta una acción explícita posterior.
+
+Pruebas de memoria/SQLite y SQL generado offline verifican esta base sin red. No prueban
+todavía el trigger 0003 ni su concurrencia en PostgreSQL real. La IA continúa simulada:
+no OCR, Gemini, Google SDK ni LangGraph en esta etapa.
+
 La corrección admite nombre, edad, tipo y prioridad. No permite editar score ni motivos
 originales de auditoría. Una alerta previa se conserva aunque cambie la prioridad.
 Las decisiones finales conservan el original y eventos inmutables durante la ejecución;
