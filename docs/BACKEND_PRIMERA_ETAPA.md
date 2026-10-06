@@ -246,3 +246,17 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 - GEMINI_API_KEY y modelo se agregarán localmente; modo sigue sin modificación. Free tier
   de gemini-3.8-flash confirmado en documentación oficial, no acceso de cuenta ni costo real.
 - La dependencia httpx2 eliminó la advertencia Starlette anterior en esta suite.
+
+## Portabilidad del entorno Python
+
+- Requisito actual: Python 3.12.x; `.python-version` ahora contiene 3.12, consistente
+  con pyproject `>=3.12,<3.13`. Las referencias históricas a 3.12.14 son evidencia del
+  entorno Windows probado, no un parche obligatorio para Linux.
+- No se recrea la .venv Windows ni se cambia el lock/dependencias. Linux usa
+  `uv python install 3.12` y `uv sync --locked`; PyCharm puede conservar pip con
+  `--inexact`. Guía diferencia instalación de paquetes de comportamiento de la API.
+- Los 61 casos de una versión anterior no acreditan la suite actual en Linux;
+  última suite actual observada: 173 en Windows. Este cambio documental no repite Linux.
+- Clave Gemini se conserva local; no se inspeccionó, copió ni usó. Guía especifica
+  AI_MODE=gemini/modelo explícito/reinicio y demo con --confirm-provider-call, solo tras
+  autorización. Sin llamadas reales de Google/Neon en esta tarea.

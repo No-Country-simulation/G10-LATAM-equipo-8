@@ -21,7 +21,8 @@
   infraestructura para configuración e inyección de dependencias.
 - Mantener IA y persistencia detrás de puertos. Una demo en memoria no equivale a
   persistencia ni a concurrencia entre procesos; documentar reinicios y límites.
-- Backend con Python 3.12.14. Dependencias: `backend/pyproject.toml` y `backend/uv.lock`;
+- Backend con Python 3.12.x; el entorno Windows existente fue verificado con 3.12.14.
+  Dependencias: `backend/pyproject.toml` y `backend/uv.lock`;
   `backend/requirements.txt` es una exportación, no una segunda lista independiente.
 - Desde `backend/`: `uv run --locked pytest -q`, `uv run --locked ruff check app tests`
   y `uv run --locked ruff format --check app tests`, según el cambio.

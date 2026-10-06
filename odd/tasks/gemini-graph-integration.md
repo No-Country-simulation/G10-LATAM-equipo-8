@@ -34,3 +34,17 @@ Docs de API principal ahora prefieren Interactions; generate_content sigue sopor
 y SDK instalado acepta response_mime_type/response_json_schema. No se añade estado remoto.
 Próximo: coordinador revisión y commits; después usuario agrega clave/modelo a .env,
 mantiene simulated hasta autorizar llamada real. Sin ampliación de esquema clínico.
+
+## Portabilidad Python: documentación y pin de familia
+Checkpoint actual: `18ff4db`; integración Gemini guardada por el coordinador.
+- [x] G5: pin Python 3.12 por familia, instrucciones Linux/Windows y activación Gemini
+  consistentes con settings/demo actuales. Sin recrear entorno, sincronizar dependencias,
+  leer claves o realizar llamadas vivas. Verificar actual Windows 3.12.14 y rango pyproject.
+Ruta delegada, cambio acotado config/docs; RED no aplica: no cambia comportamiento.
+
+Verificado: pin 3.12, pyproject >=3.12,<3.13; intérprete Windows sigue 3.12.14.
+uv lock --check --offline con intérprete existente aprobó (78 paquetes, no cambio lock).
+3 pruebas enfocadas de settings Gemini aprobadas; diff check aprobado. Dependencias
+sin cambios; no suite completa/Linux repetida, evidencia previa173 Windows preservada.
+Comandos demo comprobados contra script; --confirm-provider-call es el flag real.
+Próximo: coordinador revisión/commit, luego autorización explícita de prueba Google.

@@ -1,15 +1,47 @@
 # Backend: primera etapa funcional
 
-Python **3.12.14**. Dependencias declaradas en `pyproject.toml`, resolución fija
+Python **3.12.x** (`>=3.12,<3.13`). El entorno Windows existente se verificó con
+**3.12.14**: se conserva, no hay que recrearlo. `.python-version` fija la familia 3.12
+para que uv elija un parche disponible por plataforma. Dependencias en `pyproject.toml`, resolución fija
 en `uv.lock`. `requirements.txt` es una exportación de runtime para pip, no se edita a mano.
 
 Desde `backend/`, con [uv](https://docs.astral.sh/uv/getting-started/installation/) instalado:
 
+### Windows / PyCharm
+
+Si ya existe `backend/.venv` con Python 3.12, usar ese intérprete. Para instalar o
+sincronizar dependencias sin eliminar herramientas locales como pip:
+
 ```powershell
 uv sync --locked --inexact
-Copy-Item .env.example .env
+# Solo al iniciar un clon nuevo; no reemplazar un .env ya configurado:
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 uv run --locked --no-sync uvicorn app.main:app --reload
 ```
+
+### Linux / clon nuevo
+
+Desde `backend/`; no copiar una `.venv` de Windows a Linux:
+
+```bash
+uv python install 3.12
+uv sync --locked
+# Crear configuración solo si todavía no existe:
+test -f .env || cp .env.example .env
+uv run --locked --no-sync uvicorn app.main:app --reload --port 8002
+```
+
+Esto instala dependencias; Python no requiere un comando genérico de build para
+levantar esta API. Una falla instalando Python/paquetes no demuestra un error de los
+endpoints. Si PyCharm en Linux necesita pip:
+
+```bash
+uv run --locked --no-sync python -m ensurepip --upgrade
+```
+
+Usar `uv sync --locked --inexact` en sincronizaciones futuras para conservarlo.
+La suite histórica de un colega con 61 casos pertenece a una versión anterior;
+la integración actual reportó 173 casos locales en Windows, no 173 verificados en Linux.
 
 Swagger: <http://127.0.0.1:8000/docs>. OpenAPI: <http://127.0.0.1:8000/openapi.json>.
 Ejecutar con un solo proceso: el repositorio en memoria no se comparte entre workers.
@@ -108,7 +140,7 @@ herramientas locales como `pip`; un sync exacto puede eliminarlas. Para PyCharm:
 .\.venv\Scripts\python.exe -m ensurepip --upgrade
 ```
 
-Seleccionar el intérprete existente `backend\.venv\Scripts\python.exe` (Python 3.12.14).
+Seleccionar el intérprete existente `backend\.venv\Scripts\python.exe` (Windows verificado 3.12.14).
 Neon CLI dejó credenciales de **development** en el `.env.local` de la raíz, ignorado
 por Git. El backend lee ese archivo primero y luego `backend/.env`; no copiar secretos
 a README, chat ni `.env.example`. `DATABASE_URL_UNPOOLED` sirve para migraciones;
@@ -205,10 +237,10 @@ entre procesos PostgreSQL/S3; complementan, no reemplazan, la demo externa exist
 
 ## Base de extracción v2: original primero
 
-**Migración 0003 preparada localmente, todavía no aplicada a Neon.** El adaptador
-PostgreSQL actualizado requiere esa migración antes de servir solicitudes; no usar
-esta versión contra el schema 0002. Aplicación y verificación development se acuerdan
-por separado. No se modificaron SDKs, claves ni proveedores de IA.
+**Migración 0003 aplicada/verificada en development durante la etapa previa.**
+Un entorno nuevo necesita ese schema antes de servir solicitudes; no usar el adaptador
+actualizado contra 0002. Las operaciones sobre otra BD requieren autorización propia.
+La comprobación histórica inicial de esta base era offline, antes de su aplicación real.
 
 Orden actual: reservar registro → guardar original → confirmar almacenamiento READY
 → reclamar procesamiento → extraer sin transacción ni bloqueo de repositorio abiertos
@@ -241,9 +273,9 @@ interrupción; **no hay reintento automático de proveedor ni endpoint de reproc
 El trabajador que reclama debe conocer el token anterior; uno obsoleto no puede finalizar.
 Una interrupción puede quedar PROCESSING hasta una acción explícita posterior.
 
-Pruebas de memoria/SQLite y SQL generado offline verifican esta base sin red. No prueban
-todavía el trigger 0003 ni su concurrencia en PostgreSQL real. La IA continúa simulada:
-no OCR, Gemini, Google SDK ni LangGraph en esta etapa.
+Pruebas de memoria/SQLite y SQL generado offline verificaron esta base sin red;
+las verificaciones posteriores development se registran en la bitácora. El modo por
+defecto sigue simulado; la integración opt-in Gemini/grafo se explica a continuación.
 
 ## Gemini directo y LangGraph: activación posterior
 
@@ -268,6 +300,21 @@ No pegar la clave en chat ni Git. No copiar esta clave placeholder como una clav
 Para iniciar una prueba de proveedor explícitamente autorizada, cambiar solo entonces
 `AI_MODE=gemini`, reiniciar FastAPI y comprobar `/health`; clave/modelo ausentes impiden
 arranque sin exponer valores en errores.
+
+Si ya agregaste tu clave, no hace falta compartirla ni volver a instalar dependencias.
+Conservar las variables Neon/BD/almacenamiento existentes; no reemplazar todo `.env`
+por el ejemplo. Después de autorizar una prueba real, desde `backend/`:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8002
+```
+
+En Linux usar el comando uv del inicio. Si la API ya corre, detener/reiniciar para
+leer los cambios de `.env`. En Swagger <http://127.0.0.1:8002/docs>, usar
+`POST /api/v1/triajes/archivo`, ID nuevo, canal `web` y PDF/PNG/JPEG sintético.
+La API registra la relación en BD y sube al bucket; una subida manual al bucket no
+crea un triaje. Incluso un score alto queda en revisión humana. No activar una llamada
+automática solo por haber agregado la clave.
 
 La [tarifa oficial](https://ai.google.dev/gemini-api/docs/pricing) consultada el 06/10/2026
 incluye nivel gratuito para gemini-3.8-flash, pero acceso/cuotas dependen de cuenta y
