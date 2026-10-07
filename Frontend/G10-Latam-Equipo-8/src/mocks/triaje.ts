@@ -16,6 +16,10 @@ export const fabricarPromesaTardia = (
   });
 };
 
+export async function mockTriajesConLatencia() {
+  return fabricarPromesaTardia(mockTriajes, 1000, false);
+}
+
 export const revisionDocumento = (
   documento_id: string,
   accion: "aprobar" | "rechazar",
@@ -55,10 +59,6 @@ export const revisionDocumento = (
     }, 1000);
   });
 };
-
-export async function mockTriajesConLatencia() {
-  return fabricarPromesaTardia(mockTriajes, 1000, false);
-}
 
 export const mockTriajes: TriajeDocumento[] = [
   // Primer Caso
