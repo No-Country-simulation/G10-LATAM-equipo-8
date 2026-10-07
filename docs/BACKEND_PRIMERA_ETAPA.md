@@ -260,3 +260,22 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 - Clave Gemini se conserva local; no se inspeccionó, copió ni usó. Guía especifica
   AI_MODE=gemini/modelo explícito/reinicio y demo con --confirm-provider-call, solo tras
   autorización. Sin llamadas reales de Google/Neon en esta tarea.
+
+## Estado de publicación y prueba manual — 2026-10-07
+
+- Checkpoints conservados: b0236f1 persistencia; 9b5097c recuperación; 325d549 ingesta
+  original-first; e265cb8 tipos runtime; 18ff4db Gemini/grafo; c7efbb7 portabilidad.
+- Migración 0003 aplicada/verificada en development en etapa independiente previa.
+  Las menciones anteriores a pendiente describen sus momentos históricos.
+- Usuario informó PDF exitoso vía API completa. Independientemente se verificó una
+  llamada directa PDF sintético con gemini-3.5-flash-lite en 4.34 s; esta prueba no
+  demuestra por sí sola todo HTTP/Neon. No se hizo otra llamada en esta preparación.
+- La precedencia de variables del proceso puede ocultar cambios de backend/.env;
+  mantener modelo/key explícitos sin imprimirlos y reiniciar el proceso apropiado.
+- Publicación pendiente del coordinador: IaC privada y locks de tooling, exclusiones
+  locales y actualización documental. Skills propias se versionan; ocho skills oficiales
+  descargadas quedan locales/ignoradas, con fuente/hash en skills-lock.json.
+- Persisten pendientes autenticación/revisores/descargas, CI Linux, contratos API,
+  evidencia/calibración clínica y reglas/pesos aprobados. Pipeline real siempre exige
+  revisión; no hay despacho ni fallback automático aprobado. Error400/401/403 agrupado
+  como GEMINI_AUTH es deuda de diagnóstico, no se cambia en este ajuste.

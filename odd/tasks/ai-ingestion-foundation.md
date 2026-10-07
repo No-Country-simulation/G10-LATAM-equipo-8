@@ -52,5 +52,9 @@ Ruff check/format (40 archivos) y diff check aprobados. Fixture Informe genéric
 cambió a tipo soportado sin cambiar la prueba de urgencia/auditoría. Conjunto de tipos
 compartido con revisión, sin aliases nuevos; ValueError de corrección se traduce a
 InvalidReview existente (422). Strings opcionales vacíos conservados.
-Propuesto, aún no creado: `fix(extraccion): validar tipos antes de finalizar el procesamiento`.
+Checkpoint confirmado: `e265cb8` (`fix(extraccion): validar tipos antes de finalizar el procesamiento`).
 Migración 0003 no aplicada por este trabajador; ninguna operación remota o de proveedor.
+
+Actualización de cierre: migración 0003 fue aplicada/verificada posteriormente en
+development por otro trabajador. Ingesta guardada en 325d549; tipos en e265cb8.
+Los estados anteriores describen ejecución histórica, no pendientes actuales.

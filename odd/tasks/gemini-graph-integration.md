@@ -47,4 +47,22 @@ uv lock --check --offline con intérprete existente aprobó (78 paquetes, no cam
 3 pruebas enfocadas de settings Gemini aprobadas; diff check aprobado. Dependencias
 sin cambios; no suite completa/Linux repetida, evidencia previa173 Windows preservada.
 Comandos demo comprobados contra script; --confirm-provider-call es el flag real.
-Próximo: coordinador revisión/commit, luego autorización explícita de prueba Google.
+Portabilidad guardada en `c7efbb7`; estado anterior de revisión era histórico.
+
+## Preparación de publicación y archivos locales
+Base actual `c7efbb7`; funcionalidad ya guardada y revisada por el coordinador.
+- [x] G6: excluir ocho skills oficiales descargadas sin ocultar skills propias;
+  preparar IaC/config pendientes sin secretos, actualizar guía/bitácora y verificar suite.
+Solo config/docs; sin cambios funcionales, instalación ni llamadas de proveedor.
+Commit/push los realiza el coordinador, no este trabajador. RED no aplica a higiene documental.
+
+Prueba manual nueva informada: usuario reportó éxito de PDF vía API. Prueba directa
+independiente gemini-3.5-flash-lite/PDF sintético: 4.34 s. No equiparar ambos alcances.
+Puertos de comandos actuales alineados a 8002; historical localhost se conserva en
+bitácora. No .codex/config.toml local presente; no exclusión innecesaria añadida.
+Verificado de nuevo: 173 pruebas locales, Ruff check/format47 y uv lock --check --offline
+(78 paquetes) aprobados. Auditoría de81 rutas indexadas y6 commits pendientes: cero
+coincidencias de credenciales locales, cero flags de tokens/keys; manifiesto/lock NPM
+sin URLs de credencial o registry ajeno. Ocho directorios oficiales ignorados/conservados;
+skills propias y .env.example no ignoradas. Cinco rutas config preparadas; docs sin stage.
+Próximo: coordinador verifica/prepara docs y commits separados, luego push autorizado.

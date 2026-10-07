@@ -16,7 +16,7 @@ sincronizar dependencias sin eliminar herramientas locales como pip:
 uv sync --locked --inexact
 # Solo al iniciar un clon nuevo; no reemplazar un .env ya configurado:
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-uv run --locked --no-sync uvicorn app.main:app --reload
+uv run --locked --no-sync uvicorn app.main:app --reload --port 8002
 ```
 
 ### Linux / clon nuevo
@@ -43,7 +43,7 @@ Usar `uv sync --locked --inexact` en sincronizaciones futuras para conservarlo.
 La suite histórica de un colega con 61 casos pertenece a una versión anterior;
 la integración actual reportó 173 casos locales en Windows, no 173 verificados en Linux.
 
-Swagger: <http://127.0.0.1:8000/docs>. OpenAPI: <http://127.0.0.1:8000/openapi.json>.
+Swagger: <http://127.0.0.1:8002/docs>. OpenAPI: <http://127.0.0.1:8002/openapi.json>.
 Ejecutar con un solo proceso: el repositorio en memoria no se comparte entre workers.
 
 ```powershell
@@ -55,7 +55,7 @@ uv run --locked --no-sync ruff format --check app tests
 En la máquina donde Codex preparó el entorno también se puede ejecutar directamente:
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8002
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
@@ -80,7 +80,7 @@ Desde `backend/`, con la API activa:
 
 ```powershell
 $caso = Get-Content ..\data\functional\rutina.json -Raw
-Invoke-RestMethod http://127.0.0.1:8000/api/v1/triajes/process-text -Method Post -ContentType application/json -Body $caso
+Invoke-RestMethod http://127.0.0.1:8002/api/v1/triajes/process-text -Method Post -ContentType application/json -Body $caso
 ```
 
 Repetir con `urgencia.json` y `ambiguo.json`. Los resultados esperados son,
@@ -88,9 +88,9 @@ respectivamente, `PROCESSED/HISTORIA_CLINICA`, `PROCESSED/EMERGENCIA_MEDICA`
 y `NEEDS_AUDIT/REVISION_HUMANA`. Los scores son valores fijos de prueba.
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/v1/triajes
-Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/queue
-Invoke-RestMethod http://127.0.0.1:8000/api/v1/triajes/DEMO-RUTINA
+Invoke-RestMethod http://127.0.0.1:8002/api/v1/triajes
+Invoke-RestMethod http://127.0.0.1:8002/api/v1/audit/queue
+Invoke-RestMethod http://127.0.0.1:8002/api/v1/triajes/DEMO-RUTINA
 ```
 
 Cada `documento_id` es único por ejecución: reenviar el mismo devuelve `409`.
@@ -100,7 +100,7 @@ Cada `documento_id` es único por ejecución: reenviar el mismo devuelve `409`.
 Con la API activa, desde `backend/`:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\demo_revision.py
+.\.venv\Scripts\python.exe scripts\demo_revision.py --base-url http://127.0.0.1:8002
 ```
 
 El script crea tres casos con IDs únicos, aprueba uno, corrige y aprueba otro y rechaza
@@ -289,7 +289,7 @@ Cuando el coordinador termine revisión/commit, agregar a `backend/.env`:
 
 ```dotenv
 GEMINI_API_KEY=su_clave_local_de_google_ai_studio
-GEMINI_MODEL=gemini-3.8-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 GEMINI_TIMEOUT_SECONDS=30
 GEMINI_MAX_RETRIES=1
 AI_MODE=simulated
@@ -346,6 +346,50 @@ confirma recuperación del original; un fallo de cuota no se interpreta como éx
 Fuentes: [structured output y migración API](https://ai.google.dev/gemini-api/docs/migrate-to-interactions),
 [documentos](https://ai.google.dev/gemini-api/docs/document-processing),
 [Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api).
+
+### Prueba manual actual y precedencia de variables
+
+El usuario informó éxito del PDF mediante la API completa. Por separado, una prueba
+directa de Gemini con PDF sintético y `gemini-3.5-flash-lite` fue verificada por otro
+trabajador en 4.34 segundos. No confundir ese llamado directo con una verificación
+independiente de todo el flujo HTTP/Neon. El modelo sigue explícito: usar el disponible
+en su cuenta, sin fallback/cambio automático ni garantía de cuota gratuita.
+
+Settings prioriza argumentos explícitos, luego variables del proceso y luego dotenv;
+en dotenv `backend/.env` prevalece sobre `.env.local` de la raíz. Un valor viejo en
+PowerShell/PyCharm puede prevalecer sobre una clave o modelo recién editados en `.env`.
+Corregir únicamente la variable correspondiente y reiniciar la terminal/servidor,
+sin imprimir claves. No copiar secretos en una configuración de Run versionada.
+
+### Herramientas Neon del repositorio
+
+`package.json`/lock y `neon.ts` son herramientas de configuración Neon, no el runtime
+Python de FastAPI. El bucket se mantiene privado y no se cambia ni despliega en este
+ajuste. `preview.buckets` conserva la declaración original; moverla al nivel GA queda
+como mantenimiento pendiente, no como autorización para desplegar.
+
+Las skills propias `mediflow-commits`/`mediflow-gitflow` se versionan. Ocho skills
+oficiales Neon descargadas quedan locales e ignoradas por rutas exactas; no se eliminan.
+`skills-lock.json` conserva fuente/hash de procedencia, no promete congelar el catálogo
+remoto ni instalar paquetes Python. Con Neon CLI disponible y alcance de instalación
+aceptado, reinstalarlas desde la raíz del proyecto:
+
+```powershell
+neon skills -y
+```
+
+Revisar diferencias de versión frente al lock antes de adoptar nuevas instrucciones.
+Credenciales/env, `.neon`, storage y .venv permanecen fuera de Git. No hay que instalar
+Node ni las skills para ejecutar un backend cuyo entorno Python ya está preparado.
+
+### Pendientes antes de considerar una entrega clínica
+
+Autenticación/autorización de revisores y descarga privada; pruebas CI/Linux y contratos
+de API; evaluación clínica/evidencia, reglas y pesos aprobados; tratamiento de fallos y
+reprocesamiento explícito. El código actual agrupa 400/401/403 como GEMINI_AUTH:
+distinguir solicitudes inválidas de autenticación/permisos es un ajuste pendiente. No existe
+fallback automático aceptado, fiabilidad clínica del score ni despacho real. Las
+pruebas de software y una respuesta exitosa de Gemini no acreditan seguridad humana.
 
 La corrección admite nombre, edad, tipo y prioridad. No permite editar score ni motivos
 originales de auditoría. Una alerta previa se conserva aunque cambie la prioridad.

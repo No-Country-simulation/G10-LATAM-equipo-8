@@ -86,5 +86,6 @@ Las pruebas de frontera, errores de lectura y revocación de token ya pasaron en
 primera ejecución: cobertura de comportamiento existente, no RED inventado.
 No se cambió release_stale: conserva el bloqueo, valida estado/edad y revoca token.
 La intercalación determinista de SQLite no demuestra concurrencia de PostgreSQL.
-Commit propuesto, aún no creado:
-`fix(persistencia): preservar metadatos y validar recuperacion de originales`.
+Checkpoint de cierre confirmado: `9b5097ca260008257cbede56657c720d0c6ae0a3`
+(`fix(persistencia): preservar metadatos y validar recuperacion de originales`).
+Referencias a preparación/commit pendiente arriba son evidencia histórica.
