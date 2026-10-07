@@ -1,4 +1,4 @@
-import type { StatusTriaje, TriajeDocumento } from "@/types/triaje";
+import type { AccionRevision ,StatusTriaje, TriajeDocumento } from "@/types/triaje";
 
 export const fabricarPromesaTardia = (
   dato: TriajeDocumento[],
@@ -22,7 +22,7 @@ export async function mockTriajesConLatencia() {
 
 export const revisionDocumento = (
   documento_id: string,
-  accion: "aprobar" | "rechazar",
+  accion: AccionRevision,
 ) => {
   return new Promise<TriajeDocumento>((resolve, reject) => {
     setTimeout(() => {

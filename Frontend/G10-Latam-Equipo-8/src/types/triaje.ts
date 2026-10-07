@@ -7,6 +7,8 @@ export type StatusTriaje =
   | "aprobado"
   | "rechazado";
 
+export type AccionRevision = "aprobar" | "rechazar";
+
 // Sub interfaces
 export interface Paciente {
   nombre: string;

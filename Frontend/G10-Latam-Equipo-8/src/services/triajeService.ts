@@ -1,5 +1,6 @@
 import type { TriajeDocumento } from "@/types/triaje";
 import { mockTriajesConLatencia, revisionDocumento } from "@/mocks/triaje";
+import type { AccionRevision } from "@/types/triaje"
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
@@ -17,7 +18,7 @@ export const triajeService = {
   },
   revisarDocumento: async (
     documento_id: string,
-    accion: "aprobar" | "rechazar",
+    accion: AccionRevision,
   ): Promise<TriajeDocumento> => {
     if (!API_BASE_URL) {
       return revisionDocumento(documento_id, accion);
