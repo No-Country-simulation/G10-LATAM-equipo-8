@@ -26,13 +26,13 @@ export const triajeService = {
       `${API_BASE_URL}/triajes/${documento_id}/revision`,
       {
         method: "POST",
-        headers: { "Content-Type": "aplication/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ accion }),
       },
     );
     if (!response.ok) {
       throw new Error(
-        `Error al reivsar el documento ${documento_id}: ${response.statusText}`,
+        `Error al reivsar ${documento_id}: ${response.statusText}`,
       );
     }
     return response.json();
