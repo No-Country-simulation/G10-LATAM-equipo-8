@@ -70,3 +70,14 @@ Thumbs.db
 .tools/
 .uv-cache/
 backend/storage/
+.neon
+
+# Skills oficiales descargadas: locales/reinstalables, no contenido propio.
+.agents/skills/neon/
+.agents/skills/neon-ai-gateway/
+.agents/skills/neon-auth/
+.agents/skills/neon-functions/
+.agents/skills/neon-object-storage/
+.agents/skills/neon-postgres/
+.agents/skills/neon-postgres-branches/
+.agents/skills/neon-postgres-egress-optimizer/
