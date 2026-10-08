@@ -1,0 +1,6 @@
+{
+  "accion": "aprobar",
+  "revisor": "revisor-demo",
+  "comentario": "Aprobación ficticia para validar la interfaz, no uso clínico",
+  "destino": "HISTORIA_CLINICA"
+}

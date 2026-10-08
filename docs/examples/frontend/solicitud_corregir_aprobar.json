@@ -1,0 +1,12 @@
+{
+  "accion": "corregir_aprobar",
+  "revisor": "revisor-demo",
+  "comentario": "Corrección ficticia de fallo técnico",
+  "destino": "HISTORIA_CLINICA",
+  "correcciones": {
+    "nombre_paciente": "Demo Corregido",
+    "edad_paciente": null,
+    "tipo_documento": "Informe de Laboratorio",
+    "nivel_prioridad": "Rutina"
+  }
+}

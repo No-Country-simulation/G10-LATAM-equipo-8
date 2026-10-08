@@ -1,0 +1,65 @@
+[
+  {
+    "review_id": "99e7eef52df34f1e97427687d8a5e2df",
+    "document_id": "FRONTEND-REVISION-001",
+    "action": "aprobar",
+    "reviewer": "revisor-demo",
+    "comment": "Aprobación ficticia para validar la interfaz, no uso clínico",
+    "created_at": "2026-10-08T12:05:00Z",
+    "previous_status": "NEEDS_AUDIT",
+    "new_status": "APPROVED",
+    "before": {
+      "document_type": "Informe de Laboratorio",
+      "priority": "Rutina",
+      "confidence": null,
+      "patient_name": "Demo Sintético",
+      "patient_age": 30,
+      "audit_reasons": [
+        "UNVERIFIED_BINARY_EVIDENCE",
+        "GEMINI_REQUIRES_HUMAN_REVIEW"
+      ],
+      "schema_version": 2,
+      "professional_name": null,
+      "professional_registration": null,
+      "study": null,
+      "indication": null,
+      "diagnosis": null,
+      "cie10_suggested": null,
+      "evidence": [
+        {
+          "field": "patient_name",
+          "page": 1,
+          "quote": "Paciente Demo Sintético"
+        }
+      ]
+    },
+    "after": {
+      "document_type": "Informe de Laboratorio",
+      "priority": "Rutina",
+      "confidence": null,
+      "patient_name": "Demo Sintético",
+      "patient_age": 30,
+      "audit_reasons": [
+        "UNVERIFIED_BINARY_EVIDENCE",
+        "GEMINI_REQUIRES_HUMAN_REVIEW"
+      ],
+      "schema_version": 2,
+      "professional_name": null,
+      "professional_registration": null,
+      "study": null,
+      "indication": null,
+      "diagnosis": null,
+      "cie10_suggested": null,
+      "evidence": [
+        {
+          "field": "patient_name",
+          "page": 1,
+          "quote": "Paciente Demo Sintético"
+        }
+      ]
+    },
+    "previous_destination": "REVISION_HUMANA",
+    "new_destination": "HISTORIA_CLINICA",
+    "corrections": []
+  }
+]

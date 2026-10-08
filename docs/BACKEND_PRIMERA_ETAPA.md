@@ -279,3 +279,19 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   evidencia/calibración clínica y reglas/pesos aprobados. Pipeline real siempre exige
   revisión; no hay despacho ni fallback automático aprobado. Error400/401/403 agrupado
   como GEMINI_AUTH es deuda de diagnóstico, no se cambia en este ajuste.
+
+## Handoff HTTP frontend — 2026-10-08
+
+- Publicación previa confirmada en checkpoint 9f6df98. Nuevo documento
+  docs/CONTRATO_API_FRONTEND.md describe HTTP/OpenAPI actual y nueve fixtures sintéticos.
+  No se modifica runtime, CORS/auth, tipos clínicos, reglas o infraestructura.
+- Se separan estado técnico/proveedor, decisión humana, alerta y despacho no implementado;
+  201 con extracción FAILED no se muestra como análisis exitoso. Correcciones restringidas
+  al contrato real; una aprobación conserva score null y la trazabilidad del fallo.
+- JSON de historial es envelope items/total/offset/limit; revisiones es array con snapshots
+  de nombres ingleses. UI no accede directamente a DB/SDK ni convierte claves en URLs.
+- Autorización de descarga/revisores y CORS permanecen pendientes. Memoria no comparte
+  procesos ni sobrevive reinicios; PostgreSQL es persistente, no equivaler ambos modos.
+- Validación observada: nueve fixtures Pydantic y tres solicitudes de revisión de forma/
+  semántica local, score null conservado y enlaces válidos; no seguridad clínica ni nueva
+  ejecución Google/Neon. Commit del coordinador pendiente; no push de este incremento.
