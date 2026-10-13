@@ -1,5 +1,7 @@
 # Backend: primera etapa funcional
 
+Para integrar la interfaz: [contrato HTTP frontend y ejemplos sintéticos](../docs/CONTRATO_API_FRONTEND.md).
+
 Python **3.12.x** (`>=3.12,<3.13`). El entorno Windows existente se verificó con
 **3.12.14**: se conserva, no hay que recrearlo. `.python-version` fija la familia 3.12
 para que uv elija un parche disponible por plataforma. Dependencias en `pyproject.toml`, resolución fija
