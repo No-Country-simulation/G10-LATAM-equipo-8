@@ -295,3 +295,30 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 - Validación observada: nueve fixtures Pydantic y tres solicitudes de revisión de forma/
   semántica local, score null conservado y enlaces válidos; no seguridad clínica ni nueva
   ejecución Google/Neon. Commit del coordinador pendiente; no push de este incremento.
+
+## Almacenamiento OCI Object Storage — 2026-10-13
+
+- Rama `feature/backend-oci-storage` (Silvio), creada desde `feature/backend-foundation`.
+  Nuevo `STORAGE_MODE=oci`: `OciDocumentStorage` hereda save/read y errores del adaptador
+  S3 de Neon; solo cambia endpoint `https://<namespace>.compat.objectstorage.<region>.
+  oraclecloud.com` y configuración del cliente. No se modificó `neon_storage.py`.
+- Bucket del equipo: tenancy de Nico, región `sa-santiago-1`, bucket
+  `mediflow-documentos-clinicos`. Variables `OCI_NAMESPACE`, `OCI_REGION`, `OCI_BUCKET`,
+  `OCI_ACCESS_KEY_ID`, `OCI_SECRET_ACCESS_KEY`; cada integrante usa su Customer Secret Key.
+- Hallazgos: boto3 >= 1.36 exige `request_checksum_calculation` y
+  `response_checksum_validation` en `when_required`; sin eso OCI responde
+  `NotImplemented: AWS chunked encoding not supported`. Una clave recién creada tarda
+  minutos en propagarse y mientras tanto falla con `SignatureDoesNotMatch`.
+- Decisión: OCI se permite con `REPOSITORY_MODE=memory` para pruebas. Al reiniciar se
+  pierde el historial y los originales quedan en el bucket sin referencia; con PostgreSQL
+  aplican las reservas PENDING/READY/FAILED y la reconciliación existentes. Namespace y
+  región se validan con formato estricto porque forman el hostname del endpoint.
+- Contrato sin cambios de forma: `almacenamiento.proveedor` admite `oci` y
+  `almacenamiento_oci` sigue en null. Pendiente acordar con frontend si se completa.
+- Fuera de alcance: prefijos por decisión (`procesados/<destino>/`, `auditoria_humana/`);
+  los originales siguen en `recibidos/<id>`.
+- Verificación: 12 pruebas nuevas con cliente simulado (endpoint, checksums, errores sin
+  secretos, variables obligatorias, hostname, API con proveedor oci y 503 sin registro);
+  185 pruebas aprobadas; ruff lint y formato aprobados. Prueba real con IA simulada y
+  memoria: POST 201 con `proveedor=oci`, `GET /documento` leyó el original desde OCI y
+  `head_object` confirmó el objeto en el bucket.

@@ -133,10 +133,10 @@ humana **no aumenta** el score ni convierte null en un número.
 | `decision_enrutamiento.justificacion_enrutamiento` | string | Explicación técnica actual. |
 | `decision_enrutamiento.alerta_urgente` | boolean | Alerta independiente; no significa autorización/envío. |
 | `decision_enrutamiento.notificacion_generada` | null siempre | Ninguna notificación implementada. |
-| `almacenamiento.proveedor` | `local` / `neon` | Proveedor del original. |
+| `almacenamiento.proveedor` | `local` / `neon` / `oci` | Proveedor del original. |
 | `almacenamiento.ruta_objeto` | string | Clave interna, no URL pública ni endpoint frontend. |
 | `almacenamiento.status_backup` | `exito` | Original almacenado; no éxito de IA ni segunda copia verificada. |
-| `almacenamiento_oci` | null siempre | OCI no implementado. |
+| `almacenamiento_oci` | null siempre | Con OCI activo el original se informa en `almacenamiento` (`proveedor=oci`); completar este bloque queda pendiente de acuerdo. |
 
 Destinos: `HISTORIA_CLINICA`, `EMERGENCIA_MEDICA`, `REVISION_HUMANA`, `FARMACIA`,
 `AUDITORIA_AUTORIZACIONES`. No inventar otros ni interpretar sus nombres como envío.
