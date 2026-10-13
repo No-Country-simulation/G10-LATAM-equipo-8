@@ -49,7 +49,7 @@ class Routing(BaseModel):
 
 
 class StorageInfo(BaseModel):
-    proveedor: Literal["local", "neon"] = "local"
+    proveedor: Literal["local", "neon", "oci"] = "local"
     ruta_objeto: str
     status_backup: Literal["exito"] = "exito"
 

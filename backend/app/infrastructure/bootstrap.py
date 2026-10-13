@@ -61,6 +61,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             settings.aws_access_key_id.get_secret_value(),
             settings.aws_secret_access_key.get_secret_value(),
         )
+    if settings.storage_mode == "oci":
+        from app.adapters.outbound.oci_storage import OciDocumentStorage
+
+        app.state.storage = OciDocumentStorage(
+            settings.oci_namespace,
+            settings.oci_region,
+            settings.oci_bucket,
+            settings.oci_access_key_id.get_secret_value(),
+            settings.oci_secret_access_key.get_secret_value(),
+        )
     extractor = SimulatedExtractor()
     provenance = ExtractionProvenance(provider="simulated", model="fixtures-v1")
     if settings.ai_mode == "gemini":

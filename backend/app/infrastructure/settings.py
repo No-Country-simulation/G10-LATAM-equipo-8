@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
     storage_dir: Path = Path("storage")
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
     repository_mode: Literal["memory", "postgres"] = "memory"
-    storage_mode: Literal["local", "neon"] = "local"
+    storage_mode: Literal["local", "neon", "oci"] = "local"
     database_url: SecretStr | None = None
     database_url_direct: SecretStr | None = Field(
         default=None,
@@ -41,6 +42,11 @@ class Settings(BaseSettings):
     aws_region: str = "us-east-2"
     aws_access_key_id: SecretStr | None = None
     aws_secret_access_key: SecretStr | None = None
+    oci_namespace: str | None = None
+    oci_region: str | None = None
+    oci_bucket: str | None = None
+    oci_access_key_id: SecretStr | None = None
+    oci_secret_access_key: SecretStr | None = None
 
     @model_validator(mode="after")
     def validate_adapters(self):
@@ -58,6 +64,24 @@ class Settings(BaseSettings):
                 (self.aws_endpoint_url_s3, self.aws_access_key_id, self.aws_secret_access_key)
             ):
                 raise ValueError("Faltan credenciales explicitas del bucket Neon")
+        if self.storage_mode == "oci":
+            required = {
+                "OCI_NAMESPACE": self.oci_namespace,
+                "OCI_REGION": self.oci_region,
+                "OCI_BUCKET": self.oci_bucket,
+                "OCI_ACCESS_KEY_ID": self.oci_access_key_id
+                and self.oci_access_key_id.get_secret_value(),
+                "OCI_SECRET_ACCESS_KEY": self.oci_secret_access_key
+                and self.oci_secret_access_key.get_secret_value(),
+            }
+            missing = [name for name, value in required.items() if not (value or "").strip()]
+            if missing:
+                raise ValueError(f"Faltan variables de OCI: {', '.join(missing)}")
+            # Namespace y región forman el hostname del endpoint: no aceptar otra cosa.
+            if not re.fullmatch(r"[a-z0-9]+", self.oci_namespace):
+                raise ValueError("OCI_NAMESPACE invalido")
+            if not re.fullmatch(r"[a-z]{2}-[a-z]+-\d+", self.oci_region):
+                raise ValueError("OCI_REGION invalida, ejemplo: sa-santiago-1")
         if self.repository_mode == "postgres":
             root = Path(__file__).resolve().parents[3]
             link_path, env_path = root / ".neon", root / ".env.local"
