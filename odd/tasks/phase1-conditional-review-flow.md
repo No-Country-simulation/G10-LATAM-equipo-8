@@ -99,7 +99,8 @@ operativos existentes sin presentar una propuesta como regla clínica aprobada.
   persistencia durable del grafo ni despacho real.
 - Revisión estática: `gentle-ai review assess` informó riesgo alto/no evaluable porque
   los archivos sin seguimiento no estaban declarados; la revisión estática
-  independiente no encontró bloqueos. El commit sigue pendiente; no hubo push, PR ni
+  independiente no encontró bloqueos. Commit de implementación registrado:
+  `79d87b9` (`feat(triaje): agregar rutas condicionales seguras`). No hubo push, PR ni
   merge.
 - La prueba focalizada del fallo técnico verifica explícitamente que el fallback deja
   la decisión en `NEEDS_AUDIT`/`REVISION_HUMANA`, además de conservar el original y
