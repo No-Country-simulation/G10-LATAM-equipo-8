@@ -3,7 +3,15 @@ from datetime import UTC, datetime
 import pytest
 
 from app.domain.review import InvalidReview, ReviewAction, ReviewConflict, review_triage
-from app.domain.triaje import Decision, Destination, Extraction, Priority, Status, Triage
+from app.domain.triaje import (
+    Decision,
+    Destination,
+    Extraction,
+    Priority,
+    Status,
+    Triage,
+    decide,
+)
 
 
 def pending(priority=Priority.ROUTINE):
@@ -79,3 +87,54 @@ def test_invalid_correction(changes):
 def test_urgent_cannot_be_approved_for_history():
     with pytest.raises(InvalidReview):
         run(pending(Priority.URGENT))
+
+
+def test_explicit_human_review_can_authorize_urgent_emergency_destination():
+    updated, event = run(pending(Priority.URGENT), destination=Destination.EMERGENCY)
+
+    assert updated.decision.status == Status.APPROVED
+    assert updated.decision.destination == Destination.EMERGENCY
+    assert updated.decision.urgent_alert
+    assert event.new_destination == Destination.EMERGENCY
+
+
+def test_decide_keeps_urgent_extraction_in_human_review():
+    extraction = Extraction("Informe de Laboratorio", Priority.URGENT, 0.99, "Demo")
+
+    decision = decide(extraction)
+
+    assert decision.status == Status.NEEDS_AUDIT
+    assert decision.destination == Destination.REVIEW
+    assert decision.urgent_alert
+
+
+def test_routine_decision_is_not_human_approval_or_dispatch():
+    extraction = Extraction("Informe de Laboratorio", Priority.ROUTINE, 0.01, "Demo")
+
+    decision = decide(extraction)
+
+    assert decision.status == Status.PROCESSED
+    assert decision.destination == Destination.HISTORY
+    assert not decision.urgent_alert
+
+
+@pytest.mark.parametrize(
+    "extraction",
+    [
+        Extraction(
+            "Informe de Laboratorio",
+            Priority.ROUTINE,
+            0.9,
+            "Demo",
+            audit_reasons=("AMBIGUOUS",),
+        ),
+        Extraction(None, Priority.ROUTINE, 0.9, "Demo"),
+        Extraction("Informe de Laboratorio", None, 0.9, "Demo"),
+        Extraction("Informe de Laboratorio", Priority.ROUTINE, None, "Demo"),
+    ],
+)
+def test_ambiguous_or_incomplete_decision_requires_human_review(extraction):
+    decision = decide(extraction)
+
+    assert decision.status == Status.NEEDS_AUDIT
+    assert decision.destination == Destination.REVIEW

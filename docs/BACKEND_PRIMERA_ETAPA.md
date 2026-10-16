@@ -295,3 +295,42 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 - Validación observada: nueve fixtures Pydantic y tres solicitudes de revisión de forma/
   semántica local, score null conservado y enlaces válidos; no seguridad clínica ni nueva
   ejecución Google/Neon. Commit del coordinador pendiente; no push de este incremento.
+
+## Verificaciones pendientes para la demo — 2026-10-13
+
+- Por decisión del usuario, se pospone por ahora volver a ejecutar la suite de regresión.
+  La última ejecución registrada fue de 173 pruebas aprobadas en Windows; no equivale a
+  una ejecución reciente ni a validación clínica.
+- Antes de cerrar la integración web, queda pendiente ejecutar las pruebas de navegador:
+  preflight CORS desde el origen acordado, llamada permitida y rechazo de un origen no
+  autorizado. Primero se debe confirmar el origen local exacto del frontend.
+
+## Fase 1: rutas condicionales con revisión humana — 2026-10-16
+
+- El grafo distingue propuesta rutinaria, revisión por ambigüedad/incompletitud y
+  revisión urgente mediante ramas que solo agregan trazas efímeras; no persisten estado
+  ni realizan revisión. El resultado actual lo determina `decide`; la confianza reportada
+  no tiene corte.
+- `decide` mantiene toda señal urgente en `NEEDS_AUDIT`/`REVISION_HUMANA` con alerta
+  activa. Solo la revisión explícita puede aprobar `EMERGENCIA_MEDICA`; rutina produce
+  `PROCESSED`/`HISTORIA_CLINICA`, no una aprobación ni despacho. El fallback de
+  `ProcessDocument` no se cambió.
+- Verificación focalizada: 23 pruebas aprobadas; Ruff check aprobado; Ruff format check
+  aprobado (advertencia de caché, código de salida 0); `git diff --check` aprobado con
+  advertencias de normalización LF/CRLF. Se usaron los ejecutables existentes de
+  `backend/.venv` porque `uv` no está disponible. El coordinador repitió la suite
+  focalizada con 23 aprobadas. La suite completa no se ejecutó.
+- `gentle-ai review assess` clasificó el riesgo como alto/no evaluable porque los
+  archivos sin seguimiento no estaban declarados. La revisión estática independiente
+  no encontró bloqueos.
+- Estas pruebas no acreditan seguridad clínica. No se afirma persistencia durable de
+  las trazas del grafo ni despacho real. OCI Object Storage sigue pendiente como
+  requisito obligatorio de Alura.
+- El commit sigue pendiente; no se hizo push, PR ni merge.
+
+## Handoff: plan de alertas externas — 2026-10-16
+
+- Se documentó una propuesta por fases para alertas operativas sintéticas, con Slack
+  como primer canal y Resend como ampliación opcional: [Plan MVP de alertas y fases](PLAN_MVP_ALERTAS_Y_FASES.md).
+- No se implementó envío externo. La revisión humana y el enrutamiento permanecen
+  independientes; OCI Object Storage continúa pendiente como requisito obligatorio de Alura.
