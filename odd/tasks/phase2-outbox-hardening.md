@@ -27,7 +27,7 @@ pruebas de cada restricción única.
 
 ## Tarea
 
-- [ ] H2-T1 — Aplicar ambos hardenings con pruebas RED/GREEN y mantenerlos en un
+- [x] H2-T1 — Aplicar ambos hardenings con pruebas RED/GREEN y mantenerlos en un
   solo commit coherente.
 
 ## Verificación y entrega
@@ -42,7 +42,9 @@ pruebas de cada restricción única.
 ## Estado
 
 - Implementación, autoverificación y revisión independiente completas; sin bloqueos.
-  El coordinador reprodujo **37 aprobadas en 1.15 s**. El commit queda pendiente.
+  El coordinador reprodujo **37 aprobadas en 1.15 s**.
+- Commit: `cf7c8b0` — `fix(outbox): alinear default y aislar pruebas de unicidad`.
+  La unidad suma 182 líneas autorales (178 adiciones y 4 eliminaciones).
 - RDD permanece desactivado; la evaluación de riesgo fue alta/no evaluable por el
   inventario sin seguimiento. Se aplicó revisión estática independiente, no RDD.
 - El outbox principal está en `3925d17`; la Fase 3 Slack queda para después de
@@ -82,4 +84,4 @@ migraciones PostgreSQL/Neon. Suite completa no ejecutada por el bloqueo previo
 informado por el coordinador. No hay frontera runtime nueva: N/A para entrega real;
 el único escenario adicional es la inserción local SQL sin default del cliente.
 Reversión: modelo, pruebas y este registro forman una sola unidad; sin migraciones.
-No se prepararon archivos ni se creó commit, push, PR o merge.
+El coordinador creó el commit local indicado; no hubo push, PR ni merge.

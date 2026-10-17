@@ -357,6 +357,7 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 
 ### Hardening de Fase 2
 
+- Commit: `cf7c8b0` — `fix(outbox): alinear default y aislar pruebas de unicidad`.
 - Se alineó `attempt_count` del ORM con el default de servidor de la migración `0004`,
   conservando el default del cliente. Una inserción SQL sin contador prueba el default
   real de la tabla SQLite. Las dos restricciones únicas se verifican por separado.
