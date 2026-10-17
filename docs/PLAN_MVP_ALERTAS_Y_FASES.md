@@ -72,6 +72,21 @@ independiente no encontró bloqueos. No se ejecutó la suite completa ni se afir
 validación clínica, persistencia durable del grafo o despacho real. OCI Object Storage
 continúa pendiente como requisito obligatorio de Alura.
 
+### Fase 2: estado local del outbox
+
+El adaptador SQLAlchemy crea un único evento `REVIEW_REQUIRED` en `PENDING` para un
+resultado de dominio `NEEDS_AUDIT`, con canal previsto `SLACK`. La clave idempotente es
+un SHA-256 de documento y tipo; el registro guarda solo ese hash y una referencia a la
+fila interna del triaje, sin copiar el identificador público ni datos clínicos. La
+inserción comparte la transacción que finaliza el triaje. El esquema ORM y sus pruebas
+usan SQLite; la revisión en memoria no tiene outbox persistente.
+
+La prueba focalizada de persistencia (35 aprobadas), Ruff check/format check y
+`git diff --check` pasaron con el entorno existente. El intento de suite completa se
+interrumpió sin salida ni resumen, por lo que queda sin resultado. La migración aditiva
+`0004` está escrita pero no fue ejecutada contra PostgreSQL ni Neon. No hay worker,
+reintento efectivo, envío, validación clínica ni despacho real.
+
 ## Slack frente a correo
 
 | Canal | Recomendación | Consideraciones |

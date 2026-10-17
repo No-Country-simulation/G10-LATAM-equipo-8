@@ -10,8 +10,14 @@ from sqlalchemy import Engine, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.adapters.outbound.persistence_models import DocumentRow, ReviewRow, TriageRow
+from app.adapters.outbound.persistence_models import (
+    DocumentRow,
+    NotificationOutboxRow,
+    ReviewRow,
+    TriageRow,
+)
 from app.domain.extraction import ExtractionProvenance, ProcessingStatus, SourceReference
+from app.domain.notification import review_required_intent
 from app.domain.review import Correction, ReviewAction, ReviewConflict, ReviewEvent
 from app.domain.triaje import (
     Decision,
@@ -305,8 +311,32 @@ class PostgresTriageRepository:
             row.processing_error = error_code
             row.processing_token = None
             row.processing_lease_until = None
-            row.updated_at = datetime.now(UTC)
+            now = datetime.now(UTC)
+            row.updated_at = now
             row.version += 1
+            if decision.status == Status.NEEDS_AUDIT:
+                intent = review_required_intent(
+                    document.public_id,
+                    row.id,
+                    now,
+                    error_code,
+                )
+                session.add(
+                    NotificationOutboxRow(
+                        id=uuid4().hex,
+                        triage_id=intent.triage_id,
+                        event_type=intent.event_type.value,
+                        channel=intent.channel.value,
+                        status=intent.status.value,
+                        idempotency_key=intent.idempotency_key,
+                        attempt_count=intent.attempt_count,
+                        created_at=intent.created_at,
+                        last_attempt_at=intent.last_attempt_at,
+                        delivered_at=intent.delivered_at,
+                        next_attempt_at=intent.next_attempt_at,
+                        error_code=intent.error_code,
+                    )
+                )
             return decode_triage(document, row)
 
     def reconcile(self, storage, public_id: str) -> str:

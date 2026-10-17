@@ -334,3 +334,23 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   como primer canal y Resend como ampliación opcional: [Plan MVP de alertas y fases](PLAN_MVP_ALERTAS_Y_FASES.md).
 - No se implementó envío externo. La revisión humana y el enrutamiento permanecen
   independientes; OCI Object Storage continúa pendiente como requisito obligatorio de Alura.
+
+## Fase 2: outbox persistente de revisión — 2026-10-17
+
+- El adaptador SQLAlchemy añade una intención `REVIEW_REQUIRED`/`SLACK`/`PENDING` al
+  finalizar en `NEEDS_AUDIT`, dentro de la misma transacción del cambio de triaje.
+  La unicidad por triaje/tipo y por hash idempotente evita duplicados. El outbox guarda
+  una referencia interna al triaje y el SHA-256 de documento/tipo, no el ID público,
+  extracción, texto clínico ni contenido de excepción. Solo códigos de error permitidos
+  quedan como metadato.
+- Verificación local con los ejecutables existentes de `backend/.venv` (porque `uv` no
+  está disponible): RED de pruebas al faltar el modelo; GREEN focalizado: 35 aprobadas.
+  Ruff check y Ruff format check pasaron; `git diff --check` pasó con advertencias
+  LF/CRLF.
+- El intento de suite completa quedó interrumpido sin salida ni resumen; no se afirma
+  que haya pasado. La migración aditiva `0004` está escrita, pero no se ejecutó ni en
+  PostgreSQL local ni en Neon. No hubo llamadas externas.
+- `MemoryTriageRepository` no persiste outbox; no se afirma durabilidad en memoria ni
+  tras reinicios. No hay worker, reintentos efectivos, envío Slack, endpoint, validación
+  clínica ni despacho real.
+- El commit de esta unidad sigue pendiente del coordinador; no hubo push, PR ni merge.
