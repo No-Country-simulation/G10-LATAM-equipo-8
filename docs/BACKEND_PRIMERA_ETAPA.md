@@ -392,5 +392,7 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   `odd/tasks/neon-outbox-0004-validation.md`.
 - No se verificaron Alembic online, FastAPI contra la hija, concurrencia, Slack ni
   seguridad clínica. La suite completa Python permanece sin verificar. Hija preservada;
-  commit documental pendiente, sin push, PR ni merge. Migrar development e iniciar
+  commit documental `5803641`, sin push, PR ni merge. Revisión independiente confirmó
+  catálogo, revisiones y cero fixtures; el coordinador comprobó ambas revisiones.
+  Migrar development e iniciar
   Slack requieren una decisión posterior; este resultado no los ejecuta ni autoriza.

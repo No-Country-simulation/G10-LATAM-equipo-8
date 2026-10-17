@@ -31,7 +31,7 @@ propuesta de rama de pruebas aislada. No autoriza merges Git ni cambios en produ
 
 ## Tarea y aceptación
 
-- [ ] N4-T1 — Crear la hija, verificar su padre y baseline, renderizar/aplicar el SQL
+- [x] N4-T1 — Crear la hija, verificar su padre y baseline, renderizar/aplicar el SQL
   versionado, comprobar catálogo y restricciones con fixtures sintéticos revertidos,
   revalidar el padre intacto y documentar evidencia en un commit.
 
@@ -60,8 +60,8 @@ propuesta de rama de pruebas aislada. No autoriza merges Git ni cambios en produ
 
 ## Estado
 
-- Migración y verificaciones de la hija completas; commit documental pendiente del
-  coordinador. N4-T1 permanece abierta únicamente hasta registrar ese commit.
+- Migración y verificaciones de la hija completas. Commit documental `5803641`:
+  `docs(neon): registrar validación aislada del outbox` (146 líneas añadidas).
 - Revisión independiente de solo lectura sin bloqueos: confirmó esquema completo,
   revisión de hija/padre y cero fixtures. El coordinador confirmó también las dos
   revisiones y presencia/ausencia de la tabla; no repitió escrituras sintéticas.
