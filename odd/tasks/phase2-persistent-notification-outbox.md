@@ -48,7 +48,7 @@ finaliza en `NEEDS_AUDIT`, sin enviar mensajes ni guardar datos clínicos en la 
 
 ## Tareas
 
-- [ ] P2-T1 — Implementar el contrato de evento y la persistencia atómica completa,
+- [x] P2-T1 — Implementar el contrato de evento y la persistencia atómica completa,
   con migración, deduplicación, pruebas sintéticas y documentación. Se mantiene como
   una unidad de trabajo para evitar commits intermedios que dejen el flujo incompleto.
 
@@ -95,9 +95,9 @@ finaliza en `NEEDS_AUDIT`, sin enviar mensajes ni guardar datos clínicos en la 
 - La evaluación nativa reportó riesgo `high` por inventario de archivos no rastreados;
   RDD está desactivado y no se inició ciclo nativo. El coordinador repitió la prueba
   focalizada: 35 pasaron. No hubo push, PR ni merge.
-- El commit de unidad de trabajo está autorizado y pendiente. La suite completa sigue
-  sin resultado; la migración no se ejecutó en PostgreSQL/Neon. Ninguna de las dos
-  limitaciones se presentará como verificada.
-- Siguiente: registrar esta unidad con un commit coherente y actualizar el documento
-  con su SHA; luego decidir la ejecución local/Neon de la migración antes de declarar
-  persistencia operativa en ese entorno.
+- La suite completa sigue sin resultado; la migración no se ejecutó en PostgreSQL/Neon.
+  Ninguna de las dos limitaciones se presentará como verificada.
+- Commit de unidad de trabajo: `3925d17` (`feat(notificaciones): persistir intenciones de revisión`).
+- Siguiente: decidir cómo y cuándo ejecutar la migración en un PostgreSQL seguro antes
+  de declarar persistencia operativa en ese entorno; después, pasar a la fase de envío
+  Slack, sin reenviar estados o mensajes clínicos no aprobados.
