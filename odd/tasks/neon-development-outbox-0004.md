@@ -19,7 +19,7 @@ Esta unidad no implementa Slack ni autoriza merges Git o cambios en producción.
 
 ## Tarea y aceptación
 
-- [ ] D4-T1 — Verificar destino directo, aplicar Alembic online, comprobar esquema y
+- [x] D4-T1 — Verificar destino directo, aplicar Alembic online, comprobar esquema y
   fixtures sintéticos reversibles, obtener revisión independiente y registrar evidencia.
 
 ### Comprobaciones
@@ -48,7 +48,9 @@ Esta unidad no implementa Slack ni autoriza merges Git o cambios en producción.
 ## Estado y siguiente paso
 
 - Aplicación online, autoverificación y revisión independiente completas, sin bloqueos.
-  El coordinador confirmó `0004`, tabla presente y outbox vacío. Commit local pendiente.
+  El coordinador confirmó `0004`, tabla presente y outbox vacío.
+- Commit de evidencia: `fa188ed` — `docs(neon): registrar migración online de development`
+  (136 líneas documentales añadidas).
 - El verificador confirmó catálogo, conteos y cero fixtures mediante SELECTs; los siete
   ensayos históricos y hashes de configuración permanecen reportados por el ejecutor.
 - RDD desactivado; evaluación alta/no evaluable por inventario sin seguimiento.

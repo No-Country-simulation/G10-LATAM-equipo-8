@@ -425,5 +425,5 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   sigue pendiente. No hubo nuevas credenciales, cambios funcionales, instalaciones,
   llamadas a IA/storage/Slack, push, PR ni merge. Revisión independiente sin bloqueos:
   confirmó catálogo, conteos y cero fixtures; el coordinador confirmó revisión y outbox
-  vacío. Commit local pendiente; evidencia en
+  vacío. Commit local `fa188ed`; evidencia en
   `odd/tasks/neon-development-outbox-0004.md`.
