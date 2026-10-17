@@ -396,3 +396,34 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   catálogo, revisiones y cero fixtures; el coordinador comprobó ambas revisiones.
   Migrar development e iniciar
   Slack requieren una decisión posterior; este resultado no los ejecuta ni autoriza.
+
+## Outbox 0004 aplicado online en development — 2026-10-17 (America/Lima)
+
+- Tras autorización explícita, se aplicó la migración existente a development
+  `br-broad-bread-b4sii0lv`, proyecto `wandering-voice-40276879`, base `mediflow-bd`.
+  Desde `backend/`: `.venv/Scripts/python.exe -m alembic upgrade 0004_notification_outbox`,
+  salida 0. Antes de lanzarlo se verificaron endpoint directo sin pooler, base,
+  revisión `0003_processing_state` y tabla ausente. El render offline previo conservó
+  el SHA-256 `49e76f6125c56158f8eb51d4fe8da4401089d3ce9963e57eebf90add09d12782`.
+- MCP confirmó revisión `0004_notification_outbox`, las 12 columnas con tipos,
+  longitudes, nulabilidad/default exactos y siete restricciones: PK, FK a `triages(id)`,
+  dos únicas y tres checks. Este resultado sí prueba Alembic ONLINE en development;
+  no debe confundirse con la ejecución de SQL offline de la hija anterior.
+- Siete aserciones SQL sintéticas verificaron default 0 omitido y rechazos por contador
+  negativo, evento/canal inválidos, FK inexistente y las dos colisiones únicas por
+  separado, comprobando SQLSTATE y nombre de constraint. Excepción controlada `P4004`
+  tras las aserciones revirtió todos los fixtures; errores inesperados se propagan.
+  Consulta posterior confirmó cero fixtures y outbox vacío. Conteos antes/después:
+  documentos 20/20, triajes 20/20 y revisiones 6/6; sin deriva observada, no una prueba
+  de ausencia de modificaciones concurrentes. No se borraron datos existentes.
+- El primer preflight sandbox falló con `OperationalError` antes de lanzar Alembic;
+  bajo elevación autorizada se revalidó el baseline y se ejecutó una sola migración.
+  Los cuatro archivos de configuración conservaron sus hashes. El modo simulated/local
+  se limitó al entorno del subproceso y no debilitó las guardas de `Settings`.
+- Producción no se consultó y la hija no se modificó. No se verificaron ingesta HTTP
+  completa, concurrencia, Slack, despacho ni seguridad clínica; la suite Python completa
+  sigue pendiente. No hubo nuevas credenciales, cambios funcionales, instalaciones,
+  llamadas a IA/storage/Slack, push, PR ni merge. Revisión independiente sin bloqueos:
+  confirmó catálogo, conteos y cero fixtures; el coordinador confirmó revisión y outbox
+  vacío. Commit local pendiente; evidencia en
+  `odd/tasks/neon-development-outbox-0004.md`.
