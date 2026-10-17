@@ -353,4 +353,14 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 - `MemoryTriageRepository` no persiste outbox; no se afirma durabilidad en memoria ni
   tras reinicios. No hay worker, reintentos efectivos, envío Slack, endpoint, validación
   clínica ni despacho real.
-- El commit de esta unidad sigue pendiente del coordinador; no hubo push, PR ni merge.
+- Commit de esta unidad: `3925d17`; registro de cierre: `3d0161b`. Sin push, PR ni merge.
+
+### Hardening de Fase 2
+
+- Se alineó `attempt_count` del ORM con el default de servidor de la migración `0004`,
+  conservando el default del cliente. Una inserción SQL sin contador prueba el default
+  real de la tabla SQLite. Las dos restricciones únicas se verifican por separado.
+- RED: 1 fallo y 36 aprobadas; GREEN: 37 aprobadas. Ruff check/format y diff check
+  pasaron. Revisión independiente sin bloqueos; el coordinador reprodujo 37 aprobadas.
+- La suite completa y la migración PostgreSQL/Neon siguen sin verificar. No se hicieron
+  llamadas externas ni se implementó Slack. Evidencia: `odd/tasks/phase2-outbox-hardening.md`.

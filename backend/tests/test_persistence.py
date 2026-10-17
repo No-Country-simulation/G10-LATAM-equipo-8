@@ -233,7 +233,38 @@ def test_routine_result_does_not_create_notification_outbox_intent(repository):
         assert session.scalar(select(func.count()).select_from(NotificationOutboxRow)) == 0
 
 
-def test_outbox_unique_constraints_reject_duplicate_document_event(repository):
+def test_outbox_attempt_count_defaults_to_zero_without_client_default(repository):
+    from sqlalchemy import select, text
+    from sqlalchemy.orm import Session
+
+    from app.adapters.outbound.persistence_models import TriageRow
+
+    repository.create(make_triage(), lambda: None)
+    with Session(repository.engine) as session:
+        triage_id = session.scalar(select(TriageRow.id))
+
+    with repository.engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO notification_outbox "
+                "(id, triage_id, event_type, channel, status, idempotency_key, created_at) "
+                "VALUES (:id, :triage_id, :event_type, :channel, :status, "
+                ":idempotency_key, :created_at)"
+            ),
+            {
+                "id": "database-default-intent",
+                "triage_id": triage_id,
+                "event_type": "REVIEW_REQUIRED",
+                "channel": "SLACK",
+                "status": "PENDING",
+                "idempotency_key": "database-default-key",
+                "created_at": datetime.now(UTC).isoformat(),
+            },
+        )
+        assert connection.scalar(select(NotificationOutboxRow.attempt_count)) == 0
+
+
+def test_outbox_triage_event_constraint_rejects_duplicate_with_different_key(repository):
     from sqlalchemy import select
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import Session
@@ -251,11 +282,57 @@ def test_outbox_unique_constraints_reject_duplicate_document_event(repository):
         event_type=original.event_type,
         channel=original.channel,
         status=original.status,
+        idempotency_key="different-idempotency-key",
+        attempt_count=0,
+        created_at=original.created_at,
+    )
+    with (
+        Session(repository.engine) as session,
+        pytest.raises(
+            IntegrityError,
+            match=r"notification_outbox.triage_id, notification_outbox.event_type",
+        ),
+    ):
+        session.add(duplicate)
+        session.commit()
+
+
+def test_outbox_idempotency_constraint_rejects_duplicate_key_for_different_triage(repository):
+    from sqlalchemy import select
+    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.orm import Session
+
+    from app.adapters.outbound.persistence_models import TriageRow
+
+    complete_pending(
+        repository,
+        Extraction("Receta Medica", Priority.ROUTINE, 0.9, "Demo", audit_reasons=("AMBIGUOUS",)),
+    )
+    repository.create(
+        replace(make_triage(), document_id="OTHER", object_key="recibidos/other"),
+        lambda: None,
+    )
+    with Session(repository.engine) as session:
+        original = session.scalar(select(NotificationOutboxRow))
+        other_triage_id = session.scalar(
+            select(TriageRow.id).where(TriageRow.id != original.triage_id)
+        )
+        assert other_triage_id is not None
+
+    duplicate = NotificationOutboxRow(
+        id="duplicate-key-intent",
+        triage_id=other_triage_id,
+        event_type=original.event_type,
+        channel=original.channel,
+        status=original.status,
         idempotency_key=original.idempotency_key,
         attempt_count=0,
         created_at=original.created_at,
     )
-    with Session(repository.engine) as session, pytest.raises(IntegrityError):
+    with (
+        Session(repository.engine) as session,
+        pytest.raises(IntegrityError, match=r"notification_outbox.idempotency_key"),
+    ):
         session.add(duplicate)
         session.commit()
 
