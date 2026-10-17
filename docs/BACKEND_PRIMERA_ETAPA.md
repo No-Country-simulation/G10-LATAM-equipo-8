@@ -365,3 +365,32 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   pasaron. Revisión independiente sin bloqueos; el coordinador reprodujo 37 aprobadas.
 - La suite completa y la migración PostgreSQL/Neon siguen sin verificar. No se hicieron
   llamadas externas ni se implementó Slack. Evidencia: `odd/tasks/phase2-outbox-hardening.md`.
+
+## Validación aislada de outbox 0004 en Neon — 2026-10-16 (America/Lima)
+
+- Migración verificada únicamente en `test/outbox-0004`, ID `br-noisy-tooth-b4y7bq5u`,
+  hija de development `br-broad-bread-b4sii0lv`, proyecto `wandering-voice-40276879`,
+  base `mediflow-bd`. Baseline observado: `0003_processing_state`, sin outbox.
+- Se generó el SQL versionado con Alembic offline y se aplicaron su CREATE y UPDATE
+  exactos mediante MCP transaccional, con guardas antes y después. SHA-256 del stdout
+  completo: `49e76f6125c56158f8eb51d4fe8da4401089d3ce9963e57eebf90add09d12782`.
+  La hija quedó en `0004_notification_outbox`.
+- Catálogo real: 12 columnas con tipos/longitudes/nulabilidad/default esperados, PK,
+  FK a `triages(id)`, dos claves únicas y tres checks. Siete aserciones sintéticas
+  probaron default 0 omitido, contador negativo, evento/canal inválidos, FK inexistente
+  y ambas colisiones únicas de forma independiente, verificando cada nombre de constraint.
+- Fixtures revertidos mediante subtransacción después de todas las aserciones;
+  conteo posterior 0. No se leyeron filas clínicas ni se borraron datos existentes.
+  Development se releyó: sigue en `0003`, sin outbox. Producción no se consultó.
+- `.neon` y tres archivos de entorno conservaron sus bytes. El modo simulado/local
+  se pasó únicamente al subproceso de generación offline, sin abrir conexión ni
+  debilitar la validación de hostname de `Settings`.
+- Un primer intento MCP fue rechazado por múltiples comandos en una entrada; tras
+  confirmar baseline intacto, se enviaron los comandos generados por separado en la
+  misma transacción. Una consulta de catálogo de solo lectura también requirió corregir
+  su ORDER BY; ambas incidencias y el detalle están en
+  `odd/tasks/neon-outbox-0004-validation.md`.
+- No se verificaron Alembic online, FastAPI contra la hija, concurrencia, Slack ni
+  seguridad clínica. La suite completa Python permanece sin verificar. Hija preservada;
+  commit documental pendiente, sin push, PR ni merge. Migrar development e iniciar
+  Slack requieren una decisión posterior; este resultado no los ejecuta ni autoriza.
