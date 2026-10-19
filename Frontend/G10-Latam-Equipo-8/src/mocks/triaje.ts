@@ -1,11 +1,17 @@
 import type {
   CorreccionesRevision,
   DestinoPrincipal,
+  DocumentoOriginal,
   HistoryResponse,
+  ReviewEventResponse,
   ReviewRequest,
   StatusTriaje,
   TriajeDocumento,
 } from "@/types/triaje";
+import {
+  frontendReviewDataset,
+  frontendReviewDocumentIds,
+} from "./frontendReview.ts";
 
 export const fabricarPromesaTardia = <T>(
   dato: T,
@@ -44,6 +50,7 @@ export async function mockHistorialConLatencia({
   const start = Math.max(0, Math.floor(offset));
   const filtrados = mockTriajes.filter(
     (documento) =>
+      frontendReviewDocumentIds.has(documento.documento_id) &&
       (status === undefined || documento.status === status) &&
       (destino === undefined ||
         documento.decision_enrutamiento.destino_principal === destino),
@@ -65,6 +72,32 @@ export async function mockColaAuditoriaConLatencia(
   limit = 20,
 ): Promise<HistoryResponse> {
   return mockHistorialConLatencia({ offset, limit, status: "NEEDS_AUDIT" });
+}
+
+export async function mockDetalleTriajeConLatencia(
+  documentId: string,
+): Promise<TriajeDocumento> {
+  if (!frontendReviewDocumentIds.has(documentId)) {
+    throw new Error("Documento no existe en el dataset demo");
+  }
+  const history = await mockHistorialConLatencia({ limit: 100 });
+  const detail = history.items.find((item) => item.documento_id === documentId);
+  if (!detail) throw new Error("Documento no existe en el dataset demo");
+  return detail;
+}
+
+export async function mockDocumentoOriginalConLatencia(
+  documentId: string,
+): Promise<DocumentoOriginal> {
+  await mockDetalleTriajeConLatencia(documentId);
+  throw new Error("El documento original no está disponible en modo demo");
+}
+
+export async function mockRevisionesConLatencia(
+  documentId: string,
+): Promise<ReviewEventResponse[]> {
+  await mockDetalleTriajeConLatencia(documentId);
+  return [];
 }
 
 const tiposDocumentales = new Set([
@@ -294,112 +327,14 @@ export const revisionDocumento = (
 };
 
 /**
- * Colección de triajes simulados — fixtures del contrato.
- * Fuente: docs/examples/frontend/ (commit b4180ec). El mock imita al API:
- * mismas formas, mismas reglas. Estado inicial del "mundo simulado".
+ * Mutable mock state seeded from the portable frontend-review sample.
+ * History endpoints expose that sample; a retained processed case preserves the
+ * existing direct mock-review behavior without adding it to the portable dataset.
  */
 export const mockTriajes: TriajeDocumento[] = [
-  // Caso 1: pendiente de auditoría (fixture triaje_revision_pendiente.json)
-  {
-    documento_id: "FRONTEND-REVISION-001",
-    status: "NEEDS_AUDIT",
-    canal_origen: "web",
-    created_at: "2026-10-08T12:00:00Z",
-    clasificacion: {
-      tipo_documento: "Informe de Laboratorio",
-      especialidad: null,
-      nivel_prioridad: "Rutina",
-      score_confianza_clasificacion: null,
-    },
-    datos_extraidos: {
-      paciente: { nombre: "Demo Sintético", edad: 30 },
-      medico_solicitante: null,
-      estudio_realizado: null,
-      indicacion: null,
-      diagnostico_principal: null,
-      cie10_sugerido: null,
-    },
-    decision_enrutamiento: {
-      destino_principal: "REVISION_HUMANA",
-      requiere_auditoria_humana: true,
-      justificacion_enrutamiento: "Requiere revision humana",
-      alerta_urgente: false,
-      notificacion_generada: null,
-    },
-    audit_reasons: [
-      "UNVERIFIED_BINARY_EVIDENCE",
-      "GEMINI_REQUIRES_HUMAN_REVIEW",
-    ],
-    almacenamiento: {
-      proveedor: "neon",
-      ruta_objeto: "recibidos/00000000000000000000000000000001",
-      status_backup: "exito",
-    },
-    almacenamiento_oci: null,
-    modo_ia: "gemini",
-    confianza_tipo: "autodeclarada_modelo",
-    processing_status: "SUCCEEDED",
-    processing_error: null,
-    extraction_schema_version: 2,
-    extraction_provenance: {
-      provider: "google-gemini",
-      model: "gemini-3.5-flash-lite",
-      prompt_version: "mediflow-extraction-v1",
-    },
-    extraction_evidence: [
-      { field: "patient_name", page: 1, quote: "Paciente Demo Sintético" },
-    ],
-  },
+  ...structuredClone(frontendReviewDataset.items),
 
-  // Caso 2: extracción fallida (fixture triaje_extraccion_fallida.json).
-  // NEEDS_AUDIT + processing FAILED: se audita igual, conservando el error técnico.
-  {
-    documento_id: "FRONTEND-FALLO-001",
-    status: "NEEDS_AUDIT",
-    canal_origen: "web",
-    created_at: "2026-10-08T12:00:00Z",
-    clasificacion: {
-      tipo_documento: null,
-      especialidad: null,
-      nivel_prioridad: null,
-      score_confianza_clasificacion: null,
-    },
-    datos_extraidos: {
-      paciente: { nombre: null, edad: null },
-      medico_solicitante: null,
-      estudio_realizado: null,
-      indicacion: null,
-      diagnostico_principal: null,
-      cie10_sugerido: null,
-    },
-    decision_enrutamiento: {
-      destino_principal: "REVISION_HUMANA",
-      requiere_auditoria_humana: true,
-      justificacion_enrutamiento: "Requiere revision humana",
-      alerta_urgente: false,
-      notificacion_generada: null,
-    },
-    audit_reasons: ["GEMINI_TIMEOUT"],
-    almacenamiento: {
-      proveedor: "neon",
-      ruta_objeto: "recibidos/00000000000000000000000000000002",
-      status_backup: "exito",
-    },
-    almacenamiento_oci: null,
-    modo_ia: "gemini",
-    confianza_tipo: "autodeclarada_modelo",
-    processing_status: "FAILED",
-    processing_error: "GEMINI_TIMEOUT",
-    extraction_schema_version: 2,
-    extraction_provenance: {
-      provider: "google-gemini",
-      model: "gemini-3.5-flash-lite",
-      prompt_version: "mediflow-extraction-v1",
-    },
-    extraction_evidence: [],
-  },
-
-  // Caso 3: variantes derivada — PROCESSED sin auditoría.
+  // Caso 3: variante de compatibilidad para conservar la revisión no auditable.
   // El contrato define PROCESSED como "resultado sin auditoría, no aprobación
   // clínica": ejemplo necesario para la vista "Todos los documentos" (flag false).
   {

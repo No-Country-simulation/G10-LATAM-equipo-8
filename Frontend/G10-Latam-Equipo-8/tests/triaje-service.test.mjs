@@ -127,7 +127,14 @@ test("HTTP validation errors expose backend detail instead of hiding it", async 
       comentario: "Revisión de prueba",
       destino: "HISTORIA_CLINICA",
     }),
-    /field required/i,
+    (error) => {
+      assert.match(error.message, /field required/i);
+      assert.equal(error.status, 422);
+      assert.deepEqual(error.body, {
+        detail: [{ loc: ["body", "revisor"], msg: "field required" }],
+      });
+      return true;
+    },
   );
 });
 

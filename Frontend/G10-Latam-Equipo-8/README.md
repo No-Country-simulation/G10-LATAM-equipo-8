@@ -97,7 +97,15 @@ src/
 
 ### UX/UI V2: especificación y límites
 
-La base confirmada evoluciona con cuatro destinos de menú, carga visible, filtros y revisión en modal alineada al JSON. La edición ampliada de datos extraídos es un objetivo pendiente de soporte backend: hoy solo pueden persistirse nombre, edad, tipo y prioridad. Se omiten borradores y reprocesamiento hasta tener soporte. La [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, conserva Canva, shadcn/ui y valores documentados de Tailwind; la migración completa a ReIcon sigue pendiente. El [mock de datos](../../docs/examples/frontend-review/README.md) copia el historial de ejemplo del backend sin conectarlo a la aplicación. No se implementaron estas pantallas ni se hizo una comprobación visual en navegador.
+La base confirmada evoluciona con cuatro destinos de menú, carga visible, filtros y revisión en modal alineada al JSON. La edición ampliada de datos extraídos es un objetivo pendiente de soporte backend: hoy solo pueden persistirse nombre, edad, tipo y prioridad. Se omiten borradores y reprocesamiento hasta tener soporte. La [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, conserva Canva, shadcn/ui y valores documentados de Tailwind; la migración completa a ReIcon sigue pendiente. El [mock de datos](../../docs/examples/frontend-review/README.md) usa la muestra portable existente en modo demo, sin crear una copia del JSON ni simular originales descargables. No se implementaron estas pantallas ni se hizo una comprobación visual en navegador.
+
+### Servicio de detalle, original y revisiones
+
+- `triajeService.provenance` informa `"api"` o `"demo"`; una URL base explícitamente vacía conserva el modo demo y los fallos HTTP no cambian silenciosamente a mocks.
+- `getDetalleTriaje(documentId: string): Promise<TriajeDocumento>` consulta el detalle disponible; en demo solo resuelve IDs de la muestra portable.
+- `getDocumentoOriginal(documentId: string): Promise<DocumentoOriginal>` devuelve `{ blob, contentType, filename? }` desde los bytes y headers HTTP. En demo rechaza porque la muestra no incluye PDF/imagen.
+- `getRevisiones(documentId: string): Promise<ReviewEventResponse[]>` devuelve el array del contrato; el modo demo no inventa eventos y expone una lista vacía para los fixtures conocidos.
+- `TriajeServiceError` conserva `status`, `statusText`, `body` y `detail` para que la UI gestione, entre otros, conflictos `409` sin perder el error del backend.
 
 ---
 

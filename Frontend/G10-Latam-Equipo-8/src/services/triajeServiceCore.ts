@@ -1,6 +1,8 @@
 import type {
   DestinoPrincipal,
+  DocumentoOriginal,
   HistoryResponse,
+  ReviewEventResponse,
   ReviewRequest,
   StatusTriaje,
   TriajeDocumento,
@@ -22,12 +24,37 @@ export interface MockTriajeAdapter {
   getHistory: (filters: FiltrosHistorial) => Promise<HistoryResponse>;
   getAuditQueue: (page: ParametrosPaginacion) => Promise<HistoryResponse>;
   review: (documentId: string, request: ReviewRequest) => Promise<TriajeDocumento>;
+  getDocument?: (documentId: string) => Promise<TriajeDocumento>;
+  getOriginal?: (documentId: string) => Promise<DocumentoOriginal>;
+  getReviewEvents?: (documentId: string) => Promise<ReviewEventResponse[]>;
 }
+
+export type TriajeServiceProvenance = "api" | "demo";
 
 export interface TriajeServiceOptions {
   apiBaseUrl?: string;
   fetchImpl?: typeof fetch;
   mock?: MockTriajeAdapter;
+}
+
+/** HTTP error with its status and parsed response body preserved for callers. */
+export class TriajeServiceError extends Error {
+  readonly status: number;
+  readonly statusText: string;
+  readonly body: unknown;
+  readonly detail: unknown;
+
+  constructor(status: number, statusText: string, body: unknown) {
+    super(mensajeError(body, status, statusText));
+    this.name = "TriajeServiceError";
+    this.status = status;
+    this.statusText = statusText;
+    this.body = body;
+    this.detail =
+      body && typeof body === "object" && "detail" in body
+        ? body.detail
+        : undefined;
+  }
 }
 
 function apiPrefix(apiBaseUrl: string): string {
@@ -45,28 +72,55 @@ function queryString(filters: FiltrosHistorial): string {
   return params.toString();
 }
 
-async function mensajeError(response: Response): Promise<string> {
+function mensajeError(body: unknown, status: number, statusText: string): string {
+  if (body && typeof body === "object" && "detail" in body) {
+    const detail = body.detail;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      const messages = detail
+        .map((item) =>
+          item && typeof item === "object" && "msg" in item &&
+          typeof item.msg === "string"
+            ? item.msg
+            : "",
+        )
+        .filter(Boolean);
+      if (messages.length > 0) return messages.join("; ");
+    }
+  }
+  return `Error HTTP ${status}${statusText ? `: ${statusText}` : ""}`;
+}
+
+async function errorDesdeRespuesta(response: Response): Promise<TriajeServiceError> {
+  let body: unknown;
   try {
-    const body: unknown = await response.json();
-    if (body && typeof body === "object" && "detail" in body) {
-      const detail = body.detail;
-      if (typeof detail === "string") return detail;
-      if (Array.isArray(detail)) {
-        const messages = detail
-          .map((item) =>
-            item && typeof item === "object" && "msg" in item &&
-            typeof item.msg === "string"
-              ? item.msg
-              : "",
-          )
-          .filter(Boolean);
-        if (messages.length > 0) return messages.join("; ");
+    body = await response.json();
+  } catch {
+    // A non-JSON error response still has a useful HTTP status fallback.
+  }
+  return new TriajeServiceError(response.status, response.statusText, body);
+}
+
+function nombreDesdeContentDisposition(value: string | null): string | undefined {
+  if (!value) return undefined;
+
+  const extended = /(?:^|;)\s*filename\*\s*=\s*(?:"([^"]*)"|([^;]*))/i.exec(value);
+  if (extended) {
+    const candidate = (extended[1] ?? extended[2] ?? "").trim();
+    const encoded = /^UTF-8''(.+)$/i.exec(candidate);
+    if (encoded) {
+      try {
+        return decodeURIComponent(encoded[1]);
+      } catch {
+        return undefined;
       }
     }
-  } catch {
-    // A non-JSON error response still has a useful HTTP status fallback below.
+    if (candidate) return candidate;
   }
-  return `Error HTTP ${response.status}${response.statusText ? `: ${response.statusText}` : ""}`;
+
+  const standard = /(?:^|;)\s*filename\s*=\s*(?:"([^"]*)"|([^;]*))/i.exec(value);
+  const filename = (standard?.[1] ?? standard?.[2] ?? "").trim();
+  return filename || undefined;
 }
 
 export function createTriajeService(options: TriajeServiceOptions = {}) {
@@ -79,11 +133,28 @@ export function createTriajeService(options: TriajeServiceOptions = {}) {
     init: RequestInit = { method: "GET" },
   ): Promise<T> {
     const response = await fetchImpl(`${prefix}${path}`, init);
-    if (!response.ok) throw new Error(await mensajeError(response));
+    if (!response.ok) throw await errorDesdeRespuesta(response);
     return (await response.json()) as T;
   }
 
+  async function requestOriginal(path: string): Promise<DocumentoOriginal> {
+    const response = await fetchImpl(`${prefix}${path}`, { method: "GET" });
+    if (!response.ok) throw await errorDesdeRespuesta(response);
+
+    const contentType = response.headers.get("Content-Type");
+    const filename = nombreDesdeContentDisposition(
+      response.headers.get("Content-Disposition"),
+    );
+    return {
+      blob: await response.blob(),
+      contentType,
+      ...(filename ? { filename } : {}),
+    };
+  }
+
   return {
+    provenance: (prefix ? "api" : "demo") as TriajeServiceProvenance,
+
     getTriajes(filters: FiltrosHistorial = {}): Promise<HistoryResponse> {
       if (!prefix) {
         if (!mock) throw new Error("El servicio mock de triajes no está configurado");
@@ -99,6 +170,42 @@ export function createTriajeService(options: TriajeServiceOptions = {}) {
       }
       const query = queryString(page);
       return requestJson<HistoryResponse>(`/audit/queue?${query}`);
+    },
+
+    getDetalleTriaje(documentId: string): Promise<TriajeDocumento> {
+      if (!prefix) {
+        if (!mock?.getDocument) {
+          throw new Error("El detalle de triajes demo no está configurado");
+        }
+        return mock.getDocument(documentId);
+      }
+      return requestJson<TriajeDocumento>(
+        `/triajes/${encodeURIComponent(documentId)}`,
+      );
+    },
+
+    getDocumentoOriginal(documentId: string): Promise<DocumentoOriginal> {
+      if (!prefix) {
+        if (!mock?.getOriginal) {
+          throw new Error("El original no está disponible en modo demo");
+        }
+        return mock.getOriginal(documentId);
+      }
+      return requestOriginal(
+        `/triajes/${encodeURIComponent(documentId)}/documento`,
+      );
+    },
+
+    getRevisiones(documentId: string): Promise<ReviewEventResponse[]> {
+      if (!prefix) {
+        if (!mock?.getReviewEvents) {
+          throw new Error("El historial de revisiones demo no está configurado");
+        }
+        return mock.getReviewEvents(documentId);
+      }
+      return requestJson<ReviewEventResponse[]>(
+        `/triajes/${encodeURIComponent(documentId)}/revisiones`,
+      );
     },
 
     subirArchivo(
