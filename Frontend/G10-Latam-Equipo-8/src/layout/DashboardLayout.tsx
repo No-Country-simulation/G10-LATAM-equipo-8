@@ -1,43 +1,48 @@
 import type { DashboardView } from "@/types/navigation";
+import type { TriajeServiceProvenance } from "@/services/triajeServiceCore";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
-type Props = {
+interface Props {
   children: React.ReactNode;
+  pageTitle: string;
   activeView: DashboardView;
   onViewChange: (view: DashboardView) => void;
-  criticalAlertsCount: number;
-};
+  auditPendingCount: number | null;
+  urgentAlertCount: number | null;
+  provenance: TriajeServiceProvenance;
+}
 
 export function DashboardLayout({
   children,
+  pageTitle,
   activeView,
   onViewChange,
-  criticalAlertsCount,
+  auditPendingCount,
+  urgentAlertCount,
+  provenance,
 }: Props) {
-  const title =
-    activeView === "history"
-      ? "Todos los documentos"
-      : "Mediflow - Administración de Documentación Médica";
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="hidden md:flex">
+    <div className="flex min-h-screen flex-col bg-slate-50 lg:h-screen lg:flex-row lg:overflow-hidden">
+      <div className="hidden shrink-0 lg:flex">
         <Sidebar
           activeView={activeView}
           onViewChange={onViewChange}
-          criticalAlertsCount={criticalAlertsCount}
+          auditPendingCount={auditPendingCount}
+          urgentAlertCount={urgentAlertCount}
         />
       </div>
-
-      <div className="flex-1 flex flex-col min-h-0 min-w-0">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Header
-          title={title}
+          pageTitle={pageTitle}
           activeView={activeView}
           onViewChange={onViewChange}
-          criticalAlertsCount={criticalAlertsCount}
+          auditPendingCount={auditPendingCount}
+          urgentAlertCount={urgentAlertCount}
+          provenance={provenance}
         />
-        <main className="flex-1 flex flex-col min-h-0 gap-4 p-2 bg-gray-100">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 bg-slate-50 p-4 sm:p-6 lg:overflow-y-auto">
+          <h1 className="sr-only">{pageTitle}</h1>
           {children}
         </main>
       </div>

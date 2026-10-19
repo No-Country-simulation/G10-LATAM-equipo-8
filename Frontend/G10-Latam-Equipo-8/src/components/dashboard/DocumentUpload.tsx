@@ -1,79 +1,53 @@
-import { useState } from "react";
-import { CloudUpload, Loader2 } from "lucide-react";
 import type { ChangeEvent } from "react";
-import type { TriajeDocumento } from "@/types/triaje";
-import { triajeService } from "@/services/triajeService";
+import type { DocumentUploadSnapshot } from "@/hooks/documentUploadController";
 
 interface Props {
-  onUpload: (documento: TriajeDocumento) => void;
+  uploadState: DocumentUploadSnapshot;
+  onFileSelected: (file: File) => void;
 }
 
-function mensajeDeError(error: unknown): string {
-  return error instanceof Error ? error.message : "No se pudo cargar el documento";
-}
+export function DocumentUpload({ uploadState, onFileSelected }: Props) {
+  const isUploading = uploadState.phase === "uploading";
 
-export function DocumentUpload({ onUpload }: Props) {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
-  const [uploadError, setUploadError] = useState("");
-
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
     const file = input.files?.[0];
-    if (!file) return;
-
-    setSelectedFileName(file.name);
-    setUploadError("");
-    setIsProcessing(true);
-
-    try {
-      const documento = await triajeService.subirArchivo(
-        `web-${crypto.randomUUID()}`,
-        "web",
-        file,
-      );
-      onUpload(documento);
-    } catch (error) {
-      setUploadError(mensajeDeError(error));
-    } finally {
-      setIsProcessing(false);
-      input.value = "";
-    }
+    if (file) onFileSelected(file);
+    input.value = "";
   };
 
   return (
-    <section className="my-2">
+    <section aria-labelledby="upload-title" className="flex flex-col gap-4">
+      <header>
+        <h2 id="upload-title" className="text-2xl font-semibold text-slate-900">
+          Cargar documentos
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Selecciona un archivo para enviarlo al servicio configurado.
+        </p>
+      </header>
       <label
-        htmlFor="file-upload"
-        className="cursor-pointer flex flex-col items-center justify-center gap-2 p-2 bg-gray-200 text-muted-foreground border-2 border-dashed border-gray-300 rounded-lg hover:bg-muted/50 hover:border-primary/60 active:scale-95 active:bg-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 transition-all duration-200"
+        htmlFor="document-upload"
+        className={`inline-flex min-h-11 w-fit items-center justify-center rounded-lg border px-4 text-sm font-medium focus-within:ring-2 focus-within:ring-teal-700 focus-within:ring-offset-2 ${
+          isUploading
+            ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
+            : "cursor-pointer border-teal-700 bg-teal-700 text-white hover:bg-teal-800"
+        }`}
       >
         <input
-          id="file-upload"
+          id="document-upload"
           type="file"
-          className="hidden"
-          accept=".pdf,.png,.jpg,.jpeg"
-          disabled={isProcessing}
-          onChange={(event) => void handleFileChange(event)}
+          className="sr-only"
+          accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+          aria-describedby="upload-formats"
+          disabled={isUploading}
+          onChange={handleFileChange}
         />
-        {isProcessing ? (
-          <>
-            <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
-            <h3 className="font-bold">Cargando documento…</h3>
-            <p className="font-extralight text-sm">{selectedFileName}</p>
-          </>
-        ) : (
-          <>
-            <CloudUpload aria-hidden="true" />
-            <h3 className="font-bold">Carga de nuevos documentos</h3>
-            <p className="font-extralight">Seleccioná un PDF o una imagen JPG/PNG.</p>
-          </>
-        )}
+        <span>{isUploading ? "Carga en curso" : "Seleccionar archivo"}</span>
       </label>
-      {uploadError && (
-        <p className="mt-2 text-sm text-destructive" role="alert">
-          {uploadError}
-        </p>
-      )}
+      <p id="upload-formats" className="text-sm text-slate-600">
+        Formatos admitidos: PDF, PNG, JPG y JPEG. El límite de tamaño lo valida el servicio.
+      </p>
     </section>
   );
 }

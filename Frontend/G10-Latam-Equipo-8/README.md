@@ -12,13 +12,12 @@
 
 ## 🚀 Características Principales
 
-* **Diseño 100% Responsivo y Adaptativo (Desktop & Mobile):**
-  * **Desktop:** Tabla tabular de alta densidad con desplazamiento vertical confinado para análisis rápido de casos clínicos.
-  * **Mobile:** Vista adaptativa de tarjetas independientes (*cards*) apiladas ergonómicamente con acciones inmediatas al alcance del pulgar.
-* **Navegación Móvil Integrada:** Encabezado con drawer lateral deslizante (*Sheet*) que contiene el menú completo de navegación sin ocupar espacio en pantalla.
-* **Ingesta de Documentos Clínicos:** Zona interactiva de arrastre y soltado (*dropzone*) preparada para recibir archivos clínicos en formatos PDF e imágenes.
-* **Cola de Revisión de Casos Críticos (HITL):** Módulo central de auditoría humana con acciones rápidas de **Aprobar** y **Rechazar**.
-* **Métricas Clave:** Indicadores superiores de volumen total de documentos procesados y alertas críticas pendientes de resolución.
+* **Shell responsive:** Sidebar desde `lg` y navegación móvil mediante Sheet; las bandejas completas y sus filtros siguen en etapas posteriores.
+* **Cuatro destinos en memoria:** Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas, sin rutas URL nuevas.
+* **Carga compartida:** Selector PDF/PNG/JPG/JPEG con estado, errores y resultado consultables al navegar; la API valida límites y confirma los registros.
+* **Colecciones provisionales:** Pendientes muestra la cola de auditoría; Alertas inmediatas se limita a `alerta_urgente === true` en el historial cargado, no a un total global.
+* **Revisión HITL existente:** La cola conserva sus acciones actuales mientras T5/T6 preparan la experiencia final de revisión.
+* La comprobación visual responsive en navegador está pendiente; este resumen no afirma validación en viewports reales.
 
 ---
 
@@ -95,9 +94,11 @@ src/
   - [ ] Conexión con endpoints de backend (FastAPI / n8n en OCI Compute).
   - [ ] Validación de persistencia de documentos en OCI Object Storage.
 
-### UX/UI V2: especificación y límites
+### UX/UI V2: shell T3 y límites
 
-La base confirmada evoluciona con cuatro destinos de menú, carga visible, filtros y revisión en modal alineada al JSON. La edición ampliada de datos extraídos es un objetivo pendiente de soporte backend: hoy solo pueden persistirse nombre, edad, tipo y prioridad. Se omiten borradores y reprocesamiento hasta tener soporte. La [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, conserva Canva, shadcn/ui y valores documentados de Tailwind; la migración completa a ReIcon sigue pendiente. El [mock de datos](../../docs/examples/frontend-review/README.md) usa la muestra portable existente en modo demo, sin crear una copia del JSON ni simular originales descargables. No se implementaron estas pantallas ni se hizo una comprobación visual en navegador.
+T3 implementa el shell responsive con cuatro destinos en memoria: Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas. Pendientes usa la cola de auditoría; su contador no representa urgencia clínica. Alertas inmediatas solo filtra `alerta_urgente === true` entre los registros cargados de la página de historial e informa ese alcance local. El estado de carga vive en App y permanece consultable al cambiar de destino; el resultado confirmado se separa de errores de actualización de colecciones. PDF, PNG, JPG y JPEG se validan localmente por extensión/MIME cuando está disponible; los límites y rechazos 413/415 siguen bajo autoridad de la API. Un 201 con `processing_status=FAILED` se muestra como fallo técnico registrado, no como extracción exitosa.
+
+La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia=simulado` no prueba que un archivo subido sea ficticio. T4 aún debe completar listas y filtros; T5/T6, el modal de revisión y sus acciones; T7, la migración completa a ReIcon. Se conserva la [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, y las referencias Canva aprobadas; no se simula un original descargable ni se declara comprobación visual en navegador. El [mock de datos](../../docs/examples/frontend-review/README.md) sigue siendo la muestra portable existente, sin copia adicional del JSON.
 
 ### Servicio de detalle, original y revisiones
 

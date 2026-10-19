@@ -1,73 +1,111 @@
-import { House, Files, TriangleAlert, type LucideIcon } from "lucide-react";
+import {
+  ClipboardList,
+  FilePlus2,
+  Files,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
 import logoMediflow from "@/assets/mediflow-logo.jpg";
-import type { DashboardView } from "@/types/navigation";
+import {
+  DASHBOARD_DESTINATIONS,
+  isActiveDashboardView,
+  type DashboardView,
+} from "@/types/navigation";
 
 type NavItem = {
   label: string;
   icon: LucideIcon;
   target: DashboardView;
-  activeWhen?: DashboardView;
-  badge?: number;
+  count: number | null;
+  countDescription: (count: number) => string;
 };
 
-type Props = {
+interface Props {
   activeView: DashboardView;
   onViewChange: (view: DashboardView) => void;
-  criticalAlertsCount: number;
+  auditPendingCount: number | null;
+  urgentAlertCount: number | null;
+}
+
+const destinationIcons: Record<DashboardView, LucideIcon> = {
+  upload: FilePlus2,
+  pending: ClipboardList,
+  all: Files,
+  alerts: TriangleAlert,
 };
 
-export const Sidebar = ({
+export function Sidebar({
   activeView,
   onViewChange,
-  criticalAlertsCount,
-}: Props) => {
-  const navItems: NavItem[] = [
-    {
-      label: "Inicio",
-      icon: House,
-      target: "dashboard",
-      activeWhen: "dashboard",
-    },
-    {
-      label: "Todos los documentos",
-      icon: Files,
-      target: "history",
-      activeWhen: "history",
-    },
-    { label: "Ingesta de Documentos", icon: Files, target: "dashboard" },
-    {
-      label: "Revision pendiente (HITL)",
-      icon: TriangleAlert,
-      target: "dashboard",
-      badge: criticalAlertsCount,
-    },
-  ];
+  auditPendingCount,
+  urgentAlertCount,
+}: Props) {
+  const navItems: NavItem[] = DASHBOARD_DESTINATIONS.map(({ view, label }) => {
+    if (view === "pending") {
+      return {
+        label,
+        icon: destinationIcons[view],
+        target: view,
+        count: auditPendingCount,
+        countDescription: (count) => `${count} pendientes de auditoría`,
+      };
+    }
+    if (view === "alerts") {
+      return {
+        label,
+        icon: destinationIcons[view],
+        target: view,
+        count: urgentAlertCount,
+        countDescription: (count) =>
+          `${count} alertas urgentes en la página de historial cargada`,
+      };
+    }
+    return {
+      label,
+      icon: destinationIcons[view],
+      target: view,
+      count: null,
+      countDescription: () => "",
+    };
+  });
 
   return (
-    <aside className="w-64 h-screen p-4 flex flex-col gap-2 border">
-      <header>
-        <img src={logoMediflow} alt="Logo MediFlow" />
+    <aside className="flex min-h-full w-54 shrink-0 flex-col gap-6 border-r border-slate-200 bg-white p-4">
+      <header className="flex min-h-11 items-center px-2">
+        <img
+          src={logoMediflow}
+          alt="MediFlow"
+          className="h-10 w-auto object-contain"
+        />
       </header>
       <nav aria-label="Navegación principal" className="flex flex-col gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = item.activeWhen === activeView;
+          const isActive = isActiveDashboardView(activeView, item.target);
           return (
             <button
-              key={item.label}
+              key={item.target}
               type="button"
               aria-current={isActive ? "page" : undefined}
               onClick={() => onViewChange(item.target)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-muted hover:text-foreground ${
-                isActive ? "bg-muted text-foreground" : ""
+              className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${
+                isActive
+                  ? "bg-teal-50 font-medium text-teal-800"
+                  : "text-slate-700 hover:bg-slate-100"
               }`}
             >
-              <Icon className="size-5 shrink-0" />
+              <Icon aria-hidden="true" className="size-5 shrink-0" />
               <span>{item.label}</span>
-              {item.badge !== undefined && (
-                <span className="ml-auto" aria-label={`${item.badge} alertas críticas`}>
-                  {item.badge}
-                </span>
+              {item.count !== null && (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700"
+                  >
+                    {item.count}
+                  </span>
+                  <span className="sr-only">{item.countDescription(item.count)}</span>
+                </>
               )}
             </button>
           );
@@ -75,4 +113,4 @@ export const Sidebar = ({
       </nav>
     </aside>
   );
-};
+}

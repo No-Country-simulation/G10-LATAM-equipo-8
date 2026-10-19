@@ -176,7 +176,7 @@ export function useTriajes() {
     handleHistoryPageChange,
     mensaje,
     status,
-    criticalAlertsCount: colaAuditoria.total,
+    auditPendingCount: colaAuditoria.total,
     triajes: historial.items,
     historial,
     casosRevision: colaAuditoria.items,
