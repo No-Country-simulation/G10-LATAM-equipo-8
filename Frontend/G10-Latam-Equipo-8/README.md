@@ -100,6 +100,16 @@ T3 implementa el shell responsive con cuatro destinos en memoria: Cargar documen
 
 La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia=simulado` no prueba que un archivo subido sea ficticio. T4 aún debe completar listas y filtros; T5/T6, el modal de revisión y sus acciones; T7, la migración completa a ReIcon. Se conserva la [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, y las referencias Canva aprobadas; no se simula un original descargable ni se declara comprobación visual en navegador. El [mock de datos](../../docs/examples/frontend-review/README.md) sigue siendo la muestra portable existente, sin copia adicional del JSON.
 
+### Modal de revisión documental (T5; todavía sin integración en App)
+
+`src/components/dashboard/DocumentReviewDialog.tsx` exporta `DocumentReviewDialog` con `document`, `onClose`, `onReturnFocus` opcional y `busy` opcional (por defecto `false`). Cuando T4 conecte las bandejas, debe montarlo con `key={document.documento_id}` y proporcionar `onReturnFocus` o un destino lógico marcado con `data-review-dialog-return-focus` y foco programático disponible.
+
+El modal carga detalle, bytes originales y eventos de revisión de forma independiente mediante el servicio compartido. Mantiene separados sus estados y errores; el JSON demo comunica que no contiene los bytes originales. Solo ofrece vista previa para `application/pdf`, `image/png` e `image/jpeg` recibidos; los demás MIME no se interpretan como HTML/SVG. Se revoca cada URL temporal al cambiar el original o desmontar el visor.
+
+Los valores originales permanecen visibles junto a propuestas distintas. Datos del médico y del estudio se identifican como solo locales; no se guardan ni envían. La propuesta futura de correcciones se limita a nombre, edad, tipo documental y prioridad; un campo vacío no implica borrar en servidor y la edad nula requiere una acción explícita. `FAILED` muestra **Revisar procesamiento**, prioridad nula como **Sin evaluar** y `processing_error` dentro de un diagnóstico desplegable, sin formulario de aprobación. Los casos no revisables se muestran en solo lectura. La pestaña móvil conserva el borrador local; Escape/clic exterior/cierre piden confirmar descarte si hay cambios y `busy` impide cerrar.
+
+T5 no añade aprobación, rechazo, envío, persistencia de borradores ni integración con `App`; esas acciones e integración corresponden a T6/T4. La verificación con interacciones reales de navegador sigue pendiente.
+
 ### Servicio de detalle, original y revisiones
 
 - `triajeService.provenance` informa `"api"` o `"demo"`; una URL base explícitamente vacía conserva el modo demo y los fallos HTTP no cambian silenciosamente a mocks.
