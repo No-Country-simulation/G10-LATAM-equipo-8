@@ -44,15 +44,18 @@ The five paths listed under Scope plus this task file only. No other existing fi
 ## Verification
 - Reopened all final PDFs with pypdf: each begins with `%PDF-`, has exactly one page, and has extractable text (869, 1038, and 1092 characters respectively). Confirmed the required disclaimer and each scenario's identifier/label; the ambiguous PDF contains both `RUTINA` and `PRIORIDAD ALTA`.
 - Rendered all three PDF pages with Poppler `pdftoppm` and visually inspected the PNGs. Headers, disclaimer, scenario labels, body text, note, and footer were visible; no clipping or overlap was observed. Poppler emitted `No display font for 'Symbol'` and `ArialUnicode` warnings, but all pages rendered and inspected legibly.
-- Root `.gitattributes` now marks only `backend/data/functional/*.pdf` as binary. Verify with `git check-attr text diff merge -- ...` and confirm it prevents line-ending normalization, then rerun staged `git diff --check`.
-- Final path/status inspection: PASS. Added exactly `backend/data/functional/README.md`, `backend/data/functional/rutina-001.pdf`, `backend/data/functional/urgente-001.pdf`, `backend/data/functional/ambiguo-001.pdf`, plus this task file. No other files were changed by this task. The unrelated `backend/.env.example` remains modified and `.codegraph/` remains untracked, matching their initial status.
+- Root `.gitattributes` marks only `backend/data/functional/*.pdf` as binary. `git check-attr` reported `text`, `diff`, and `merge` unset for all three PDFs; staged `git diff --cached --check` passed without treating PDF bytes as text.
+- Final path/status inspection: PASS. Added exactly `.gitattributes`, `backend/data/functional/README.md`, the three PDFs, and this task file. No other files were included. Unrelated `backend/.env.example` remains modified and `.codegraph/` remains untracked.
 - No API or provider integration was run; this was a passive-document artifact task. No credentials, secrets, or real personal/clinical data were added.
 
 ## Progress and evidence
 - The initial attempt stopped before artifact creation because the repository-assigned model `gpt-6.1-luna` was not available. The user clarified that `gpt-6-luna` is the requested available model; work proceeded using that authorized model. The required PDF marker ran successfully once before PDF generation.
 - `SYNTH-01`: complete. Created three searchable, one-page PDFs with the required notice, synthetic identifiers, and distinct routine, sender-labeled urgent, and contradictory cases.
 - `SYNTH-02`: complete. Added the Spanish quick path for Uvicorn on port 8002, health check, Swagger upload, expected 201, detail/original retrieval, extraction states, OCI verification, and repository-dependent restart persistence. Documented Gemini nondeterminism, manual review, unverified PDF binary evidence, and non-clinical meaning of `confidence=1`.
-- `SYNTH-03`: PDF signature, one-page text extraction, visual rendering/readback, and path/privacy review passed. A narrow binary attribute is now authorized to prevent Windows Git line-ending conversion; rerun staged checks before commit.
+- `SYNTH-03`: complete. PDF signature, one-page text extraction, visual rendering/readback, path/privacy review, Git binary attributes, and staged whitespace check passed.
+
+## Work-unit commit
+- `b74352d` — `test(documentos): agregar PDFs sintéticos para pruebas funcionales` (three PDFs, Spanish guide, narrow binary rule, and task evidence).
 
 ## Next step
-Rerun the staged checks, create the work-unit commit, record its identity in this plan, and push only to the explicitly authorized upstream branch.
+Push the authorized work-unit commit to `origin/feature/backend-oci-storage`, then report publication and hand off the guide for manual API/OCI tests.
