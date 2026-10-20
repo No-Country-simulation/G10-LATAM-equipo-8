@@ -7,7 +7,7 @@ from langgraph.graph import END, START, StateGraph
 from langsmith import tracing_context
 
 from app.application.ports import Extractor
-from app.domain.triaje import Extraction
+from app.domain.triaje import Extraction, Priority, Status, decide
 
 
 class PipelineState(TypedDict):
@@ -25,10 +25,24 @@ class TriagePipeline:
         graph.add_node("extract", self._extract)
         graph.add_node("validate", self._validate)
         graph.add_node("review_policy", self._policy)
+        graph.add_node("routine_proposal", self._routine_proposal)
+        graph.add_node("ambiguous_review", self._ambiguous_review)
+        graph.add_node("urgent_review", self._urgent_review)
         graph.add_edge(START, "extract")
         graph.add_edge("extract", "validate")
         graph.add_edge("validate", "review_policy")
-        graph.add_edge("review_policy", END)
+        graph.add_conditional_edges(
+            "review_policy",
+            self._route,
+            {
+                "routine": "routine_proposal",
+                "ambiguous": "ambiguous_review",
+                "urgent": "urgent_review",
+            },
+        )
+        graph.add_edge("routine_proposal", END)
+        graph.add_edge("ambiguous_review", END)
+        graph.add_edge("urgent_review", END)
         self.graph = graph.compile(checkpointer=None)
 
     def _extract(self, state):
@@ -52,6 +66,23 @@ class TriagePipeline:
                 ),
             )
         return {"extraction": extraction, "trace": state["trace"] + ["review_policy"]}
+
+    def _route(self, state):
+        extraction = state["extraction"]
+        if extraction.priority == Priority.URGENT:
+            return "urgent"
+        if decide(extraction).status == Status.NEEDS_AUDIT:
+            return "ambiguous"
+        return "routine"
+
+    def _routine_proposal(self, state):
+        return {"trace": state["trace"] + ["routine_proposal"]}
+
+    def _ambiguous_review(self, state):
+        return {"trace": state["trace"] + ["ambiguous_review"]}
+
+    def _urgent_review(self, state):
+        return {"trace": state["trace"] + ["urgent_review"]}
 
     def run(self, content: bytes, media_type: str):
         # Prevent ambient LangSmith tracing from exporting document content.

@@ -12,6 +12,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -97,3 +98,28 @@ class ReviewRow(Base):
     before: Mapped[dict] = mapped_column(JSON_VALUE)
     after: Mapped[dict] = mapped_column(JSON_VALUE)
     corrections: Mapped[list] = mapped_column(JSON_VALUE)
+
+
+class NotificationOutboxRow(Base):
+    __tablename__ = "notification_outbox"
+    __table_args__ = (
+        CheckConstraint("event_type = 'REVIEW_REQUIRED'", name="ck_notification_outbox_event"),
+        CheckConstraint("channel = 'SLACK'", name="ck_notification_outbox_channel"),
+        CheckConstraint("attempt_count >= 0", name="ck_notification_outbox_attempt_count"),
+        UniqueConstraint("idempotency_key", name="uq_notification_outbox_idempotency"),
+        UniqueConstraint("triage_id", "event_type", name="uq_notification_outbox_triage_event"),
+    )
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    triage_id: Mapped[str] = mapped_column(ForeignKey("triages.id"), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    channel: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempt_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_code: Mapped[str | None] = mapped_column(String(60))

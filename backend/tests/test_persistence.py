@@ -6,9 +6,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.adapters.outbound.persistence_models import Base, DocumentRow
+from app.adapters.outbound.persistence_models import Base, DocumentRow, NotificationOutboxRow
 from app.adapters.outbound.postgres import PostgresTriageRepository
 from app.application.review_document import ReviewDocument
+from app.domain.extraction import ProcessingStatus
 from app.domain.review import ReviewAction, ReviewConflict
 from app.domain.triaje import (
     Destination,
@@ -144,6 +145,243 @@ def synthetic_triage():
         storage_provider="neon",
         storage_bucket="mediflow-pruebas",
     )
+
+
+def complete_pending(repository, extraction, error_code=None):
+    pending = replace(make_triage(), processing_status=ProcessingStatus.PENDING)
+    repository.create(pending, lambda: None)
+    token = repository.begin_processing(pending.document_id)
+    return repository.finish_processing(pending.document_id, token, extraction, error_code)
+
+
+@pytest.mark.parametrize(
+    ("extraction", "error_code", "expected_error_code"),
+    [
+        (
+            Extraction("Receta Medica", Priority.URGENT, 0.99, "Demo"),
+            None,
+            None,
+        ),
+        (
+            Extraction(
+                "Receta Medica",
+                Priority.ROUTINE,
+                0.9,
+                "Demo",
+                audit_reasons=("AMBIGUOUS",),
+            ),
+            None,
+            None,
+        ),
+        (Extraction(None, None, None), None, None),
+        (
+            Extraction(None, None, None, audit_reasons=("EXTRACTION_FAILED",)),
+            "EXTRACTION_FAILED",
+            "EXTRACTION_FAILED",
+        ),
+    ],
+    ids=["urgent", "ambiguous", "incomplete", "technical-error"],
+)
+def test_needs_audit_persists_one_review_required_outbox_intent(
+    repository, extraction, error_code, expected_error_code
+):
+    from hashlib import sha256
+
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    result = complete_pending(repository, extraction, error_code)
+
+    assert result.decision.status == Status.NEEDS_AUDIT
+    assert result.decision.destination == Destination.REVIEW
+    with Session(repository.engine) as session:
+        rows = session.scalars(select(NotificationOutboxRow)).all()
+        assert len(rows) == 1
+        row = rows[0]
+        assert row.event_type == "REVIEW_REQUIRED"
+        assert row.channel == "SLACK"
+        assert row.status == "PENDING"
+        assert row.idempotency_key == sha256(b"TEST\x00REVIEW_REQUIRED").hexdigest()
+        assert row.idempotency_key != "TEST"
+        assert row.triage_id != "TEST"
+        assert row.error_code == expected_error_code
+        assert row.attempt_count == 0
+        assert row.created_at is not None
+        assert row.last_attempt_at is None
+        assert row.delivered_at is None
+        assert row.next_attempt_at is None
+        assert not {
+            "document_id",
+            "payload",
+            "patient_name",
+            "diagnosis",
+            "extraction",
+        } & set(NotificationOutboxRow.__table__.columns.keys())
+
+
+def test_routine_result_does_not_create_notification_outbox_intent(repository):
+    from sqlalchemy import func, select
+    from sqlalchemy.orm import Session
+
+    result = complete_pending(
+        repository,
+        Extraction("Receta Medica", Priority.ROUTINE, 0.9, "Demo"),
+    )
+
+    assert result.decision.status == Status.PROCESSED
+    with Session(repository.engine) as session:
+        assert session.scalar(select(func.count()).select_from(NotificationOutboxRow)) == 0
+
+
+def test_outbox_attempt_count_defaults_to_zero_without_client_default(repository):
+    from sqlalchemy import select, text
+    from sqlalchemy.orm import Session
+
+    from app.adapters.outbound.persistence_models import TriageRow
+
+    repository.create(make_triage(), lambda: None)
+    with Session(repository.engine) as session:
+        triage_id = session.scalar(select(TriageRow.id))
+
+    with repository.engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO notification_outbox "
+                "(id, triage_id, event_type, channel, status, idempotency_key, created_at) "
+                "VALUES (:id, :triage_id, :event_type, :channel, :status, "
+                ":idempotency_key, :created_at)"
+            ),
+            {
+                "id": "database-default-intent",
+                "triage_id": triage_id,
+                "event_type": "REVIEW_REQUIRED",
+                "channel": "SLACK",
+                "status": "PENDING",
+                "idempotency_key": "database-default-key",
+                "created_at": datetime.now(UTC).isoformat(),
+            },
+        )
+        assert connection.scalar(select(NotificationOutboxRow.attempt_count)) == 0
+
+
+def test_outbox_triage_event_constraint_rejects_duplicate_with_different_key(repository):
+    from sqlalchemy import select
+    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.orm import Session
+
+    complete_pending(
+        repository,
+        Extraction("Receta Medica", Priority.ROUTINE, 0.9, "Demo", audit_reasons=("AMBIGUOUS",)),
+    )
+    with Session(repository.engine) as session:
+        original = session.scalar(select(NotificationOutboxRow))
+
+    duplicate = NotificationOutboxRow(
+        id="duplicate-intent",
+        triage_id=original.triage_id,
+        event_type=original.event_type,
+        channel=original.channel,
+        status=original.status,
+        idempotency_key="different-idempotency-key",
+        attempt_count=0,
+        created_at=original.created_at,
+    )
+    with (
+        Session(repository.engine) as session,
+        pytest.raises(
+            IntegrityError,
+            match=r"notification_outbox.triage_id, notification_outbox.event_type",
+        ),
+    ):
+        session.add(duplicate)
+        session.commit()
+
+
+def test_outbox_idempotency_constraint_rejects_duplicate_key_for_different_triage(repository):
+    from sqlalchemy import select
+    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.orm import Session
+
+    from app.adapters.outbound.persistence_models import TriageRow
+
+    complete_pending(
+        repository,
+        Extraction("Receta Medica", Priority.ROUTINE, 0.9, "Demo", audit_reasons=("AMBIGUOUS",)),
+    )
+    repository.create(
+        replace(make_triage(), document_id="OTHER", object_key="recibidos/other"),
+        lambda: None,
+    )
+    with Session(repository.engine) as session:
+        original = session.scalar(select(NotificationOutboxRow))
+        other_triage_id = session.scalar(
+            select(TriageRow.id).where(TriageRow.id != original.triage_id)
+        )
+        assert other_triage_id is not None
+
+    duplicate = NotificationOutboxRow(
+        id="duplicate-key-intent",
+        triage_id=other_triage_id,
+        event_type=original.event_type,
+        channel=original.channel,
+        status=original.status,
+        idempotency_key=original.idempotency_key,
+        attempt_count=0,
+        created_at=original.created_at,
+    )
+    with (
+        Session(repository.engine) as session,
+        pytest.raises(IntegrityError, match=r"notification_outbox.idempotency_key"),
+    ):
+        session.add(duplicate)
+        session.commit()
+
+
+def test_review_required_intent_replaces_unrecognized_error_text_with_safe_code():
+    from app.domain.notification import review_required_intent
+
+    intent = review_required_intent(
+        "SYNTHETIC-DOC-SECRET",
+        "triage-reference",
+        datetime.now(UTC),
+        "synthetic private exception detail",
+    )
+
+    assert intent.error_code == "EXTRACTION_FAILED"
+    assert intent.idempotency_key != "SYNTHETIC-DOC-SECRET"
+    assert "synthetic private exception detail" not in repr(intent)
+    assert not hasattr(intent, "document_id")
+
+
+def test_outbox_insert_failure_rolls_back_triage_finalization(repository):
+    from sqlalchemy import event, select
+    from sqlalchemy.orm import Session
+
+    from app.adapters.outbound.persistence_models import TriageRow
+
+    pending = replace(make_triage(), processing_status=ProcessingStatus.PENDING)
+    repository.create(pending, lambda: None)
+    token = repository.begin_processing(pending.document_id)
+
+    def fail(*args):
+        raise RuntimeError("synthetic outbox insert failure")
+
+    event.listen(NotificationOutboxRow, "before_insert", fail)
+    try:
+        with pytest.raises(RuntimeError, match="synthetic outbox insert failure"):
+            repository.finish_processing(
+                pending.document_id,
+                token,
+                Extraction("Receta Medica", Priority.URGENT, 0.99, "Demo"),
+            )
+    finally:
+        event.remove(NotificationOutboxRow, "before_insert", fail)
+
+    with Session(repository.engine) as session:
+        triage = session.scalar(select(TriageRow))
+        assert triage.processing_status == ProcessingStatus.PROCESSING
+        assert triage.processing_token == token
+        assert session.scalars(select(NotificationOutboxRow)).all() == []
 
 
 @pytest.mark.parametrize(

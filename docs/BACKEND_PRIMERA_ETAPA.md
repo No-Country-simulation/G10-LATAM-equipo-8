@@ -298,6 +298,10 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
 
 ## Almacenamiento OCI Object Storage — 2026-10-13
 
+Registro de la rama OCI antes de integrar los avances posteriores de foundation.
+La evidencia histórica de esta sección no acredita la validación de la combinación
+actual ni una nueva prueba contra OCI durante la resolución del merge.
+
 - Rama `feature/backend-oci-storage` (Silvio), creada desde `feature/backend-foundation`.
   Nuevo `STORAGE_MODE=oci`: `OciDocumentStorage` hereda save/read y errores del adaptador
   S3 de Neon; solo cambia endpoint `https://<namespace>.compat.objectstorage.<region>.
@@ -317,8 +321,144 @@ no una fórmula aprobada ni mediciones clínicas. Los fixtures tienen solo entra
   `almacenamiento_oci` sigue en null. Pendiente acordar con frontend si se completa.
 - Fuera de alcance: prefijos por decisión (`procesados/<destino>/`, `auditoria_humana/`);
   los originales siguen en `recibidos/<id>`.
-- Verificación: 12 pruebas nuevas con cliente simulado (endpoint, checksums, errores sin
-  secretos, variables obligatorias, hostname, API con proveedor oci y 503 sin registro);
+- Verificación reportada en la rama OCI: 12 pruebas nuevas con cliente simulado
+  (endpoint, checksums, errores sin secretos, variables obligatorias, hostname, API
+  con proveedor oci y 503 sin registro);
   185 pruebas aprobadas; ruff lint y formato aprobados. Prueba real con IA simulada y
   memoria: POST 201 con `proveedor=oci`, `GET /documento` leyó el original desde OCI y
   `head_object` confirmó el objeto en el bucket.
+
+## Verificaciones pendientes para la demo — 2026-10-13
+
+- En foundation, por decisión del usuario en esa fecha, se pospuso volver a ejecutar
+  la suite de regresión. La última ejecución allí registrada fue de 173 pruebas
+  aprobadas en Windows; no equivale a una ejecución reciente, a la validación de esta
+  integración ni a validación clínica.
+- Antes de cerrar la integración web, queda pendiente ejecutar las pruebas de navegador:
+  preflight CORS desde el origen acordado, llamada permitida y rechazo de un origen no
+  autorizado. Primero se debe confirmar el origen local exacto del frontend.
+
+## Fase 1: rutas condicionales con revisión humana — 2026-10-16
+
+- El grafo distingue propuesta rutinaria, revisión por ambigüedad/incompletitud y
+  revisión urgente mediante ramas que solo agregan trazas efímeras; no persisten estado
+  ni realizan revisión. El resultado actual lo determina `decide`; la confianza reportada
+  no tiene corte.
+- `decide` mantiene toda señal urgente en `NEEDS_AUDIT`/`REVISION_HUMANA` con alerta
+  activa. Solo la revisión explícita puede aprobar `EMERGENCIA_MEDICA`; rutina produce
+  `PROCESSED`/`HISTORIA_CLINICA`, no una aprobación ni despacho. El fallback de
+  `ProcessDocument` no se cambió.
+- Verificación focalizada: 23 pruebas aprobadas; Ruff check aprobado; Ruff format check
+  aprobado (advertencia de caché, código de salida 0); `git diff --check` aprobado con
+  advertencias de normalización LF/CRLF. Se usaron los ejecutables existentes de
+  `backend/.venv` porque `uv` no está disponible. El coordinador repitió la suite
+  focalizada con 23 aprobadas. La suite completa no se ejecutó.
+- `gentle-ai review assess` clasificó el riesgo como alto/no evaluable porque los
+  archivos sin seguimiento no estaban declarados. La revisión estática independiente
+  no encontró bloqueos.
+- Estas pruebas no acreditan seguridad clínica. No se afirma persistencia durable de
+  las trazas del grafo ni despacho real. En foundation, OCI Object Storage seguía
+  pendiente de integración como requisito obligatorio de Alura; el adaptador de la
+  rama OCI se documenta en su sección anterior.
+- El commit sigue pendiente; no se hizo push, PR ni merge.
+
+## Handoff: plan de alertas externas — 2026-10-16
+
+- Se documentó una propuesta por fases para alertas operativas sintéticas, con Slack
+  como primer canal y Resend como ampliación opcional: [Plan MVP de alertas y fases](PLAN_MVP_ALERTAS_Y_FASES.md).
+- No se implementó envío externo. La revisión humana y el enrutamiento permanecen
+  independientes; en foundation, OCI Object Storage seguía pendiente de integración
+  como requisito obligatorio de Alura, no sustituible por Slack.
+
+## Fase 2: outbox persistente de revisión — 2026-10-17
+
+- El adaptador SQLAlchemy añade una intención `REVIEW_REQUIRED`/`SLACK`/`PENDING` al
+  finalizar en `NEEDS_AUDIT`, dentro de la misma transacción del cambio de triaje.
+  La unicidad por triaje/tipo y por hash idempotente evita duplicados. El outbox guarda
+  una referencia interna al triaje y el SHA-256 de documento/tipo, no el ID público,
+  extracción, texto clínico ni contenido de excepción. Solo códigos de error permitidos
+  quedan como metadato.
+- Verificación local con los ejecutables existentes de `backend/.venv` (porque `uv` no
+  está disponible): RED de pruebas al faltar el modelo; GREEN focalizado: 35 aprobadas.
+  Ruff check y Ruff format check pasaron; `git diff --check` pasó con advertencias
+  LF/CRLF.
+- El intento de suite completa quedó interrumpido sin salida ni resumen; no se afirma
+  que haya pasado. La migración aditiva `0004` está escrita, pero no se ejecutó ni en
+  PostgreSQL local ni en Neon. No hubo llamadas externas.
+- `MemoryTriageRepository` no persiste outbox; no se afirma durabilidad en memoria ni
+  tras reinicios. No hay worker, reintentos efectivos, envío Slack, endpoint, validación
+  clínica ni despacho real.
+- Commit de esta unidad: `3925d17`; registro de cierre: `3d0161b`. Sin push, PR ni merge.
+
+### Hardening de Fase 2
+
+- Commit: `cf7c8b0` — `fix(outbox): alinear default y aislar pruebas de unicidad`.
+- Se alineó `attempt_count` del ORM con el default de servidor de la migración `0004`,
+  conservando el default del cliente. Una inserción SQL sin contador prueba el default
+  real de la tabla SQLite. Las dos restricciones únicas se verifican por separado.
+- RED: 1 fallo y 36 aprobadas; GREEN: 37 aprobadas. Ruff check/format y diff check
+  pasaron. Revisión independiente sin bloqueos; el coordinador reprodujo 37 aprobadas.
+- La suite completa y la migración PostgreSQL/Neon siguen sin verificar. No se hicieron
+  llamadas externas ni se implementó Slack. Evidencia: `odd/tasks/phase2-outbox-hardening.md`.
+
+## Validación aislada de outbox 0004 en Neon — 2026-10-16 (America/Lima)
+
+- Migración verificada únicamente en `test/outbox-0004`, ID `br-noisy-tooth-b4y7bq5u`,
+  hija de development `br-broad-bread-b4sii0lv`, proyecto `wandering-voice-40276879`,
+  base `mediflow-bd`. Baseline observado: `0003_processing_state`, sin outbox.
+- Se generó el SQL versionado con Alembic offline y se aplicaron su CREATE y UPDATE
+  exactos mediante MCP transaccional, con guardas antes y después. SHA-256 del stdout
+  completo: `49e76f6125c56158f8eb51d4fe8da4401089d3ce9963e57eebf90add09d12782`.
+  La hija quedó en `0004_notification_outbox`.
+- Catálogo real: 12 columnas con tipos/longitudes/nulabilidad/default esperados, PK,
+  FK a `triages(id)`, dos claves únicas y tres checks. Siete aserciones sintéticas
+  probaron default 0 omitido, contador negativo, evento/canal inválidos, FK inexistente
+  y ambas colisiones únicas de forma independiente, verificando cada nombre de constraint.
+- Fixtures revertidos mediante subtransacción después de todas las aserciones;
+  conteo posterior 0. No se leyeron filas clínicas ni se borraron datos existentes.
+  Development se releyó: sigue en `0003`, sin outbox. Producción no se consultó.
+- `.neon` y tres archivos de entorno conservaron sus bytes. El modo simulado/local
+  se pasó únicamente al subproceso de generación offline, sin abrir conexión ni
+  debilitar la validación de hostname de `Settings`.
+- Un primer intento MCP fue rechazado por múltiples comandos en una entrada; tras
+  confirmar baseline intacto, se enviaron los comandos generados por separado en la
+  misma transacción. Una consulta de catálogo de solo lectura también requirió corregir
+  su ORDER BY; ambas incidencias y el detalle están en
+  `odd/tasks/neon-outbox-0004-validation.md`.
+- No se verificaron Alembic online, FastAPI contra la hija, concurrencia, Slack ni
+  seguridad clínica. La suite completa Python permanece sin verificar. Hija preservada;
+  commit documental `5803641`, sin push, PR ni merge. Revisión independiente confirmó
+  catálogo, revisiones y cero fixtures; el coordinador comprobó ambas revisiones.
+  Migrar development e iniciar
+  Slack requieren una decisión posterior; este resultado no los ejecuta ni autoriza.
+
+## Outbox 0004 aplicado online en development — 2026-10-17 (America/Lima)
+
+- Tras autorización explícita, se aplicó la migración existente a development
+  `br-broad-bread-b4sii0lv`, proyecto `wandering-voice-40276879`, base `mediflow-bd`.
+  Desde `backend/`: `.venv/Scripts/python.exe -m alembic upgrade 0004_notification_outbox`,
+  salida 0. Antes de lanzarlo se verificaron endpoint directo sin pooler, base,
+  revisión `0003_processing_state` y tabla ausente. El render offline previo conservó
+  el SHA-256 `49e76f6125c56158f8eb51d4fe8da4401089d3ce9963e57eebf90add09d12782`.
+- MCP confirmó revisión `0004_notification_outbox`, las 12 columnas con tipos,
+  longitudes, nulabilidad/default exactos y siete restricciones: PK, FK a `triages(id)`,
+  dos únicas y tres checks. Este resultado sí prueba Alembic ONLINE en development;
+  no debe confundirse con la ejecución de SQL offline de la hija anterior.
+- Siete aserciones SQL sintéticas verificaron default 0 omitido y rechazos por contador
+  negativo, evento/canal inválidos, FK inexistente y las dos colisiones únicas por
+  separado, comprobando SQLSTATE y nombre de constraint. Excepción controlada `P4004`
+  tras las aserciones revirtió todos los fixtures; errores inesperados se propagan.
+  Consulta posterior confirmó cero fixtures y outbox vacío. Conteos antes/después:
+  documentos 20/20, triajes 20/20 y revisiones 6/6; sin deriva observada, no una prueba
+  de ausencia de modificaciones concurrentes. No se borraron datos existentes.
+- El primer preflight sandbox falló con `OperationalError` antes de lanzar Alembic;
+  bajo elevación autorizada se revalidó el baseline y se ejecutó una sola migración.
+  Los cuatro archivos de configuración conservaron sus hashes. El modo simulated/local
+  se limitó al entorno del subproceso y no debilitó las guardas de `Settings`.
+- Producción no se consultó y la hija no se modificó. No se verificaron ingesta HTTP
+  completa, concurrencia, Slack, despacho ni seguridad clínica; la suite Python completa
+  sigue pendiente. No hubo nuevas credenciales, cambios funcionales, instalaciones,
+  llamadas a IA/storage/Slack, push, PR ni merge. Revisión independiente sin bloqueos:
+  confirmó catálogo, conteos y cero fixtures; el coordinador confirmó revisión y outbox
+  vacío. Commit local `fa188ed`; evidencia en
+  `odd/tasks/neon-development-outbox-0004.md`.

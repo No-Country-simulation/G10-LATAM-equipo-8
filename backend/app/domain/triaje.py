@@ -108,14 +108,17 @@ class Decision:
 
 def decide(extraction: Extraction) -> Decision:
     urgent = extraction.priority == Priority.URGENT
-    # Alerting is independent of authorization to route the document.
-    if extraction.audit_reasons or any(
-        value is None
-        for value in (extraction.document_type, extraction.priority, extraction.confidence)
+    # A clinical urgency signal raises an alert but never authorizes routing.
+    if (
+        urgent
+        or extraction.audit_reasons
+        or any(
+            value is None
+            for value in (extraction.document_type, extraction.priority, extraction.confidence)
+        )
     ):
         return Decision(Status.NEEDS_AUDIT, Destination.REVIEW, urgent)
-    destination = Destination.EMERGENCY if urgent else Destination.HISTORY
-    return Decision(Status.PROCESSED, destination, urgent)
+    return Decision(Status.PROCESSED, Destination.HISTORY, urgent)
 
 
 @dataclass(frozen=True)
