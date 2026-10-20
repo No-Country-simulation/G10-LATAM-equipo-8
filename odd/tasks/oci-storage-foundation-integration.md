@@ -50,14 +50,18 @@ se corrigieron en OCI-T0 y la suite completa quedó verde.
 - [x] OCI-T1: Integrar `feature/backend-foundation` en la rama de trabajo existente
   `feature/backend-oci-storage`; se preservaron ambas historias y la migración 0004.
   Conflicto documental resuelto por significado. Merge local `eb3da6d`, sin push.
-- [ ] OCI-T2: Integrar adaptador OCI compatible con S3, validar configuración explícita,
-  inyectarlo detrás del puerto existente y exponer `oci` en el contrato HTTP.
-- [ ] OCI-T3: Impedir lecturas cruzadas entre proveedores/buckets y cubrir la descarga
-  correcta y el rechazo seguro cuando el proveedor registrado no está disponible.
-- [ ] OCI-T4: Documentar variables y procedimiento con credenciales fuera del repositorio,
-  límites del modo memoria y estado real de verificación OCI.
-- [ ] OCI-T5: Ejecutar suite completa, Ruff check/format y revisión de estado/diff; registrar
-  resultados y los commits de cada unidad. Push continúa pendiente de permiso expreso.
+- [x] OCI-T2: Integrar adaptador OCI compatible con S3, validar configuración explícita,
+  inyectarlo detrás del puerto existente y exponer `oci` en el contrato HTTP. Evidencia:
+  merge `eb3da6d` y commit de endurecimiento `6919a09`.
+- [x] OCI-T3: Impedir lecturas cruzadas entre proveedores/buckets y cubrir la descarga
+  correcta y el rechazo seguro cuando el proveedor registrado no está disponible. Las
+  diferencias se rechazan antes de llamar `read`; no hay fallback silencioso.
+- [x] OCI-T4: Documentar variables y procedimiento con credenciales fuera del repositorio,
+  límites del modo memoria y estado real de verificación OCI. `.env.example` contiene
+  solo placeholders; no se consultó ni probó bucket real.
+- [x] OCI-T5: Suite completa 234 passed; Ruff check aprobado y format check con 45 archivos
+  ya formateados. `git diff --check` aprobado; revisión independiente estática sin
+  hallazgos accionables. Push continúa pendiente de permiso expreso.
 
 ## Criterios generales de aceptación
 
@@ -96,5 +100,10 @@ se corrigieron en OCI-T0 y la suite completa quedó verde.
 - Verificación de la rama combinada: suite completa 205 passed; Ruff check aprobado;
   Ruff format check: 45 archivos ya formateados. Se usó el entorno virtual existente
   porque `uv` no está disponible; pytest requirió permiso local para sockets de Windows.
-- Próximo paso: integrar el adaptador/configuración OCI y agregar pruebas de selección
-  segura de proveedor y bucket. La rama remota sigue intacta y no hubo push.
+- OCI-T2–T5 completados en `6919a09`: guardas de proveedor/bucket previas a lecturas,
+  pruebas mock/sintéticas y documentación de configuración y límites.
+- No se validó conectividad real, credenciales, permisos, persistencia tras reinicio ni
+  configuración de bucket en OCI; eso requiere un entorno aislado y autorización separada.
+- Próximo paso: revisión funcional en entorno aislado cuando se autorice configurar OCI;
+  publicar esta rama requiere permiso expreso. No se hizo push, PR, merge a `develop`/
+  `main` ni se eliminó ninguna rama.
