@@ -30,7 +30,7 @@ def payload(text=ROUTINE, document_id="DOC-1"):
     "text,status,destination,alert",
     [
         (ROUTINE, "PROCESSED", "HISTORIA_CLINICA", False),
-        (URGENT, "PROCESSED", "EMERGENCIA_MEDICA", True),
+        (URGENT, "NEEDS_AUDIT", "REVISION_HUMANA", True),
         (AMBIGUOUS, "NEEDS_AUDIT", "REVISION_HUMANA", False),
     ],
 )
@@ -61,10 +61,10 @@ def test_queue_filters_and_pagination(client):
     assert result["total"] == 3
     assert len(result["items"]) == 1
     queue = client.get("/api/v1/audit/queue").json()
-    assert queue["total"] == 1
-    assert queue["items"][0]["documento_id"] == "DOC-2"
-    assert client.get("/api/v1/triajes?destino=EMERGENCIA_MEDICA").json()["total"] == 1
-    assert client.get("/api/v1/triajes?status=PROCESSED").json()["total"] == 2
+    assert queue["total"] == 2
+    assert {item["documento_id"] for item in queue["items"]} == {"DOC-1", "DOC-2"}
+    assert client.get("/api/v1/triajes?destino=EMERGENCIA_MEDICA").json()["total"] == 0
+    assert client.get("/api/v1/triajes?status=PROCESSED").json()["total"] == 1
 
 
 @pytest.mark.parametrize(
@@ -173,18 +173,21 @@ def test_new_application_has_empty_history(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "name,status",
+    "name,status,destination,urgent_alert",
     [
-        ("rutina", "PROCESSED"),
-        ("urgencia", "PROCESSED"),
-        ("ambiguo", "NEEDS_AUDIT"),
+        ("rutina", "PROCESSED", "HISTORIA_CLINICA", False),
+        ("urgencia", "NEEDS_AUDIT", "REVISION_HUMANA", True),
+        ("ambiguo", "NEEDS_AUDIT", "REVISION_HUMANA", False),
     ],
 )
-def test_documented_json_fixtures(client, name, status):
+def test_documented_json_fixtures(client, name, status, destination, urgent_alert):
     path = Path(__file__).resolve().parents[2] / "data" / "functional" / f"{name}.json"
     response = client.post("/api/v1/triajes/process-text", json=json.loads(path.read_text()))
     assert response.status_code == 201
-    assert response.json()["status"] == status
+    result = response.json()
+    assert result["status"] == status
+    assert result["decision_enrutamiento"]["destino_principal"] == destination
+    assert result["decision_enrutamiento"]["alerta_urgente"] is urgent_alert
 
 
 def test_storage_failure_does_not_register_document(client, monkeypatch):
