@@ -41,7 +41,12 @@ export function DashboardLayout({
           urgentAlertCount={urgentAlertCount}
           provenance={provenance}
         />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 bg-slate-50 p-4 sm:p-6 lg:overflow-y-auto">
+        <main
+          aria-label={pageTitle}
+          tabIndex={-1}
+          data-review-collection-focus
+          className="flex min-h-0 flex-1 flex-col gap-4 bg-slate-50 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:p-6 lg:overflow-y-auto"
+        >
           <h1 className="sr-only">{pageTitle}</h1>
           {children}
         </main>

@@ -303,7 +303,7 @@ export function DocumentCollectionView({
           <div
             role="list"
             aria-label={title}
-            className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain touch-pan-y lg:hidden"
+            className="flex flex-col gap-3 lg:hidden"
           >
             {visibleDocuments.map((document) => (
               <Card key={document.documento_id} role="listitem" className="shrink-0">

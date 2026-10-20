@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "./components/ui/button";
 import { DocumentCollectionView } from "./components/dashboard/DocumentCollectionView";
 import { DocumentReviewDialog } from "./components/dashboard/DocumentReviewDialog";
@@ -24,8 +24,26 @@ function App() {
   const [activeView, setActiveView] = useState<DashboardView>("pending");
   const { uploadState, uploadFile } = useDocumentUpload(collections.refreshCollections);
   const closeDocument = collections.closeDocument;
+  const refreshCollections = collections.refreshCollections;
+  const focusAfterConfirmedReview = useRef(false);
+  const refreshReviewedCollections = useCallback(async () => {
+    const restoreFocus = focusAfterConfirmedReview.current;
+    focusAfterConfirmedReview.current = false;
+    try {
+      await refreshCollections();
+    } finally {
+      if (restoreFocus) {
+        requestAnimationFrame(() => {
+          if (document.activeElement === document.body && !document.querySelector('[role="dialog"]')) {
+            document.querySelector<HTMLElement>("[data-review-collection-focus]")?.focus({ preventScroll: true });
+          }
+        });
+      }
+    }
+  }, [refreshCollections]);
   const [reviewRefreshError, setReviewRefreshError] = useState<DocumentReviewCollectionRefreshError | null>(null);
   const handleDecisionConfirmed = useCallback(() => {
+    focusAfterConfirmedReview.current = true;
     setReviewRefreshError(null);
     closeDocument();
   }, [closeDocument]);
@@ -114,7 +132,7 @@ function App() {
           key={collections.selectedDocument.documento_id}
           document={collections.selectedDocument}
           onClose={collections.closeDocument}
-          refreshCollections={collections.refreshCollections}
+          refreshCollections={refreshReviewedCollections}
           onDecisionConfirmed={handleDecisionConfirmed}
           onCollectionRefreshError={handleReviewRefreshError}
         />

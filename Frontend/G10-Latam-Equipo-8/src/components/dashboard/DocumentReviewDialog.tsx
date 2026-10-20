@@ -286,6 +286,7 @@ export function DocumentReviewDialog({
     <Dialog open onOpenChange={(open) => !open && requestClose()}>
       <DialogContent
         aria-describedby="document-review-description"
+        className="overflow-hidden"
         onOpenAutoFocus={() => {
           const active = window.document.activeElement;
           if (active instanceof HTMLElement) openerRef.current = active;
@@ -296,11 +297,15 @@ export function DocumentReviewDialog({
             onReturnFocus();
             return;
           }
-          const fallback = openerRef.current?.isConnected
-            ? openerRef.current
-            : window.document.querySelector<HTMLElement>(
-                "[data-review-dialog-return-focus]",
-              );
+          const fallback = [
+            openerRef.current,
+            ...window.document.querySelectorAll<HTMLElement>(
+              "[data-review-dialog-return-focus]",
+            ),
+            window.document.querySelector<HTMLElement>(
+              "[data-review-collection-focus]",
+            ),
+          ].find((element) => element?.isConnected && element.getClientRects().length > 0);
           if (fallback) {
             event.preventDefault();
             fallback.focus({ preventScroll: true });
@@ -319,10 +324,11 @@ export function DocumentReviewDialog({
           }
         }}
       >
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:contents">
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 p-4 sm:p-6">
           <div className="min-w-0 space-y-1">
             <DialogTitle>Revisar documento</DialogTitle>
-            <DialogDescription id="document-review-description">
+            <DialogDescription id="document-review-description" className="wrap-anywhere">
               {displayReviewValue(context.datos_extraidos.paciente.nombre)} · {documentId}
             </DialogDescription>
             <p className="break-words text-sm text-slate-600">
@@ -392,7 +398,7 @@ export function DocumentReviewDialog({
                   {context.audit_reasons.map((reason, index) => (
                     <li
                       key={`${reason}-${index}`}
-                      className="break-words rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"
+                      className="min-w-0 max-w-full wrap-anywhere rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"
                     >
                       {reason}
                     </li>
@@ -405,16 +411,16 @@ export function DocumentReviewDialog({
               )}
             </section>
 
-            <Tabs defaultValue="data" className="flex min-h-0 flex-1 flex-col">
+            <Tabs defaultValue="data" className="flex flex-col lg:min-h-0 lg:flex-1">
               <TabsList className="shrink-0 lg:hidden">
                 <TabsTrigger value="data">Datos extraídos</TabsTrigger>
                 <TabsTrigger value="original">Documento original</TabsTrigger>
               </TabsList>
-              <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2 lg:divide-x lg:divide-slate-200">
+              <div className="grid grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:divide-x lg:divide-slate-200 lg:overflow-hidden">
                 <TabsContent
                   value="original"
                   forceMount
-                  className="h-full min-h-0 overflow-y-auto data-[state=inactive]:hidden lg:block lg:data-[state=inactive]:block"
+                  className="min-h-0 overflow-y-visible data-[state=inactive]:hidden lg:h-full lg:overflow-y-auto lg:block lg:data-[state=inactive]:block"
                 >
                   <DocumentOriginalViewer
                     documentId={documentId}
@@ -425,7 +431,7 @@ export function DocumentReviewDialog({
                 <TabsContent
                   value="data"
                   forceMount
-                  className="h-full min-h-0 overflow-y-auto data-[state=inactive]:hidden lg:block lg:data-[state=inactive]:block"
+                  className="min-h-0 overflow-y-visible data-[state=inactive]:hidden lg:h-full lg:overflow-y-auto lg:block lg:data-[state=inactive]:block"
                 >
                   <div className="space-y-6">
                     {resources.detail.status === "loading" ? (
@@ -474,27 +480,29 @@ export function DocumentReviewDialog({
                 </TabsContent>
               </div>
             </Tabs>
-
-            <footer className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-              <p
-                role={closeBlocked ? "status" : undefined}
-                className="text-sm text-slate-600"
-              >
-                {closeBlocked
-                  ? "Hay una acción en curso; el cierre está bloqueado."
-                  : "Las propuestas no admitidas por la API son locales; solo se envían correcciones permitidas al confirmar."}
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={closeBlocked}
-                onClick={requestClose}
-              >
-                Cerrar revisión
-              </Button>
-            </footer>
           </>
         )}
+        </div>
+        {!confirmDiscard ? (
+          <footer className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p
+              role={closeBlocked ? "status" : undefined}
+              className="text-sm text-slate-600"
+            >
+              {closeBlocked
+                ? "Hay una acción en curso; el cierre está bloqueado."
+                : "Las propuestas no admitidas por la API son locales; solo se envían correcciones permitidas al confirmar."}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={closeBlocked}
+              onClick={requestClose}
+            >
+              Cerrar revisión
+            </Button>
+          </footer>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
