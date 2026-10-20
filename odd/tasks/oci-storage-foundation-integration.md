@@ -48,7 +48,7 @@ se corrigieron en OCI-T0 y la suite completa quedó verde.
   final; el total de la cola debe reflejar todos los casos que requieren auditoría.
   Evidencia: commit `c85b3b2`; suite completa 193 passed y Ruff check/format aprobados.
 - [ ] OCI-T1: Integrar `feature/backend-foundation` en la rama de trabajo existente
-  `feature/backend-oci-storage`; confirmar que quedan presentes sus doce commits locales
+  `feature/backend-oci-storage`; confirmar que quedan presentes todos los commits locales
   posteriores al remoto y la migración 0004. Resolver cualquier conflicto por significado.
 - [ ] OCI-T2: Integrar adaptador OCI compatible con S3, validar configuración explícita,
   inyectarlo detrás del puerto existente y exponer `oci` en el contrato HTTP.
@@ -73,8 +73,8 @@ se corrigieron en OCI-T0 y la suite completa quedó verde.
 
 - Ruta: implementación delegada para el cambio multiarquivo; corrección test-only acotada
   mediante edición directa después de confirmar el contrato existente.
-- Base inicial verificada: `feature/backend-foundation` en `929b2c0`; antes de integrar OCI
-  avanza doce commits locales más allá de `origin/feature/backend-foundation`.
+- Base inicial verificada: `feature/backend-foundation` en `929b2c0`; la integración debe
+  conservar todos los commits locales posteriores a `origin/feature/backend-foundation`.
 - Rama OCI recibida: `origin/feature/backend-oci-storage` en `429ba49`.
 - Integración autorizada por el usuario: `feature/backend-foundation` →
   `feature/backend-oci-storage`, local y sin PR. No hay autorización de push.
