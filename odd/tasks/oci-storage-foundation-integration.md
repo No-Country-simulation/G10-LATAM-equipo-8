@@ -47,9 +47,9 @@ se corrigieron en OCI-T0 y la suite completa quedó verde.
   urgencia debe exigir revisión humana, conservar la alerta y no autorizar el destino
   final; el total de la cola debe reflejar todos los casos que requieren auditoría.
   Evidencia: commit `c85b3b2`; suite completa 193 passed y Ruff check/format aprobados.
-- [ ] OCI-T1: Integrar `feature/backend-foundation` en la rama de trabajo existente
-  `feature/backend-oci-storage`; confirmar que quedan presentes todos los commits locales
-  posteriores al remoto y la migración 0004. Resolver cualquier conflicto por significado.
+- [x] OCI-T1: Integrar `feature/backend-foundation` en la rama de trabajo existente
+  `feature/backend-oci-storage`; se preservaron ambas historias y la migración 0004.
+  Conflicto documental resuelto por significado. Merge local `eb3da6d`, sin push.
 - [ ] OCI-T2: Integrar adaptador OCI compatible con S3, validar configuración explícita,
   inyectarlo detrás del puerto existente y exponer `oci` en el contrato HTTP.
 - [ ] OCI-T3: Impedir lecturas cruzadas entre proveedores/buckets y cubrir la descarga
@@ -73,8 +73,8 @@ se corrigieron en OCI-T0 y la suite completa quedó verde.
 
 - Ruta: implementación delegada para el cambio multiarquivo; corrección test-only acotada
   mediante edición directa después de confirmar el contrato existente.
-- Base inicial verificada: `feature/backend-foundation` en `929b2c0`; la integración debe
-  conservar todos los commits locales posteriores a `origin/feature/backend-foundation`.
+- Base inicial verificada: `feature/backend-foundation` en `929b2c0`; antes del merge,
+  todos sus commits locales posteriores se conservaron en la integración.
 - Rama OCI recibida: `origin/feature/backend-oci-storage` en `429ba49`.
 - Integración autorizada por el usuario: `feature/backend-foundation` →
   `feature/backend-oci-storage`, local y sin PR. No hay autorización de push.
@@ -89,5 +89,12 @@ se corrigieron en OCI-T0 y la suite completa quedó verde.
 - OCI-T0 completado: expectativas actualizadas sin cambiar lógica de aplicación;
   suite completa 193 passed; Ruff check y format aprobados.
 - OCI-T0 quedó registrado en `c85b3b2`; no se modificó la lógica de aplicación.
-- Próximo paso: crear el seguimiento local de la rama OCI existente e integrar la base
-  actual autorizada, conservando el remoto sin publicar cambios.
+- OCI-T1 completado en `eb3da6d`: rama local creada desde la referencia existente y
+  merge `--no-ff` de foundation. Un conflicto en `docs/BACKEND_PRIMERA_ETAPA.md` se
+  resolvió conservando las dos historias y aclarando que la evidencia OCI histórica no
+  constituye una verificación nueva de la integración actual.
+- Verificación de la rama combinada: suite completa 205 passed; Ruff check aprobado;
+  Ruff format check: 45 archivos ya formateados. Se usó el entorno virtual existente
+  porque `uv` no está disponible; pytest requirió permiso local para sockets de Windows.
+- Próximo paso: integrar el adaptador/configuración OCI y agregar pruebas de selección
+  segura de proveedor y bucket. La rama remota sigue intacta y no hubo push.
