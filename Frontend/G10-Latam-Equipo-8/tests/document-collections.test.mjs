@@ -5,7 +5,10 @@ import {
   createDocumentCollectionsController,
   filterCollectionDocuments,
 } from "../src/hooks/documentCollectionsController.ts";
-import { prioridadClinicaLegible } from "../src/hooks/documentUploadController.ts";
+import {
+  createDocumentUploadController,
+  prioridadClinicaLegible,
+} from "../src/hooks/documentUploadController.ts";
 import { createTriajeService } from "../src/services/triajeServiceCore.ts";
 import { syntheticDocument } from "./helpers/document-review-fixture.mjs";
 
@@ -226,6 +229,57 @@ test("refresh propagates both collection errors while retaining the last confirm
   assert.deepEqual(afterRefresh.auditQueue.items, beforeRefresh.auditQueue.items);
   assert.equal(afterRefresh.historyError, "historial no disponible");
   assert.equal(afterRefresh.auditQueueError, "cola no disponible");
+});
+
+test("a confirmed synthetic upload stays confirmed when aggregate collection refresh fails and preserves the old page and selection", async () => {
+  const historyRecord = syntheticDocument({ documento_id: "HISTORY-RETAINED-001" });
+  const auditRecord = syntheticDocument({ documento_id: "AUDIT-RETAINED-001" });
+  const uploaded = syntheticDocument({ documento_id: "UPLOAD-CONFIRMED-001" });
+  let failRefresh = false;
+  let uploadRequests = 0;
+  const service = {
+    getTriajes: ({ offset = 0, limit = 20 }) =>
+      failRefresh
+        ? Promise.reject(new Error("historial no disponible"))
+        : Promise.resolve(page([historyRecord], 41, offset, limit)),
+    getAuditQueue: ({ offset = 0, limit = 20 }) =>
+      failRefresh
+        ? Promise.reject(new Error("cola no disponible"))
+        : Promise.resolve(page([auditRecord], 2, offset, limit)),
+  };
+  const collections = createDocumentCollectionsController(service);
+  await collections.loadInitial();
+  await collections.loadHistoryPage(20);
+  collections.openDocument(historyRecord);
+  const previousCollections = collections.getSnapshot();
+  failRefresh = true;
+
+  const upload = createDocumentUploadController({
+    uploadFile: async () => {
+      uploadRequests += 1;
+      return uploaded;
+    },
+    onConfirmed: collections.refreshCollections,
+  });
+  const result = await upload.upload(
+    new File(["synthetic upload"], "synthetic.pdf", { type: "application/pdf" }),
+  );
+
+  assert.equal(result, uploaded);
+  assert.equal(uploadRequests, 1);
+  assert.equal(upload.getSnapshot().phase, "confirmed");
+  assert.equal(upload.getSnapshot().confirmedDocument, uploaded);
+  assert.equal(upload.getSnapshot().error, null);
+  assert.match(upload.getSnapshot().collectionRefreshError, /historial no disponible/);
+  assert.match(upload.getSnapshot().collectionRefreshError, /cola no disponible/);
+
+  const afterRefresh = collections.getSnapshot();
+  assert.deepEqual(afterRefresh.history.items, previousCollections.history.items);
+  assert.deepEqual(afterRefresh.auditQueue.items, previousCollections.auditQueue.items);
+  assert.equal(afterRefresh.history.total, previousCollections.history.total);
+  assert.equal(afterRefresh.auditQueue.total, previousCollections.auditQueue.total);
+  assert.equal(afterRefresh.history.offset, 20);
+  assert.equal(afterRefresh.selectedDocument, historyRecord);
 });
 
 test("collection loading exposes errors and retries without fabricating or clearing loaded data", async () => {

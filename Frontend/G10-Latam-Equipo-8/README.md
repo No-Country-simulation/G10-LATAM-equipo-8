@@ -12,11 +12,11 @@
 
 ## 🚀 Características Principales
 
-* **Shell responsive:** Sidebar desde `lg` y navegación móvil mediante Sheet; las bandejas completas y sus filtros siguen en etapas posteriores.
+* **Shell y bandejas:** navegación entre cuatro destinos, colecciones, filtros y paginación integrados; la verificación visual responsive en navegador sigue pendiente.
 * **Cuatro destinos en memoria:** Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas, sin rutas URL nuevas.
 * **Carga compartida:** Selector PDF/PNG/JPG/JPEG con estado, errores y resultado consultables al navegar; la API valida límites y confirma los registros.
-* **Colecciones provisionales:** Pendientes muestra la cola de auditoría; Alertas inmediatas se limita a `alerta_urgente === true` en el historial cargado, no a un total global.
-* **Revisión HITL existente:** La cola conserva sus acciones actuales mientras T5/T6 preparan la experiencia final de revisión.
+* **Colecciones conectadas:** Pendientes muestra la cola de auditoría; Alertas inmediatas se limita a `alerta_urgente === true` en el historial cargado, no a un total global.
+* **Revisión HITL:** El modal conserva el original y las propuestas locales, con aprobación/corrección y rechazo confirmados mediante los métodos vigentes de la API.
 * La comprobación visual responsive en navegador está pendiente; este resumen no afirma validación en viewports reales.
 
 ---
@@ -98,7 +98,7 @@ src/
 
 T3 implementa el shell responsive con cuatro destinos en memoria: Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas. Pendientes usa la cola de auditoría; su contador no representa urgencia clínica. Alertas inmediatas solo filtra `alerta_urgente === true` entre los registros cargados de la página de historial e informa ese alcance local. El estado de carga vive en App y permanece consultable al cambiar de destino; el resultado confirmado se separa de errores de actualización de colecciones. PDF, PNG, JPG y JPEG se validan localmente por extensión/MIME cuando está disponible; los límites y rechazos 413/415 siguen bajo autoridad de la API. Un 201 con `processing_status=FAILED` se muestra como fallo técnico registrado, no como extracción exitosa.
 
-La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia=simulado` no prueba que un archivo subido sea ficticio. T4 conecta las bandejas y sus filtros con el modal T5. Las decisiones de revisión y rechazo corresponden a T6; la migración completa a ReIcon, a T7. Se conserva la [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, y las referencias Canva aprobadas; no se simula un original descargable ni se declara comprobación visual en navegador. El [mock de datos](../../docs/examples/frontend-review/README.md) sigue siendo la muestra portable existente, sin copia adicional del JSON.
+La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia=simulado` no prueba que un archivo subido sea ficticio. T4 conecta las bandejas con el modal; T5 conserva original, propuestas locales y protecciones del visor, y T6 integra decisiones reales sobre el contrato vigente. La migración completa a ReIcon corresponde a T7. Se conserva la [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, y las referencias Canva aprobadas; no se simula un original descargable ni se declara comprobación visual en navegador. El [mock de datos](../../docs/examples/frontend-review/README.md) sigue siendo la muestra portable existente, sin copia adicional del JSON.
 
 ### Bandejas, filtros y contexto (T4)
 
@@ -108,15 +108,15 @@ La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia
 - **Revisar** abre el modal sobre la colección actual para cualquier estado recibido. Cerrar la selección no reinicia destino, búsqueda, tipo, estado ni página. El resultado confirmado de una carga también puede abrirse sin navegación automática.
 - Los errores de lectura permiten reintentar la consulta, no la extracción de IA. Una actualización fallida conserva las páginas previas y se informa por separado del documento cuya carga ya fue confirmada.
 
-### Modal de revisión documental (T5, integrado mediante T4)
+### Modal de revisión documental (T5–T6, integrado mediante T4)
 
 `src/components/dashboard/DocumentReviewDialog.tsx` exporta `DocumentReviewDialog` con `document`, `onClose`, `onReturnFocus` opcional y `busy` opcional (por defecto `false`). `App` lo monta con `key={document.documento_id}`. Las acciones de las filas conservan un destino de foco; el modal admite además `onReturnFocus` o un elemento lógico marcado con `data-review-dialog-return-focus`.
 
 El modal carga detalle, bytes originales y eventos de revisión de forma independiente mediante el servicio compartido. Mantiene separados sus estados y errores; el JSON demo comunica que no contiene los bytes originales. Solo ofrece vista previa para `application/pdf`, `image/png` e `image/jpeg` recibidos; los demás MIME no se interpretan como HTML/SVG. Se revoca cada URL temporal al cambiar el original o desmontar el visor.
 
-Los valores originales permanecen visibles junto a propuestas distintas. Datos del médico y del estudio se identifican como solo locales; no se guardan ni envían. La propuesta futura de correcciones se limita a nombre, edad, tipo documental y prioridad; un campo vacío no implica borrar en servidor y la edad nula requiere una acción explícita. `FAILED` muestra **Revisar procesamiento**, prioridad nula como **Sin evaluar** y `processing_error` dentro de un diagnóstico desplegable, sin formulario de aprobación. Los casos no revisables se muestran en solo lectura. La pestaña móvil conserva el borrador local; Escape/clic exterior/cierre piden confirmar descarte si hay cambios y `busy` impide cerrar.
+Los valores originales permanecen visibles junto a propuestas distintas. Datos del médico y del estudio se identifican como solo locales; no se guardan ni envían. Solo nombre, edad, tipo documental y prioridad pueden formar correcciones admitidas por la API; los valores locales no se incluyen. Un campo vacío no implica borrado y la edad nula requiere una acción explícita. Revisor declarado, comentario, destino final y verificación son requisitos separados; cambiar una propuesta o un dato de decisión invalida la verificación. La prioridad **Urgente** exige `EMERGENCIA_MEDICA`. `FAILED` muestra **Revisar procesamiento**, prioridad nula como **Sin evaluar** y `processing_error` dentro de un diagnóstico desplegable; no permite aprobar desde un formulario vacío, aunque sí confirmar un rechazo. El rechazo comparte el modal y usa el comentario como motivo, sin aplicar correcciones locales.
 
-El modal integrado no añade todavía aprobación, rechazo, envío ni persistencia de borradores; las decisiones corresponden a T6. La verificación de foco, geometría y comportamiento responsive con interacciones reales de navegador sigue pendiente en T8.
+Una decisión confirmada cierra el modal y vuelve a consultar las colecciones; un error posterior de actualización se comunica como separado de la decisión ya confirmada. Un `409` vuelve a leer el detalle y bloquea otra acción en ese modal; los errores de red/servidor inciertos tampoco ofrecen reenvío automático. No hay persistencia de borradores ni afirmaciones de despacho. Escape/clic exterior/cierre piden confirmar el descarte si hay cambios y bloquean el cierre durante el envío. La verificación de foco, geometría y comportamiento responsive con interacciones reales de navegador sigue pendiente en T8.
 
 ### Servicio de detalle, original y revisiones
 

@@ -8,6 +8,7 @@ import {
 } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { DocumentOriginalViewer } from "./DocumentOriginalViewer";
+import { ReviewDecisionFields } from "./ReviewDecisionFields";
 import { ReviewDocumentFields } from "./ReviewDocumentFields";
 import {
   clearAgeProposal,
@@ -20,6 +21,13 @@ import {
   type ReviewDraftTextField,
 } from "./reviewDraft";
 import { useDocumentReview } from "../../hooks/useDocumentReview";
+import {
+  buildSupportedReviewCorrections,
+  canRejectDocument,
+  isReviewDecisionDirty,
+  type DocumentReviewCollectionRefreshError,
+} from "../../hooks/documentReviewDecisionController";
+import { useDocumentReviewDecision } from "../../hooks/useDocumentReviewDecision";
 import type { ReviewEventResponse, TriajeDocumento } from "../../types/triaje";
 
 export interface DocumentReviewDialogProps {
@@ -27,6 +35,9 @@ export interface DocumentReviewDialogProps {
   onClose: () => void;
   onReturnFocus?: () => void;
   busy?: boolean;
+  refreshCollections: () => Promise<void>;
+  onDecisionConfirmed: (document: TriajeDocumento) => void;
+  onCollectionRefreshError: (error: DocumentReviewCollectionRefreshError) => void;
 }
 
 interface DraftSession {
@@ -152,9 +163,17 @@ export function DocumentReviewDialog({
   onClose,
   onReturnFocus,
   busy = false,
+  refreshCollections,
+  onDecisionConfirmed,
+  onCollectionRefreshError,
 }: DocumentReviewDialogProps) {
   const documentId = document.documento_id;
   const resources = useDocumentReview(documentId);
+  const decision = useDocumentReviewDecision({
+    refreshCollections,
+    onDecisionConfirmed,
+    onCollectionRefreshError,
+  });
   const [storedDraftSession, setStoredDraftSession] =
     useState<DraftSession | null>(null);
   const [discardPrompt, setDiscardPrompt] = useState(() => ({
@@ -188,24 +207,31 @@ export function DocumentReviewDialog({
     setDiscardPrompt({ documentId, open });
   }
 
-  useEffect(() => {
-    if (confirmDiscard && !busy) continueEditingRef.current?.focus();
-  }, [confirmDiscard, busy]);
-
   const activeSession =
     draftSession?.documentId === documentId &&
     loadedDetail &&
     draftSession.baseline === loadedDetail
       ? draftSession
       : null;
-  const dirty = activeSession
+  const dirty = (activeSession
     ? isReviewDraftDirty(activeSession.baseline, activeSession.draft)
-    : false;
+    : false) || isReviewDecisionDirty(decision.snapshot);
   const context = loadedDetail ?? document;
   const eligibility = reviewEligibility(context);
+  const decisionBusy =
+    decision.snapshot.phase === "submitting" ||
+    decision.snapshot.phase === "reloading-conflict";
+  const closeBlocked = busy || decisionBusy;
+  const proposedCorrections = activeSession
+    ? buildSupportedReviewCorrections(activeSession.baseline, activeSession.draft)
+    : {};
+
+  useEffect(() => {
+    if (confirmDiscard && !closeBlocked) continueEditingRef.current?.focus();
+  }, [confirmDiscard, closeBlocked]);
 
   function requestClose() {
-    if (busy) return;
+    if (closeBlocked) return;
     if (dirty) {
       setConfirmDiscard(true);
       return;
@@ -214,6 +240,7 @@ export function DocumentReviewDialog({
   }
 
   function handleDraftChange(field: ReviewDraftTextField, value: string) {
+    decision.invalidateVerification();
     setStoredDraftSession((current) => {
       if (!loadedDetail) return current;
       const session =
@@ -240,6 +267,7 @@ export function DocumentReviewDialog({
   }
 
   function handleAgeClear() {
+    decision.invalidateVerification();
     setStoredDraftSession((current) => {
       if (!loadedDetail) return current;
       const session =
@@ -279,15 +307,15 @@ export function DocumentReviewDialog({
           }
         }}
         onEscapeKeyDown={(event) => {
-          if (busy || dirty) {
+          if (closeBlocked || dirty) {
             event.preventDefault();
-            if (dirty && !busy) setConfirmDiscard(true);
+            if (dirty && !closeBlocked) setConfirmDiscard(true);
           }
         }}
         onPointerDownOutside={(event) => {
-          if (busy || dirty) {
+          if (closeBlocked || dirty) {
             event.preventDefault();
-            if (dirty && !busy) setConfirmDiscard(true);
+            if (dirty && !closeBlocked) setConfirmDiscard(true);
           }
         }}
       >
@@ -308,7 +336,7 @@ export function DocumentReviewDialog({
             ref={closeButtonRef}
             type="button"
             variant="outline"
-            disabled={busy}
+            disabled={closeBlocked}
             onClick={requestClose}
           >
             Cerrar revisión
@@ -337,7 +365,7 @@ export function DocumentReviewDialog({
                   ref={continueEditingRef}
                   type="button"
                   variant="outline"
-                  disabled={busy}
+                  disabled={closeBlocked}
                   onClick={() => setConfirmDiscard(false)}
                 >
                   Continuar editando
@@ -345,7 +373,7 @@ export function DocumentReviewDialog({
                 <Button
                   type="button"
                   variant="destructive"
-                  disabled={busy}
+                  disabled={closeBlocked}
                   onClick={onClose}
                 >
                   Descartar propuestas y cerrar
@@ -415,12 +443,31 @@ export function DocumentReviewDialog({
                       </p>
                     ) : null}
                     {activeSession ? (
-                      <ReviewDocumentFields
-                        document={activeSession.baseline}
-                        draft={activeSession.draft}
-                        onDraftChange={handleDraftChange}
-                        onAgeClear={handleAgeClear}
-                      />
+                      <>
+                        <ReviewDocumentFields
+                          document={activeSession.baseline}
+                          draft={activeSession.draft}
+                          onDraftChange={handleDraftChange}
+                          onAgeClear={handleAgeClear}
+                        />
+                        <ReviewDecisionFields
+                          snapshot={decision.snapshot}
+                          busy={closeBlocked}
+                          canApprove={reviewEligibility(activeSession.baseline).state === "ready"}
+                          canReject={canRejectDocument(activeSession.baseline)}
+                          hasEffectiveCorrections={Object.keys(proposedCorrections).length > 0}
+                          onFieldChange={decision.setField}
+                          onVerificationChange={decision.setVerified}
+                          onRequestRejection={decision.requestRejection}
+                          onCancelRejection={decision.cancelRejection}
+                          onConfirmRejection={() => {
+                            void decision.confirmRejection(activeSession.baseline);
+                          }}
+                          onApprove={() => {
+                            void decision.approve(activeSession.baseline, activeSession.draft);
+                          }}
+                        />
+                      </>
                     ) : null}
                     <ReviewEvents resource={resources.reviews} />
                   </div>
@@ -430,17 +477,17 @@ export function DocumentReviewDialog({
 
             <footer className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <p
-                role={busy ? "status" : undefined}
+                role={closeBlocked ? "status" : undefined}
                 className="text-sm text-slate-600"
               >
-                {busy
+                {closeBlocked
                   ? "Hay una acción en curso; el cierre está bloqueado."
-                  : "Las propuestas de esta vista no se guardan ni se envían."}
+                  : "Las propuestas no admitidas por la API son locales; solo se envían correcciones permitidas al confirmar."}
               </p>
               <Button
                 type="button"
                 variant="outline"
-                disabled={busy}
+                disabled={closeBlocked}
                 onClick={requestClose}
               >
                 Cerrar revisión
