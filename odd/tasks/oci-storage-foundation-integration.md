@@ -14,9 +14,10 @@ OCI Object Storage. El plan de Alura lo clasifica como requisito obligatorio, mi
 que Slack es una mejora adicional. La rama OCI se creó sobre una versión anterior y
 no debe reemplazar el estado actual: se deben conservar el outbox y la migración 0004.
 
-La suite actual termina con 190 pruebas aprobadas y tres fallidas: las expectativas de
-pruebas de urgencia todavía esperan despacho automático, contrario a la regla vigente
-de mantener la urgencia bajo revisión humana hasta aprobación explícita.
+La suite inicial terminó con 190 pruebas aprobadas y tres fallidas: las expectativas de
+pruebas de urgencia todavía esperaban despacho automático, contrario a la regla vigente
+de mantener la urgencia bajo revisión humana hasta aprobación explícita. Las expectativas
+se corrigieron en OCI-T0 y la suite completa quedó verde.
 
 ## Alcance
 
@@ -45,9 +46,9 @@ de mantener la urgencia bajo revisión humana hasta aprobación explícita.
 - [x] OCI-T0: Corregir expectativas obsoletas de pruebas de urgencia. La prueba de
   urgencia debe exigir revisión humana, conservar la alerta y no autorizar el destino
   final; el total de la cola debe reflejar todos los casos que requieren auditoría.
-  Evidencia: commit pendiente; suite completa 193 passed y Ruff check/format aprobados.
+  Evidencia: commit `c85b3b2`; suite completa 193 passed y Ruff check/format aprobados.
 - [ ] OCI-T1: Integrar `feature/backend-foundation` en la rama de trabajo existente
-  `feature/backend-oci-storage`; confirmar que quedan presentes sus diez commits locales
+  `feature/backend-oci-storage`; confirmar que quedan presentes sus once commits locales
   posteriores al remoto y la migración 0004. Resolver cualquier conflicto por significado.
 - [ ] OCI-T2: Integrar adaptador OCI compatible con S3, validar configuración explícita,
   inyectarlo detrás del puerto existente y exponer `oci` en el contrato HTTP.
@@ -72,7 +73,8 @@ de mantener la urgencia bajo revisión humana hasta aprobación explícita.
 
 - Ruta: implementación delegada para el cambio multiarquivo; corrección test-only acotada
   mediante edición directa después de confirmar el contrato existente.
-- Base inicial verificada: `feature/backend-foundation` en `929b2c0`.
+- Base inicial verificada: `feature/backend-foundation` en `929b2c0`; actualmente avanza
+  once commits locales más allá de `origin/feature/backend-foundation`.
 - Rama OCI recibida: `origin/feature/backend-oci-storage` en `429ba49`.
 - Integración autorizada por el usuario: `feature/backend-foundation` →
   `feature/backend-oci-storage`, local y sin PR. No hay autorización de push.
@@ -86,4 +88,6 @@ de mantener la urgencia bajo revisión humana hasta aprobación explícita.
   despacho automático ante urgencia, contrarias al dominio y plan vigente.
 - OCI-T0 completado: expectativas actualizadas sin cambiar lógica de aplicación;
   suite completa 193 passed; Ruff check y format aprobados.
-- Próximo paso: registrar OCI-T0 y luego integrar las ramas locales autorizadas.
+- OCI-T0 quedó registrado en `c85b3b2`; no se modificó la lógica de aplicación.
+- Próximo paso: crear el seguimiento local de la rama OCI existente e integrar la base
+  actual autorizada, conservando el remoto sin publicar cambios.
