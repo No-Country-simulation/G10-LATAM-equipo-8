@@ -56,6 +56,8 @@ The five paths listed under Scope plus this task file only. No other existing fi
 
 ## Work-unit commit
 - `b74352d` — `test(documentos): agregar PDFs sintéticos para pruebas funcionales` (three PDFs, Spanish guide, narrow binary rule, and task evidence).
+- `fc3dc01` — `docs(plan): registrar commit de PDFs funcionales` (records the work-unit commit and verification result).
+- Published both commits successfully to `origin/feature/backend-oci-storage`; push advanced the remote from `308c666` to `fc3dc01` without force.
 
 ## Next step
-Push the authorized work-unit commit to `origin/feature/backend-oci-storage`, then report publication and hand off the guide for manual API/OCI tests.
+Run the documented manual API/OCI checks using the three synthetic PDFs; confirm Gemini extraction behavior, detail/original retrieval, and repository-dependent restart persistence. No API or live Gemini/OCI test was performed in this task.
