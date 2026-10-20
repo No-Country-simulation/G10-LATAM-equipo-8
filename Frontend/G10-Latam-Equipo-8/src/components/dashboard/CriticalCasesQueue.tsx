@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "@/components/ui/icons";
 
 interface Props {
   cases: TriajeDocumento[];

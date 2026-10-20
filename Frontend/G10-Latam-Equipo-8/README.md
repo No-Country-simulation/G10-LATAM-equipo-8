@@ -27,8 +27,10 @@
 * **Empaquetador & Dev Server:** [Vite 8](https://vite.dev/) (con motor Rolldown y Fast Refresh)
 * **Estilos & Diseño:** [Tailwind CSS v4](https://tailwindcss.com/)
 * **Componentes de UI:** [Shadcn UI](https://ui.shadcn.com/) (primitivos accesibles sobre [Radix UI](https://www.radix-ui.com/))
-* **Iconografía actual:** [Lucide React](https://lucide.dev/). Una migración completa a ReIcon está planificada para una etapa futura; ver [`docs/mediflow-frontend-ai-spec.md`](../../docs/mediflow-frontend-ai-spec.md).
+* **Iconografía:** [ReIcon React](https://reicon.dev/docs/react), mediante imports explícitos por icono en `src/components/ui/icons.ts`. La integración usa los subpaths públicos verificados del paquete `reicon-react` y conserva nombres accesibles, tamaños y estados de los controles.
 * **Calidad de Código:** ESLint 9 (Flat Config con reglas optimizadas para React Refresh)
+
+Los iconos nuevos se agregan manualmente desde el adaptador local; por ejemplo: `import { ClipboardList } from "@/components/ui/icons"`. `components.json` conserva su valor existente para Lucide: la migración no afirma compatibilidad de ReIcon con el generador de shadcn.
 
 ---
 
@@ -98,7 +100,7 @@ src/
 
 T3 implementa el shell responsive con cuatro destinos en memoria: Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas. Pendientes usa la cola de auditoría; su contador no representa urgencia clínica. Alertas inmediatas solo filtra `alerta_urgente === true` entre los registros cargados de la página de historial e informa ese alcance local. El estado de carga vive en App y permanece consultable al cambiar de destino; el resultado confirmado se separa de errores de actualización de colecciones. PDF, PNG, JPG y JPEG se validan localmente por extensión/MIME cuando está disponible; los límites y rechazos 413/415 siguen bajo autoridad de la API. Un 201 con `processing_status=FAILED` se muestra como fallo técnico registrado, no como extracción exitosa.
 
-La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia=simulado` no prueba que un archivo subido sea ficticio. T4 conecta las bandejas con el modal; T5 conserva original, propuestas locales y protecciones del visor, y T6 integra decisiones reales sobre el contrato vigente. La migración completa a ReIcon corresponde a T7. Se conserva la [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, y las referencias Canva aprobadas; no se simula un original descargable ni se declara comprobación visual en navegador. El [mock de datos](../../docs/examples/frontend-review/README.md) sigue siendo la muestra portable existente, sin copia adicional del JSON.
+La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia=simulado` no prueba que un archivo subido sea ficticio. T4 conecta las bandejas con el modal; T5 conserva original, propuestas locales y protecciones del visor, y T6 integra decisiones reales sobre el contrato vigente. T7 migra los iconos del frontend activo a ReIcon mediante el adaptador local y subpaths públicos por icono. Se conserva la [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, y las referencias Canva aprobadas; no se simula un original descargable ni se declara comprobación visual en navegador. El [mock de datos](../../docs/examples/frontend-review/README.md) sigue siendo la muestra portable existente, sin copia adicional del JSON.
 
 ### Bandejas, filtros y contexto (T4)
 

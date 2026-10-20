@@ -1,8 +1,8 @@
-import { Files, TriangleAlert, type LucideIcon } from "lucide-react";
+import { Files, TriangleAlert, type IconComponent } from "@/components/ui/icons";
 
 type Props = {
   title: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   count: number;
 };
 

@@ -3,8 +3,8 @@ import {
   FilePlus2,
   Files,
   TriangleAlert,
-  type LucideIcon,
-} from "lucide-react";
+  type IconComponent,
+} from "@/components/ui/icons";
 import logoMediflow from "@/assets/mediflow-logo.jpg";
 import {
   DASHBOARD_DESTINATIONS,
@@ -14,7 +14,7 @@ import {
 
 type NavItem = {
   label: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   target: DashboardView;
   count: number | null;
   countDescription: (count: number) => string;
@@ -27,7 +27,7 @@ interface Props {
   urgentAlertCount: number | null;
 }
 
-const destinationIcons: Record<DashboardView, LucideIcon> = {
+const destinationIcons: Record<DashboardView, IconComponent> = {
   upload: FilePlus2,
   pending: ClipboardList,
   all: Files,
