@@ -1,5 +1,6 @@
 """Direct Gemini adapter. No tools, URL retrieval, fixture fallback or model switching."""
 
+import logging
 import re
 import time
 
@@ -20,6 +21,7 @@ SYSTEM_PROMPT = (
     "is self-reported and not calibrated medical reliability."
 )
 PROMPT_VERSION = "mediflow-extraction-v1"
+logger = logging.getLogger(__name__)
 
 
 class GeminiExtractor:
@@ -90,9 +92,6 @@ class GeminiExtractor:
                 break
             except errors.APIError as error:
                 status = error.code
-                if status in {429, 500, 502, 503, 504} and attempt < self.max_retries:
-                    self.sleep(0.5 * (attempt + 1))
-                    continue
                 code = (
                     "GEMINI_QUOTA"
                     if status == 429
@@ -100,6 +99,13 @@ class GeminiExtractor:
                     if status in {400, 401, 403}
                     else "GEMINI_PROVIDER_ERROR"
                 )
+                safe_status = status if type(status) is int else "unknown"
+                logger.warning(
+                    "Gemini API request failed: status=%s category=%s", safe_status, code
+                )
+                if status in {429, 500, 502, 503, 504} and attempt < self.max_retries:
+                    self.sleep(0.5 * (attempt + 1))
+                    continue
                 raise ProviderExtractionError(code) from None
             except (httpx.TimeoutException, TimeoutError):
                 raise ProviderExtractionError("GEMINI_TIMEOUT") from None

@@ -78,7 +78,7 @@ def test_invalid_schema_fails_without_raw_payload(value):
     "status,code,retries",
     [(403, "GEMINI_AUTH", 1), (429, "GEMINI_QUOTA", 2), (503, "GEMINI_PROVIDER_ERROR", 2)],
 )
-def test_bounded_status_retries_and_sanitized_errors(status, code, retries):
+def test_bounded_status_retries_and_sanitized_errors(status, code, retries, caplog):
     client = make_client()
     client.models.generate_content.side_effect = errors.APIError(
         status, {"error": {"message": "SECRET upstream", "code": status}}
@@ -90,6 +90,9 @@ def test_bounded_status_retries_and_sanitized_errors(status, code, retries):
         )
     assert str(caught.value) == code
     assert "SECRET" not in str(caught.value)
+    assert f"status={status}" in caplog.text
+    assert f"category={code}" in caplog.text
+    assert "SECRET upstream" not in caplog.text
     assert client.models.generate_content.call_count == retries
     assert sleep.call_count == retries - 1
 
