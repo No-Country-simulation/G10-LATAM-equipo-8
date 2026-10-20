@@ -12,6 +12,7 @@ from app.adapters.inbound.http.schemas import (
     TextRequest,
     TriageResponse,
 )
+from app.adapters.outbound.local_storage import LocalDocumentStorage
 from app.adapters.outbound.neon_storage import StorageUnavailable
 from app.domain.triaje import Destination, Status
 
@@ -106,7 +107,15 @@ def detail(documento_id: DocumentId, request: Request):
 @router.get("/triajes/{documento_id}/documento")
 def original_document(documento_id: DocumentId, request: Request):
     triage = request.app.state.repository.get(documento_id)
-    content = request.app.state.storage.read(triage.object_key)
+    storage = request.app.state.storage
+    # The legacy local adapter has no provider/bucket attributes; unknown adapters fail closed.
+    provider = (
+        "local" if isinstance(storage, LocalDocumentStorage) else getattr(storage, "provider", None)
+    )
+    bucket = getattr(storage, "bucket", None)
+    if provider is None or triage.storage_provider != provider or triage.storage_bucket != bucket:
+        raise StorageUnavailable("El proveedor o bucket del original no esta disponible")
+    content = storage.read(triage.object_key)
     if triage.sha256 and sha256(content).hexdigest() != triage.sha256:
         raise StorageUnavailable("El original no supera la verificacion de integridad")
     return Response(

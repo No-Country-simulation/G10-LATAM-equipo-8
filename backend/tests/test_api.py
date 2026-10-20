@@ -1,6 +1,8 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -198,3 +200,85 @@ def test_storage_failure_does_not_register_document(client, monkeypatch):
     with pytest.raises(OSError):
         client.post("/api/v1/triajes", json=payload())
     assert client.get("/api/v1/triajes").json()["total"] == 0
+
+
+@pytest.mark.parametrize("provider,bucket", [("neon", "synthetic"), ("oci", "synthetic")])
+def test_original_document_reads_only_matching_storage(client, monkeypatch, provider, bucket):
+    assert client.post("/api/v1/triajes", json=payload()).status_code == 201
+    triage = replace(
+        client.app.state.repository.get("DOC-1"),
+        storage_provider=provider,
+        storage_bucket=bucket,
+    )
+    storage = Mock(spec=["provider", "bucket", "read"])
+    storage.provider, storage.bucket = provider, bucket
+    storage.read.return_value = ROUTINE.encode()
+    client.app.state.storage = storage
+    monkeypatch.setattr(client.app.state.repository, "get", lambda _: triage)
+
+    response = client.get("/api/v1/triajes/DOC-1/documento")
+
+    assert response.status_code == 200
+    assert response.content == ROUTINE.encode()
+    assert response.headers["x-content-type-options"] == "nosniff"
+    storage.read.assert_called_once_with(triage.object_key)
+
+
+@pytest.mark.parametrize(
+    "record_provider,record_bucket,adapter_provider,adapter_bucket",
+    [
+        ("oci", "synthetic", "neon", "synthetic"),
+        ("neon", "synthetic", "oci", "synthetic"),
+        ("oci", "old-bucket", "oci", "new-bucket"),
+        ("neon", "old-bucket", "neon", "new-bucket"),
+        ("oci", None, "oci", "synthetic"),
+        ("local", None, "oci", "synthetic"),
+        ("oci", "synthetic", "local", None),
+    ],
+)
+def test_original_document_rejects_storage_mismatch_before_read(
+    client, monkeypatch, record_provider, record_bucket, adapter_provider, adapter_bucket
+):
+    assert client.post("/api/v1/triajes", json=payload()).status_code == 201
+    triage = replace(
+        client.app.state.repository.get("DOC-1"),
+        storage_provider=record_provider,
+        storage_bucket=record_bucket,
+    )
+    storage = Mock(spec=["provider", "bucket", "read"])
+    storage.provider, storage.bucket = adapter_provider, adapter_bucket
+    storage.read.return_value = ROUTINE.encode()
+    client.app.state.storage = storage
+    monkeypatch.setattr(client.app.state.repository, "get", lambda _: triage)
+
+    response = client.get("/api/v1/triajes/DOC-1/documento")
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "El proveedor o bucket del original no esta disponible"}
+    storage.read.assert_not_called()
+
+
+def test_original_document_rejects_adapter_without_identity(client):
+    assert client.post("/api/v1/triajes", json=payload()).status_code == 201
+    storage = Mock(spec=["read"])
+    storage.read.return_value = ROUTINE.encode()
+    client.app.state.storage = storage
+
+    assert client.get("/api/v1/triajes/DOC-1/documento").status_code == 503
+    storage.read.assert_not_called()
+
+
+@pytest.mark.parametrize("provider,bucket", [("oci", "synthetic"), ("local", "unexpected")])
+def test_original_document_does_not_fallback_to_local(client, monkeypatch, provider, bucket):
+    assert client.post("/api/v1/triajes", json=payload()).status_code == 201
+    triage = replace(
+        client.app.state.repository.get("DOC-1"),
+        storage_provider=provider,
+        storage_bucket=bucket,
+    )
+    read = Mock(return_value=ROUTINE.encode())
+    monkeypatch.setattr(client.app.state.storage, "read", read)
+    monkeypatch.setattr(client.app.state.repository, "get", lambda _: triage)
+
+    assert client.get("/api/v1/triajes/DOC-1/documento").status_code == 503
+    read.assert_not_called()

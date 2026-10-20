@@ -462,3 +462,36 @@ actual ni una nueva prueba contra OCI durante la resolución del merge.
   confirmó catálogo, conteos y cero fixtures; el coordinador confirmó revisión y outbox
   vacío. Commit local `fa188ed`; evidencia en
   `odd/tasks/neon-development-outbox-0004.md`.
+
+## Integración local OCI y lecturas seguras — 2026-10-19
+
+- La integración conserva `OciDocumentStorage` detrás del puerto de documentos,
+  su cliente S3 con credenciales explícitas, timeouts/reintentos acotados y checksums
+  `when_required`; `almacenamiento.proveedor=oci` y `almacenamiento_oci=null` no
+  cambian de forma. Se mantienen Neon/local, PostgreSQL y el outbox/migración 0004.
+- La descarga compara el proveedor y bucket del registro con el adaptador activo
+  **antes de llamar a `read`**. Una diferencia o adaptador sin identidad produce
+  503 seguro; no se intenta otro almacenamiento. El modo local existente conserva
+  proveedor `local` y bucket nulo. Después de leer se mantiene el control SHA-256.
+- Configuración: copiar `backend/.env.example` a un archivo local ignorado,
+  seleccionar `STORAGE_MODE=oci` y completar `OCI_NAMESPACE`, `OCI_REGION`,
+  `OCI_BUCKET`, `OCI_ACCESS_KEY_ID` y `OCI_SECRET_ACCESS_KEY` desde una fuente
+  autorizada fuera de Git. El ejemplo solo contiene valores sintéticos; no copiar
+  claves a documentación, logs ni respuestas. Variables vacías o hostname inválido
+  impiden iniciar OCI. Esta configuración no autoriza contactar el servicio.
+- **OCI con `REPOSITORY_MODE=memory` es solo demo:** reiniciar pierde historial,
+  revisiones y referencias a documentos, aunque los objetos permanezcan en OCI.
+  PostgreSQL conserva las reservas/reconciliación existentes, pero no se validó
+  contra servicios reales en esta unidad. Cambiar proveedor o bucket no migra
+  objetos; no existe soporte de dataset mixto ni migración automática.
+- Pruebas locales únicamente con datos sintéticos y cliente OCI simulado:
+  construcción/configuración, guardar/leer/cerrar cuerpo, metadatos, errores
+  sanitizados, coincidencia de ubicación y rechazo sin lectura de otra ubicación.
+  RED observado: 8 fallos y 57 aprobadas antes de proteger la descarga.
+  GREEN: 69 enfocadas y 234 totales aprobadas; Ruff check aprobado y format check
+  con 45 archivos ya formateados. TestClient requirió permisos locales de loopback;
+  el primer intento sandbox se interrumpió por bloqueo, sin contactar OCI.
+- La evidencia OCI histórica del 13/10 no demuestra conectividad ni una prueba
+  nueva de esta integración. No se inspeccionaron credenciales ni buckets, no hubo
+  migraciones de objetos, push, PR ni merge a `develop`/`main`. No se modificaron
+  scores, urgencia, decisiones clínicas ni autorización humana.

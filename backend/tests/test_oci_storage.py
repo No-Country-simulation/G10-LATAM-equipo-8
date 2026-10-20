@@ -2,7 +2,7 @@ from io import BytesIO
 from unittest.mock import Mock
 
 import pytest
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, EndpointConnectionError
 from fastapi.testclient import TestClient
 from pydantic import SecretStr, ValidationError
 
@@ -38,6 +38,25 @@ def test_client_config_disables_aws_chunked_checksums():
     assert config.response_checksum_validation == "when_required"
 
 
+def test_oci_client_uses_explicit_credentials_and_bounded_s3_configuration(monkeypatch):
+    factory = Mock()
+    monkeypatch.setattr("boto3.client", factory)
+    storage = OciDocumentStorage("synthetic", "sa-santiago-1", "bucket", "id", "secret")
+
+    assert storage.client is factory.return_value
+    args = factory.call_args.kwargs
+    assert factory.call_args.args == ("s3",)
+    assert args["endpoint_url"] == oci_endpoint("synthetic", "sa-santiago-1")
+    assert args["region_name"] == "sa-santiago-1"
+    assert args["aws_access_key_id"] == "id"
+    assert args["aws_secret_access_key"] == "secret"
+    config = args["config"]
+    assert config.signature_version == "s3v4"
+    assert config.s3 == {"addressing_style": "path"}
+    assert (config.connect_timeout, config.read_timeout) == (5, 20)
+    assert config.retries == {"max_attempts": 2, "mode": "standard"}
+
+
 def test_oci_storage_roundtrip_with_provider_and_bucket():
     client = Mock()
     client.get_object.return_value = {"Body": BytesIO(b"synthetic")}
@@ -61,16 +80,33 @@ def test_oci_errors_do_not_expose_upstream_secrets():
     assert "SECRET" not in str(caught.value)
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        ClientError({"Error": {"Code": "AccessDenied", "Message": "SECRET"}}, "GetObject"),
+        EndpointConnectionError(endpoint_url="https://SECRET.invalid"),
+    ],
+)
+def test_oci_read_errors_are_sanitized(error):
+    client = Mock()
+    client.get_object.side_effect = error
+    storage = OciDocumentStorage("ns", "sa-santiago-1", "bucket", "id", "secret", client)
+    with pytest.raises(StorageUnavailable, match="Documento temporalmente no disponible") as caught:
+        storage.read("recibidos/synthetic")
+    assert "SECRET" not in str(caught.value)
+
+
 def test_oci_mode_works_with_memory_repository():
     settings = oci_settings()
     assert settings.storage_mode == "oci"
     assert settings.repository_mode == "memory"
 
 
-@pytest.mark.parametrize("missing", ["oci_namespace", "oci_bucket", "oci_secret_access_key"])
-def test_oci_mode_requires_every_variable_without_echoing_secrets(missing):
+@pytest.mark.parametrize("missing", list(OCI))
+@pytest.mark.parametrize("value", [None, "", "   "])
+def test_oci_mode_requires_every_variable_without_echoing_secrets(missing, value):
     with pytest.raises(ValidationError) as caught:
-        oci_settings(**{missing: None})
+        oci_settings(**{missing: value})
     assert missing.upper() in str(caught.value)
     assert "synthetic-secret" not in str(caught.value)
 
@@ -85,11 +121,12 @@ def test_oci_rejects_values_that_would_change_the_endpoint_host(field, value):
 
 
 @pytest.fixture
-def oci_app():
+def oci_app(monkeypatch):
+    s3 = Mock()
+    monkeypatch.setattr("boto3.client", Mock(return_value=s3))
     app = create_app(oci_settings())
-    app.state.storage.client = Mock()
     with TestClient(app) as client:
-        yield client, app.state.storage.client
+        yield client, s3
 
 
 def test_api_saves_original_in_oci_without_changing_the_contract(oci_app):
@@ -111,6 +148,16 @@ def test_api_saves_original_in_oci_without_changing_the_contract(oci_app):
     assert s3.put_object.call_args.kwargs["Key"] == body["almacenamiento"]["ruta_objeto"]
     assert client.get("/health").json()["almacenamiento"] == "oci"
 
+    stored = client.app.state.repository.get("DOC-OCI-1")
+    assert (stored.storage_provider, stored.storage_bucket) == ("oci", "bucket-de-prueba")
+    body_stream = BytesIO(ROUTINE.encode())
+    s3.get_object.return_value = {"Body": body_stream}
+    original = client.get("/api/v1/triajes/DOC-OCI-1/documento")
+    assert original.status_code == 200
+    assert original.content == ROUTINE.encode()
+    assert body_stream.closed
+    s3.get_object.assert_called_once_with(Bucket="bucket-de-prueba", Key=stored.object_key)
+
 
 def test_api_returns_503_and_keeps_nothing_when_oci_fails(oci_app):
     client, s3 = oci_app
@@ -129,3 +176,40 @@ def test_api_returns_503_and_keeps_nothing_when_oci_fails(oci_app):
     assert response.status_code == 503
     assert "SECRET" not in response.text
     assert client.get("/api/v1/triajes/DOC-OCI-2").status_code == 404
+
+
+def test_api_oci_original_rejects_failed_integrity(oci_app):
+    client, s3 = oci_app
+    assert (
+        client.post(
+            "/api/v1/triajes",
+            json={"documento_id": "OCI-HASH", "canal_origen": "test", "documento_texto": ROUTINE},
+        ).status_code
+        == 201
+    )
+    s3.get_object.return_value = {"Body": BytesIO(b"different synthetic bytes")}
+
+    response = client.get("/api/v1/triajes/OCI-HASH/documento")
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "El original no supera la verificacion de integridad"}
+
+
+def test_api_oci_read_failure_is_sanitized(oci_app):
+    client, s3 = oci_app
+    assert (
+        client.post(
+            "/api/v1/triajes",
+            json={"documento_id": "OCI-READ", "canal_origen": "test", "documento_texto": ROUTINE},
+        ).status_code
+        == 201
+    )
+    s3.get_object.side_effect = ClientError(
+        {"Error": {"Code": "AccessDenied", "Message": "SECRET"}}, "GetObject"
+    )
+
+    response = client.get("/api/v1/triajes/OCI-READ/documento")
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Documento temporalmente no disponible"}
+    assert "SECRET" not in response.text

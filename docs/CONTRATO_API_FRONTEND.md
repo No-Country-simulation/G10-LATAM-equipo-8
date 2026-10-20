@@ -4,6 +4,10 @@ Snapshot **9f6df98**, 2026-10-08. Este documento describe el backend actual; no 
 endpoints, permisos, reglas clínicas ni campos. El frontend consume **HTTP**, no tablas
 PostgreSQL, rutas del bucket o JSON crudo de Gemini.
 
+Actualización de almacenamiento, 2026-10-19: la integración local admite `oci` y la
+descarga valida proveedor y bucket contra el registro antes de leer. El resto del
+snapshot conserva su alcance histórico; esta actualización no acredita OCI real.
+
 ## Ruta rápida
 
 1. Levantar el backend según [README](../backend/README.md), puerto **8002**.
@@ -36,6 +40,12 @@ Base: `http://127.0.0.1:8002`. No agregar otro `/api` al prefijo siguiente.
 
 No existen actualmente `/reglas`, reprocesamiento, usuarios/login, websocket, envío a
 destinos ni descarga mediante URL firmada en el DTO. No inventar botones para ellos.
+
+La descarga usa exclusivamente el adaptador activo cuando su proveedor y bucket
+coinciden con el original registrado; de lo contrario devuelve 503 **sin leer otro
+almacenamiento**. No hay fallback, migración de objetos ni resolución de datasets
+mixtos. Cambiar `STORAGE_MODE` o el bucket no mueve originales. El hash del original
+se sigue verificando después de una lectura permitida.
 
 ### Carga de texto y archivo
 
@@ -240,7 +250,7 @@ Ejemplo aprobación sin corrección: array corrections vacío y confianza null s
 | 413 | Archivo demasiado grande; corregir selección. |
 | 415 | MIME/firma no soportados; no cambiar extensión para eludir control. |
 | 422 | Validación de campos/acción; mostrar mensaje y corregir formulario. |
-| 503 | Almacenamiento/original no disponible o integridad fallida; no inventar éxito. |
+| 503 | Almacenamiento/original no disponible, proveedor/bucket distinto o integridad fallida; no inventar éxito. |
 | 500/red | Error inesperado/interrupción; consultar registro antes de repetir carga/revisión. |
 
 Errores de negocio devuelven `{"detail": "mensaje"}`; validación FastAPI puede
