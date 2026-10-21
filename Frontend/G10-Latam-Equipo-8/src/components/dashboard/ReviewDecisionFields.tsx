@@ -167,7 +167,7 @@ export function ReviewDecisionFields({
         </p>
       ) : null}
       {snapshot.phase === "error" && snapshot.error ? (
-        <p role="alert" className="break-words rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="wrap-break-word rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
           No se confirmó la decisión: {snapshot.error}
         </p>
       ) : null}
@@ -182,7 +182,7 @@ export function ReviewDecisionFields({
         </div>
       ) : null}
       {snapshot.phase === "uncertain" && snapshot.error ? (
-        <p role="alert" className="break-words rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="wrap-break-word rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
           {snapshot.error}
         </p>
       ) : null}
@@ -192,7 +192,7 @@ export function ReviewDecisionFields({
         </p>
       ) : null}
       {snapshot.phase === "confirmed-refresh-error" && snapshot.error ? (
-        <p role="alert" className="break-words rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        <p role="alert" className="wrap-break-word rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
           La decisión quedó confirmada, pero no se actualizaron las colecciones: {snapshot.error}
         </p>
       ) : null}

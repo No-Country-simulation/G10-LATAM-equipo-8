@@ -82,7 +82,7 @@ export function DocumentOriginalViewer({
                 original.
               </p>
             ) : null}
-            <p className="break-words">Detalle de carga: {resource.error}</p>
+            <p className="wrap-break-word">Detalle de carga: {resource.error}</p>
           </div>
         ) : null}
         {original ? (
@@ -91,7 +91,7 @@ export function DocumentOriginalViewer({
               <dt className="text-xs font-medium text-slate-600">
                 Nombre recibido en la respuesta
               </dt>
-              <dd className="break-words text-slate-900">
+              <dd className="wrap-break-word text-slate-900">
                 {original.filename ?? "No informado en la respuesta"}
               </dd>
             </div>
@@ -99,7 +99,7 @@ export function DocumentOriginalViewer({
               <dt className="text-xs font-medium text-slate-600">
                 Tipo de contenido recibido
               </dt>
-              <dd className="break-words text-slate-900">
+              <dd className="wrap-break-word text-slate-900">
                 {original.contentType ?? "No informado en la respuesta"}
               </dd>
             </div>

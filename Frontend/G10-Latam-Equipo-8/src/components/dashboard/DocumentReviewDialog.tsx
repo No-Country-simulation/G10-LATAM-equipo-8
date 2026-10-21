@@ -78,7 +78,7 @@ function ReviewEvents({
         </p>
       ) : null}
       {resource.status === "error" ? (
-        <p role="alert" className="break-words text-sm text-red-800">
+        <p role="alert" className="wrap-break-word text-sm text-red-800">
           No se pudo cargar el historial de revisiones: {resource.error}
         </p>
       ) : null}
@@ -108,7 +108,7 @@ function ReviewEvents({
               <p className="text-sm text-slate-700">
                 Revisor declarado: {event.reviewer}
               </p>
-              <p className="break-words text-sm text-slate-700">
+              <p className="wrap-break-word text-sm text-slate-700">
                 Comentario: {displayReviewValue(event.comment)}
               </p>
               <dl className="grid gap-2 text-sm sm:grid-cols-2">
@@ -116,7 +116,7 @@ function ReviewEvents({
                   <dt className="text-xs font-medium text-slate-600">
                     Estado de revisión
                   </dt>
-                  <dd className="break-words text-slate-900">
+                  <dd className="wrap-break-word text-slate-900">
                     {event.previous_status} → {event.new_status}
                   </dd>
                 </div>
@@ -124,7 +124,7 @@ function ReviewEvents({
                   <dt className="text-xs font-medium text-slate-600">
                     Destino registrado
                   </dt>
-                  <dd className="break-words text-slate-900">
+                  <dd className="wrap-break-word text-slate-900">
                     {event.previous_destination} → {event.new_destination}
                   </dd>
                 </div>
@@ -142,7 +142,7 @@ function ReviewEvents({
                     {event.corrections.map((correction, index) => (
                       <li
                         key={`${correction.field}-${index}`}
-                        className="break-words text-sm text-slate-700"
+                        className="wrap-break-word text-sm text-slate-700"
                       >
                         {correctionLabels[correction.field] ?? correction.field}: {displayReviewValue(correction.before)} → {displayReviewValue(correction.after)}
                       </li>
@@ -331,7 +331,7 @@ export function DocumentReviewDialog({
             <DialogDescription id="document-review-description" className="wrap-anywhere">
               {displayReviewValue(context.datos_extraidos.paciente.nombre)} · {documentId}
             </DialogDescription>
-            <p className="break-words text-sm text-slate-600">
+            <p className="wrap-break-word text-sm text-slate-600">
               Estado: {context.status} · Procesamiento: {context.processing_status}
             </p>
             <p className="text-sm text-slate-700">

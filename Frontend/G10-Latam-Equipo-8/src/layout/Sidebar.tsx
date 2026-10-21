@@ -75,7 +75,7 @@ export function Sidebar({
         <img
           src={logoMediflow}
           alt="MediFlow"
-          className="h-10 w-auto object-contain"
+          className="h-32 w-full object-cover"
         />
       </header>
       <nav aria-label="Navegación principal" className="flex flex-col gap-1">

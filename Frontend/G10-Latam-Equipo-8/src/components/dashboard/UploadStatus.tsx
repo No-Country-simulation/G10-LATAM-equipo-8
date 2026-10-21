@@ -42,7 +42,7 @@ export function UploadStatus({ uploadState, onOpenConfirmedDocument }: Props) {
       {isFailed && (
         <div role="alert" aria-live="assertive" className="text-sm text-red-700">
           <p className="font-semibold">No se pudo cargar {uploadState.fileName}.</p>
-          <p className="mt-1 break-words">{uploadState.error}</p>
+          <p className="mt-1 wrap-break-word">{uploadState.error}</p>
         </div>
       )}
       {uploadState.collectionRefreshError && (
@@ -66,7 +66,7 @@ export function UploadStatus({ uploadState, onOpenConfirmedDocument }: Props) {
             </p>
           )}
           {confirmedDocument.processing_error && (
-            <p className="mt-1 break-words text-slate-600">
+            <p className="mt-1 wrap-break-word text-slate-600">
               Diagnóstico técnico: {confirmedDocument.processing_error}
             </p>
           )}

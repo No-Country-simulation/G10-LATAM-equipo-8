@@ -34,7 +34,7 @@ function MetadataList({
         {fields.map((field) => (
           <div key={field.label} className="min-w-0 space-y-1">
             <dt className="text-xs font-medium text-slate-600">{field.label}</dt>
-            <dd className="break-words text-sm text-slate-900">{field.value}</dd>
+            <dd className="wrap-break-word text-sm text-slate-900">{field.value}</dd>
           </div>
         ))}
       </dl>
@@ -65,7 +65,7 @@ function ReviewField({
       <div className="space-y-1 border-b border-slate-200 py-3 last:border-b-0">
         <p className="text-sm font-medium text-slate-800">{field.label}</p>
         <p className="text-xs text-slate-600">Valor original</p>
-        <p className="break-words text-sm text-slate-900">{field.originalValue}</p>
+        <p className="wrap-break-word text-sm text-slate-900">{field.originalValue}</p>
       </div>
     );
   }
@@ -75,7 +75,7 @@ function ReviewField({
       <div className="space-y-1">
         <p className="text-sm font-medium text-slate-800">{field.label}</p>
         <p className="text-xs text-slate-600">Valor recibido</p>
-        <p className="break-words text-sm text-slate-900">{field.originalValue}</p>
+        <p className="wrap-break-word text-sm text-slate-900">{field.originalValue}</p>
       </div>
       <div className="space-y-2">
         <label htmlFor={id} className="block text-sm font-medium text-slate-800">
@@ -189,7 +189,7 @@ export function ReviewDocumentFields({
             <summary className="min-h-11 cursor-pointer font-medium">
               Diagnóstico técnico
             </summary>
-            <p className="break-words pt-2">
+            <p className="wrap-break-word pt-2">
               {presentation.processingError ?? "Sin dato"}
             </p>
           </details>
@@ -334,7 +334,7 @@ export function ReviewDocumentFields({
                         <p className="text-xs text-slate-600">
                           Página informada: {evidence.page}
                         </p>
-                        <p className="break-words text-sm text-slate-900">
+                        <p className="wrap-break-word text-sm text-slate-900">
                           Cita recibida: {evidence.quote}
                         </p>
                       </li>
@@ -375,7 +375,7 @@ export function ReviewDocumentFields({
                 <p className="text-xs text-slate-600">
                   Página informada: {evidence.page}
                 </p>
-                <p className="break-words text-sm text-slate-900">
+                <p className="wrap-break-word text-sm text-slate-900">
                   Cita recibida: {evidence.quote}
                 </p>
               </section>

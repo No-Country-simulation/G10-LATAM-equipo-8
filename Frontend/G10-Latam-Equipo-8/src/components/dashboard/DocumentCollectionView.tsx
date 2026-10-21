@@ -82,10 +82,10 @@ function CollectionDocumentDetails({
   const priority = document.clasificacion.nivel_prioridad;
   return (
     <>
-      <p className="break-words text-sm text-slate-700">
+      <p className="wrap-break-word text-sm text-slate-700">
         <span className="font-medium text-slate-900">Motivo:</span> {auditReason(document)}
       </p>
-      <p className="break-words text-sm text-slate-700">
+      <p className="wrap-break-word text-sm text-slate-700">
         <span className="font-medium text-slate-900">Apoyo:</span>{" "}
         {document.decision_enrutamiento.justificacion_enrutamiento}
       </p>
@@ -310,13 +310,13 @@ export function DocumentCollectionView({
                 <CardContent className="space-y-3">
                   <div>
                     <p className="text-xs text-slate-600">Paciente</p>
-                    <p className="break-words font-medium text-slate-900">
+                    <p className="wrap-break-word font-medium text-slate-900">
                       {document.datos_extraidos.paciente.nombre ?? "Paciente sin identificar"}
                     </p>
                     <p className="mt-1 break-all text-sm text-slate-700">
                       Documento: {document.documento_id}
                     </p>
-                    <p className="mt-1 break-words text-sm text-slate-700">
+                    <p className="mt-1 wrap-break-word text-sm text-slate-700">
                       Tipo de documento: {document.clasificacion.tipo_documento ?? "Sin dato"}
                     </p>
                   </div>
