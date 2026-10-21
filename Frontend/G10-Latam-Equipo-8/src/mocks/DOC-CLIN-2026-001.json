@@ -1,0 +1,53 @@
+{
+  "documento_id": "DOC-CLIN-2026-001",
+  "status": "NEEDS_AUDIT",
+  "canal_origen": "demo",
+  "created_at": "2026-10-27T00:00:00Z",
+  "clasificacion": {
+    "tipo_documento": "Receta Medica",
+    "especialidad": null,
+    "nivel_prioridad": null,
+    "score_confianza_clasificacion": 0.68
+  },
+  "datos_extraidos": {
+    "paciente": {
+      "nombre": "Laura Fernández",
+      "edad": 34
+    },
+    "medico_solicitante": {
+      "nombre": "Dr. Roberto Gómez",
+      "matricula": "MN-48291"
+    },
+    "estudio_realizado": null,
+    "indicacion": null,
+    "diagnostico_principal": "Faringitis Aguda",
+    "cie10_sugerido": "J02.9"
+  },
+  "decision_enrutamiento": {
+    "destino_principal": "REVISION_HUMANA",
+    "requiere_auditoria_humana": true,
+    "justificacion_enrutamiento": "Prescripción con dosis ambigua; requiere revisión humana.",
+    "alerta_urgente": false,
+    "notificacion_generada": null
+  },
+  "audit_reasons": [
+    "LEGACY_FIXTURE_REQUIRES_REVIEW"
+  ],
+  "almacenamiento": {
+    "proveedor": "local",
+    "ruta_objeto": "fixtures/DOC-CLIN-2026-001.json",
+    "status_backup": "exito"
+  },
+  "almacenamiento_oci": null,
+  "modo_ia": "simulado",
+  "confianza_tipo": "fixture",
+  "processing_status": "SUCCEEDED",
+  "processing_error": null,
+  "extraction_schema_version": 2,
+  "extraction_provenance": {
+    "provider": "simulated",
+    "model": null,
+    "prompt_version": null
+  },
+  "extraction_evidence": []
+}

@@ -1,83 +1,53 @@
-import type { TriajeDocumento } from "@/types/triaje";
-import { CloudUpload, Loader2 } from "lucide-react";
-import { useState } from "react";
+import type { ChangeEvent } from "react";
+import type { DocumentUploadSnapshot } from "@/hooks/documentUploadController";
 
 interface Props {
-  onUpload: (documento: TriajeDocumento) => void;
+  uploadState: DocumentUploadSnapshot;
+  onFileSelected: (file: File) => void;
 }
 
-export function DocumentUpload({ onUpload }: Props) {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFileName(file.name);
-      setIsProcessing(true);
-      setTimeout(() => {
-        const nuevoDoc: TriajeDocumento = {
-          documento_id: "DOC-CLIN-2026-005",
-          status: "pendiente_revision",
-          fecha_ingesta: "2026-10-27",
-          clasificacion: {
-            tipo_documento: "Receta Médica",
-            especialidad: "Medicina General",
-            nivel_prioridad: "Media",
-            score_confianza_clasificacion: 0.68,
-          },
-          datos_extraidos: {
-            paciente: { nombre: "Laura Fernández", edad: 34 },
-            medico_solicitante: {
-              nombre: "Dr. Roberto Gómez",
-              matricula: "MN-48291",
-            },
-            diagnostico_principal: "Faringitis Aguda",
-            cie10_sugerido: "J02.9",
-            motivo_alerta:
-              "Dosis Ambigua - Amoxicilina 1000g en lugar de 1000mg",
-          },
-          decision_enrutamiento: {
-            destino_principal: "Cola_Revision_Humana",
-            requiere_auditoria_humana: true,
-            justificacion_enrutamiento:
-              "Prescripción con dosis 1000 veces superior al límite seguro. Requiere confirmación facultativa.",
-          },
-          almacenamiento_oci: {
-            bucket: "mediflow-documentos-clinicos",
-            ruta_objeto: "auditoria_humana/DOC-CLIN-2026-001.json",
-            status_backup: "exito",
-          },
-        };
-        onUpload(nuevoDoc);
-        setIsProcessing(false);
-      }, 1500);
-    }
+export function DocumentUpload({ uploadState, onFileSelected }: Props) {
+  const isUploading = uploadState.phase === "uploading";
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (file) onFileSelected(file);
+    input.value = "";
   };
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+
   return (
-    <label
-      htmlFor="file-upload"
-      className="cursor-pointer flex flex-col items-center justify-center gap-2 p-2 my-2 bg-gray-200 text-muted-foreground border-2 border-dashed border-gray-300 rounded-lg hover:bg-muted/50 hover:border-primary/60 active:scale-95 active:bg-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 transition-all duration-200"
-    >
-      <input
-        id="file-upload"
-        type="file"
-        className="hidden"
-        accept=".pdf,.png,.jpg,.jpeg"
-        onChange={handleFileChange}
-      />
-      {isProcessing ? (
-        <>
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <h3 className="font-bold">Analizando documento con IA...</h3>
-          <p className="font-extralight text-sm">{selectedFileName}</p>
-        </>
-      ) : (
-        <>
-          <CloudUpload></CloudUpload>
-          <h3 className="font-bold">Carga de Nuevos Documentos</h3>
-          <p className="font-extralight">Arrastra PDF's, imágenes o texto</p>
-        </>
-      )}
-    </label>
+    <section aria-labelledby="upload-title" className="flex flex-col gap-4">
+      <header>
+        <h2 id="upload-title" className="text-2xl font-semibold text-slate-900">
+          Cargar documentos
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Selecciona un archivo para enviarlo al servicio configurado.
+        </p>
+      </header>
+      <label
+        htmlFor="document-upload"
+        className={`inline-flex min-h-11 w-fit items-center justify-center rounded-lg border px-4 text-sm font-medium focus-within:ring-2 focus-within:ring-teal-700 focus-within:ring-offset-2 ${
+          isUploading
+            ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
+            : "cursor-pointer border-teal-700 bg-teal-700 text-white hover:bg-teal-800"
+        }`}
+      >
+        <input
+          id="document-upload"
+          type="file"
+          className="sr-only"
+          accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+          aria-describedby="upload-formats"
+          disabled={isUploading}
+          onChange={handleFileChange}
+        />
+        <span>{isUploading ? "Carga en curso" : "Seleccionar archivo"}</span>
+      </label>
+      <p id="upload-formats" className="text-sm text-slate-600">
+        Formatos admitidos: PDF, PNG, JPG y JPEG. El límite de tamaño lo valida el servicio.
+      </p>
+    </section>
   );
 }

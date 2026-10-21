@@ -1,95 +1,188 @@
-import { useState } from "react";
-import { useEffect } from "react";
-import type { TriajeDocumento } from "@/types/triaje";
+import { useCallback, useEffect, useState } from "react";
+import type { HistoryResponse, ReviewRequest, TriajeDocumento } from "@/types/triaje";
 import { triajeService } from "@/services/triajeService";
 
+const paginaInicial: HistoryResponse = {
+  items: [],
+  total: 0,
+  offset: 0,
+  limit: 20,
+};
+
+function mensajeDeError(error: unknown): string {
+  return error instanceof Error ? error.message : "Ocurrió un error inesperado";
+}
+
 export function useTriajes() {
-  // estado del triaje
-  const [triajes, setTriajes] = useState<TriajeDocumento[]>([]);
+  const [historial, setHistorial] = useState<HistoryResponse>(paginaInicial);
+  const [colaAuditoria, setColaAuditoria] = useState<HistoryResponse>(paginaInicial);
   const [status, setStatus] = useState<"esperando" | "error" | "exito">(
     "esperando",
   );
-  const [mensaje, setMensaje] = useState<string>("");
-  const [intentos, setIntentos] = useState<number>(0);
+  const [mensaje, setMensaje] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  const [intentos, setIntentos] = useState(0);
 
-  // Pedido del Triaje
-  useEffect(() => {
-    async function pedirTriajes() {
-      setStatus("esperando");
+  const obtenerDatos = useCallback(
+    (historyOffset = 0) =>
+      Promise.all([
+        triajeService.getTriajes({
+          offset: historyOffset,
+          limit: paginaInicial.limit,
+        }),
+        triajeService.getAuditQueue({ offset: 0, limit: paginaInicial.limit }),
+      ]),
+    [],
+  );
+
+  const cargarDatos = useCallback(
+    async (mostrarCarga = true, historyOffset = 0) => {
       try {
-        const lista = await triajeService.getTriajes();
-        setTriajes(lista);
+        const [paginaHistorial, paginaAuditoria] =
+          await obtenerDatos(historyOffset);
+        setHistorial(paginaHistorial);
+        setColaAuditoria(paginaAuditoria);
+        setMensaje("");
         setStatus("exito");
       } catch (error) {
-        if (error instanceof Error) {
-          setMensaje(error.message);
-        } else {
-          setMensaje("Ocurrió un error inesperado");
-        }
+        setMensaje(mensajeDeError(error));
+        if (mostrarCarga) setStatus("error");
+        throw error;
+      }
+    },
+    [obtenerDatos],
+  );
+
+  useEffect(() => {
+    let active = true;
+    const cargarInicial = async () => {
+      try {
+        const [paginaHistorial, paginaAuditoria] = await obtenerDatos();
+        if (!active) return;
+        setHistorial(paginaHistorial);
+        setColaAuditoria(paginaAuditoria);
+        setMensaje("");
+        setStatus("exito");
+      } catch (error) {
+        if (!active) return;
+        setMensaje(mensajeDeError(error));
         setStatus("error");
       }
+    };
+    void cargarInicial();
+    return () => {
+      active = false;
+    };
+  }, [intentos, obtenerDatos]);
+
+  const handleHistoryPageChange = useCallback(
+    async (offset: number): Promise<void> => {
+      setHistoryLoading(true);
+      setHistoryError("");
+      try {
+        const pagina = await triajeService.getTriajes({
+          offset,
+          limit: historial.limit,
+        });
+        setHistorial(pagina);
+      } catch (error) {
+        setHistoryError(mensajeDeError(error));
+      } finally {
+        setHistoryLoading(false);
+      }
+    },
+    [historial.limit],
+  );
+
+  const handleReview = useCallback(
+    async (id: string, request: ReviewRequest): Promise<void> => {
+      setReviewingId(id);
+      setReviewError("");
+      setMensaje("");
+      let actualizado: TriajeDocumento;
+      try {
+        actualizado = await triajeService.revisarDocumento(id, request);
+      } catch (error) {
+        const message = mensajeDeError(error);
+        setReviewError(message);
+        throw error;
+      } finally {
+        setReviewingId(null);
+      }
+
+      setHistorial((actual) => ({
+        ...actual,
+        items: actual.items.map((item) =>
+          item.documento_id === id ? actualizado : item,
+        ),
+      }));
+      setColaAuditoria((actual) => ({
+        ...actual,
+        items: actual.items.filter((item) => item.documento_id !== id),
+        total: Math.max(0, actual.total - 1),
+      }));
+
+      try {
+        await cargarDatos(false, historial.offset);
+      } catch (error) {
+        setMensaje(
+          `La revisión quedó registrada, pero no se pudo actualizar la lista: ${mensajeDeError(error)}`,
+        );
+      }
+    },
+    [cargarDatos, historial.offset],
+  );
+
+  const handleDocumentUploaded = useCallback((nuevoDocumento: TriajeDocumento) => {
+    setHistorial((actual) => ({
+      ...actual,
+      items:
+        actual.offset === 0
+          ? [nuevoDocumento, ...actual.items].slice(0, actual.limit)
+          : actual.items,
+      total: actual.total + 1,
+    }));
+    if (nuevoDocumento.status === "NEEDS_AUDIT") {
+      setColaAuditoria((actual) => {
+        if (
+          actual.items.some(
+            (item) => item.documento_id === nuevoDocumento.documento_id,
+          )
+        ) {
+          return actual;
+        }
+        return {
+          ...actual,
+          items: [nuevoDocumento, ...actual.items].slice(0, actual.limit),
+          total: actual.total + 1,
+        };
+      });
     }
-    pedirTriajes();
-  }, [intentos]);
+  }, []);
 
-  // logica del boton aprobar
-  const handleApprove = (id: string) => {
-    setTriajes((prev) =>
-      prev.map((doc) =>
-        doc.documento_id === id
-          ? {
-              ...doc,
-              status: "aprobado",
-              decision_enrutamiento: {
-                ...doc.decision_enrutamiento,
-                requiere_auditoria_humana: false,
-              },
-            }
-          : doc,
-      ),
-    );
-  };
+  const handleRetry = useCallback(() => {
+    setMensaje("");
+    setStatus("esperando");
+    setIntentos((actual) => actual + 1);
+  }, []);
 
-  // logica del boton rechazar
-  const handleReject = (id: string) => {
-    setTriajes((prev) =>
-      prev.map((doc) =>
-        doc.documento_id === id
-          ? {
-              ...doc,
-              status: "rechazado",
-              decision_enrutamiento: {
-                ...doc.decision_enrutamiento,
-                requiere_auditoria_humana: false,
-              },
-            }
-          : doc,
-      ),
-    );
-  };
-
-  // Recibo del nuevoDoc con handleDocumentUploaded
-  const handleDocumentUploaded = (nuevoDoc: TriajeDocumento) => {
-    setTriajes((prev) => [nuevoDoc, ...prev]);
-  };
-
-  // Logica de Reintentos handleRetry
-  const handleRetry = () => {
-    setIntentos((prev) => prev + 1);
-  };
-
-  // Contador de la card DocumentCount
-  const criticalAlertsCount = triajes.filter(
-    (t) => t.decision_enrutamiento.requiere_auditoria_humana,
-  ).length;
   return {
-    handleApprove,
-    handleReject,
+    handleReview,
     handleRetry,
     handleDocumentUploaded,
+    handleHistoryPageChange,
     mensaje,
     status,
-    criticalAlertsCount,
-    triajes,
+    auditPendingCount: colaAuditoria.total,
+    triajes: historial.items,
+    historial,
+    casosRevision: colaAuditoria.items,
+    reviewError,
+    reviewingId,
+    historyLoading,
+    historyError,
   };
 }

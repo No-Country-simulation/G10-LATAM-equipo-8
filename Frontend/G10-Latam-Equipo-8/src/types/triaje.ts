@@ -177,6 +177,49 @@ export interface ReviewRequest {
   correcciones?: CorreccionesRevision;
 }
 
-// Pendientes por fase (no tipificar antes de tiempo):
-// - TextRequest (POST /api/v1/triajes por texto) → P1 upload.
-// - ReviewEventResponse (GET /api/v1/triajes/{id}/revisiones) → P3 log de revisiones.
+export interface SnapshotRevision {
+  document_type: string | null;
+  priority: NivelPrioridad | null;
+  confidence: number | null;
+  patient_name: string | null;
+  patient_age: number | null;
+  audit_reasons: string[];
+  schema_version: number;
+  professional_name: string | null;
+  professional_registration: string | null;
+  study: string | null;
+  indication: string | null;
+  diagnosis: string | null;
+  cie10_suggested: string | null;
+  evidence: EvidenciaExtraccion[];
+}
+
+export interface CorreccionEventoRevision {
+  field: string;
+  before: string | number | null;
+  after: string | number | null;
+}
+
+/** Event shape returned by GET /api/v1/triajes/{documento_id}/revisiones. */
+export interface ReviewEventResponse {
+  review_id: string;
+  document_id: string;
+  action: AccionRevision;
+  reviewer: string;
+  comment: string;
+  created_at: string;
+  previous_status: StatusTriaje;
+  new_status: StatusTriaje;
+  previous_destination: DestinoPrincipal;
+  new_destination: DestinoPrincipal;
+  before: SnapshotRevision;
+  after: SnapshotRevision;
+  corrections: CorreccionEventoRevision[];
+}
+
+/** Binary original returned by the document endpoint; MIME/name come from HTTP headers. */
+export interface DocumentoOriginal {
+  blob: Blob;
+  contentType: string | null;
+  filename?: string;
+}

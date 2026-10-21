@@ -12,13 +12,12 @@
 
 ## 🚀 Características Principales
 
-* **Diseño 100% Responsivo y Adaptativo (Desktop & Mobile):**
-  * **Desktop:** Tabla tabular de alta densidad con desplazamiento vertical confinado para análisis rápido de casos clínicos.
-  * **Mobile:** Vista adaptativa de tarjetas independientes (*cards*) apiladas ergonómicamente con acciones inmediatas al alcance del pulgar.
-* **Navegación Móvil Integrada:** Encabezado con drawer lateral deslizante (*Sheet*) que contiene el menú completo de navegación sin ocupar espacio en pantalla.
-* **Ingesta de Documentos Clínicos:** Zona interactiva de arrastre y soltado (*dropzone*) preparada para recibir archivos clínicos en formatos PDF e imágenes.
-* **Cola de Revisión de Casos Críticos (HITL):** Módulo central de auditoría humana con acciones rápidas de **Aprobar** y **Rechazar**.
-* **Métricas Clave:** Indicadores superiores de volumen total de documentos procesados y alertas críticas pendientes de resolución.
+* **Shell y bandejas:** navegación entre cuatro destinos, colecciones, filtros y paginación integrados; el alcance de verificación se detalla en T8.
+* **Cuatro destinos en memoria:** Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas, sin rutas URL nuevas.
+* **Carga compartida:** Selector PDF/PNG/JPG/JPEG con estado, errores y resultado consultables al navegar; la API valida límites y confirma los registros.
+* **Colecciones conectadas:** Pendientes muestra la cola de auditoría; Alertas inmediatas se limita a `alerta_urgente === true` en el historial cargado, no a un total global.
+* **Revisión HITL:** El modal conserva el original y las propuestas locales, con aprobación/corrección y rechazo confirmados mediante los métodos vigentes de la API.
+* **Desplazamiento móvil:** tarjetas y encabezado/contenido del modal validados manualmente por el usuario en Brave móvil, Samsung S24. La integración montada de T8 pasó además sus 11 escenarios no táctiles.
 
 ---
 
@@ -28,8 +27,10 @@
 * **Empaquetador & Dev Server:** [Vite 8](https://vite.dev/) (con motor Rolldown y Fast Refresh)
 * **Estilos & Diseño:** [Tailwind CSS v4](https://tailwindcss.com/)
 * **Componentes de UI:** [Shadcn UI](https://ui.shadcn.com/) (primitivos accesibles sobre [Radix UI](https://www.radix-ui.com/))
-* **Iconografía:** [Lucide React](https://lucide.dev/)
-* **Calidad de Código:** ESLint 9 (Flat Config con reglas optimizadas para React Refresh)
+* **Iconografía:** [ReIcon React](https://reicon.dev/docs/react), mediante imports explícitos por icono en `src/components/ui/icons.ts`. La integración usa los subpaths públicos verificados del paquete `reicon-react` y conserva nombres accesibles, tamaños y estados de los controles.
+* **Calidad de Código:** ESLint 10 (Flat Config con reglas optimizadas para React Refresh)
+
+Los iconos nuevos se agregan manualmente desde el adaptador local; por ejemplo: `import { ClipboardList } from "@/components/ui/icons"`. `components.json` conserva su valor existente para Lucide: la migración no afirma compatibilidad de ReIcon con el generador de shadcn.
 
 ---
 
@@ -39,61 +40,97 @@ El proyecto sigue principios de **Clean Architecture** y **Screaming Architectur
 
 ```text
 src/
-├── assets/                  # Recursos gráficos y estáticos (logo institucional, etc.)
+├── assets/                  # Recursos gráficos y estáticos
 ├── components/
-│   ├── dashboard/           # Componentes de negocio específicos del panel
-│   │   ├── CriticalCasesQueue.tsx  # Cola de casos críticos (vista dual tabla/tarjeta)
-│   │   ├── DashboardFooter.tsx     # Pie de página institucional y enlaces OCI
-│   │   ├── DocumentCount.tsx       # Contadores métricos de triaje y alertas
-│   │   └── DocumentUpload.tsx      # Dropzone de ingesta de archivos
-│   └── ui/                  # Componentes primitivos desacoplados (Shadcn UI)
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── sheet.tsx
-│       └── table.tsx
-├── layout/                  # Cascarón estructural de la aplicación
-│   ├── DashboardLayout.tsx  # Layout principal con control estricto de viewport
-│   ├── Header.tsx           # Encabezado responsive (Desktop + Mobile Sheet)
-│   └── Sidebar.tsx          # Barra de navegación lateral con identidad visual
-├── types/                   # Contratos de datos e interfaces de dominio (Fase 2)
-├── mocks/                   # Datos simulados estructurados para desarrollo aislado (Fase 2)
-├── services/                # Servicios HTTP y comunicación con backend API/OCI (Fase 3)
-├── App.tsx                  # Ensamblador de vistas y layout raíz
-├── index.css                # Configuración global de estilos y tokens Tailwind v4
-└── main.tsx                 # Punto de entrada de la aplicación React
+│   ├── dashboard/           # Componentes del flujo documental activo
+│   │   ├── DocumentCollectionView.tsx # Bandejas, filtros y tabla/tarjetas
+│   │   ├── DocumentReviewDialog.tsx   # Modal y recursos de la revisión
+│   │   ├── DocumentOriginalViewer.tsx # Visor del original recibido
+│   │   ├── ReviewDocumentFields.tsx   # Valores originales y propuestas
+│   │   ├── ReviewDecisionFields.tsx   # Validación de decisiones y rechazo
+│   │   └── DocumentUpload.tsx         # Selector de archivos
+│   └── ui/                  # Primitivos accesibles y adaptador de iconos
+├── hooks/                   # Controladores de carga, colecciones y decisiones
+├── layout/
+│   ├── DashboardLayout.tsx  # Flujo móvil y contención de escritorio
+│   ├── Header.tsx           # Encabezado y navegación móvil vía Sheet
+│   └── Sidebar.tsx          # Navegación lateral
+├── types/                   # Contratos de triaje y revisión
+├── mocks/                   # Adaptador de la muestra sintética portable
+├── services/                # Cliente HTTP y modo demo explícito
+├── App.tsx                  # Ensamblador de destinos y estado compartido
+├── index.css                # Estilos y tokens Tailwind
+└── main.tsx                 # Punto de entrada React
 ```
 
 ---
 
-## 🗺️ Roadmap de Implementación (Frontend)
+## 📚 Guía técnica del proyecto
 
-- [x] **Fase 1: Maquetado y Shell Responsivo**
-  - [x] Configuración de entorno base (Vite + Tailwind v4 + Shadcn UI).
-  - [x] Estructura de `DashboardLayout` con contención de viewport (`h-screen overflow-hidden`) y flexbox sin desbordes (`min-w-0`, `min-h-0`).
-  - [x] `Sidebar` con branding y navegación principal.
-  - [x] `Header` con variante de escritorio y menú móvil vía `Sheet`.
-  - [x] Módulo `DocumentUpload` (dropzone de carga).
-  - [x] `CriticalCasesQueue` con comportamiento adaptativo (Tabla en escritorio / Tarjetas en mobile).
-  - [x] Integración de `DashboardFooter`.
-  - [x] Saneamiento de ESLint Flat Config para componentes de UI.
+Para entender qué hace cada archivo importante, cómo se conectan las capas y qué piezas son heredadas, consultá la [guía técnica de MediFlow](../../docs/mediflow-project-guide.md).
 
-- [ ] **Fase 2: Contratos de Datos y Mocks Clínicos (Type-Driven Development)**
-  - [ ] Modelado de interfaces TypeScript (`src/types/triaje.ts`) siguiendo el contrato oficial del backend.
-  - [ ] Creación de datasets simulados (`src/mocks/triajes.ts`) cubriendo los 3 escenarios obligatorios del hackathon:
-    1. Caso estándar de rutina aprobado automáticamente.
-    2. Caso con prioridad de urgencia médica.
-    3. Caso ambiguo/inconsistente derivado a auditoría humana (*Human-in-the-Loop*).
-  - [ ] Conexión de componentes a los tipos formales en lugar de datos hardcodeados.
+## 🗺️ Estado de implementación V2
 
-- [ ] **Fase 3: Lógica Interactiva y Estado Human-in-the-Loop (HITL)**
-  - [ ] Manejo de estado reactivo para la aprobación y rechazo de casos en la cola crítica.
-  - [ ] Simulación de ingesta de archivos en el dropzone con previsualización y validación de formatos (PDF / Imágenes).
-  - [ ] Feedback visual interactivo (estados de carga, confirmación y alertas).
+| Unidad | Estado |
+|---|---|
+| T1–T3: base, servicios, navegación y carga compartida | Implementadas y verificadas como unidades de código. |
+| T4–T6: bandejas, modal y decisiones | Implementadas; pruebas de lógica, revisiones independientes y los 11 escenarios montados de T8 verificados dentro de sus respectivos alcances. |
+| T7: migración a ReIcon | Implementada con `reicon-react@1.2.6`; generador de shadcn sin cambios no verificados. |
+| T8: integración y cierre | Base V2 `685722f` verificada: 11/11 escenarios montados no táctiles, checks locales y confirmación manual de los dos gestos móviles. |
 
-- [ ] **Fase 4: Integración con API REST y Despliegue**
-  - [ ] Creación del cliente de servicios (`src/services/triajeService.ts`).
-  - [ ] Conexión con endpoints de backend (FastAPI / n8n en OCI Compute).
-  - [ ] Validación de persistencia de documentos en OCI Object Storage.
+El detalle de requisitos, evidencia y commits está en [el seguimiento V2](../../odd/tasks/mediflow-frontend-v2.md). Este estado no acredita despliegue, activación de proveedores ni persistencia en OCI.
+
+### UX/UI V2: shell T3 y límites
+
+T3 implementa el shell responsive con cuatro destinos en memoria: Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas. Pendientes usa la cola de auditoría; su contador no representa urgencia clínica. Alertas inmediatas solo filtra `alerta_urgente === true` entre los registros cargados de la página de historial e informa ese alcance local. El estado de carga vive en App y permanece consultable al cambiar de destino; el resultado confirmado se separa de errores de actualización de colecciones. PDF, PNG, JPG y JPEG se validan localmente por extensión/MIME cuando está disponible; los límites y rechazos 413/415 siguen bajo autoridad de la API. Un 201 con `processing_status=FAILED` se muestra como fallo técnico registrado, no como extracción exitosa.
+
+La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia=simulado` no prueba que un archivo subido sea ficticio. T4 conecta las bandejas con el modal; T5 conserva original, propuestas locales y protecciones del visor, y T6 integra decisiones reales sobre el contrato vigente. T7 migra los iconos del frontend activo a ReIcon mediante el adaptador local y subpaths públicos por icono. Se conserva la [especificación](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, y las referencias Canva aprobadas; no se simula un original descargable y el alcance real de verificación se distingue en T8. El [mock de datos](../../docs/examples/frontend-review/README.md) sigue siendo la muestra portable existente, sin copia adicional del JSON.
+
+### Bandejas, filtros y contexto (T4)
+
+- **Pendientes** consulta la cola de auditoría con `offset` y `limit`, sin añadir un filtro HTTP de estado.
+- **Todos los documentos** y **Alertas inmediatas** comparten la página de historial y su filtro de estado de revisión. El historial admite ese filtro HTTP; Alertas selecciona únicamente `alerta_urgente === true` entre los registros recibidos, sin aparentar una consulta o un total global de alertas.
+- **Paciente o documento** y **Tipo de documento** filtran solo la página cargada. Las coincidencias locales no sustituyen el total ni la paginación del servidor; una página sin coincidencias puede tener páginas siguientes.
+- **Revisar** abre el modal sobre la colección actual para cualquier estado recibido. Cerrar la selección no reinicia destino, búsqueda, tipo, estado ni página. El resultado confirmado de una carga también puede abrirse sin navegación automática.
+- Los errores de lectura permiten reintentar la consulta, no la extracción de IA. Una actualización fallida conserva las páginas previas y se informa por separado del documento cuya carga ya fue confirmada.
+
+### Modal de revisión documental (T5–T6, integrado mediante T4)
+
+`src/components/dashboard/DocumentReviewDialog.tsx` exporta `DocumentReviewDialog` con `document`, `onClose`, `onReturnFocus` opcional y `busy` opcional (por defecto `false`). `App` lo monta con `key={document.documento_id}`. Las acciones de las filas conservan un destino de foco; el modal admite además `onReturnFocus` o un elemento lógico marcado con `data-review-dialog-return-focus`.
+
+El modal carga detalle, bytes originales y eventos de revisión de forma independiente mediante el servicio compartido. Mantiene separados sus estados y errores; el JSON demo comunica que no contiene los bytes originales. Solo ofrece vista previa para `application/pdf`, `image/png` e `image/jpeg` recibidos; los demás MIME no se interpretan como HTML/SVG. Se revoca cada URL temporal al cambiar el original o desmontar el visor.
+
+Los valores originales permanecen visibles junto a propuestas distintas. Datos del médico y del estudio se identifican como solo locales; no se guardan ni envían. Solo nombre, edad, tipo documental y prioridad pueden formar correcciones admitidas por la API; los valores locales no se incluyen. Un campo vacío no implica borrado y la edad nula requiere una acción explícita. Revisor declarado, comentario, destino final y verificación son requisitos separados; cambiar una propuesta o un dato de decisión invalida la verificación. La prioridad **Urgente** exige `EMERGENCIA_MEDICA`. `FAILED` muestra **Revisar procesamiento**, prioridad nula como **Sin evaluar** y `processing_error` dentro de un diagnóstico desplegable; no permite aprobar desde un formulario vacío, aunque sí confirmar un rechazo. El rechazo comparte el modal y usa el comentario como motivo, sin aplicar correcciones locales.
+
+Una decisión confirmada cierra el modal y vuelve a consultar las colecciones; un error posterior de actualización se comunica como separado de la decisión ya confirmada. Un `409` vuelve a leer el detalle y bloquea otra acción en ese modal; los errores de red/servidor inciertos tampoco ofrecen reenvío automático. No hay persistencia de borradores ni afirmaciones de despacho. Escape/clic exterior/cierre piden confirmar el descarte si hay cambios y bloquean el cierre durante el envío. T8 verificó el foco, la geometría y los estados montados con respuestas sintéticas. Al cerrar se restaura un disparador visible o un destino lógico de la colección; si la última fila desaparece tras confirmar la revisión, el área principal recibe el foco sin desplazar la página ni quitarle un foco deliberado al usuario.
+
+### Desplazamiento y verificación (T8)
+
+- **Móvil, menos de 1024 px:** las tarjetas participan del scroll de la página, sin un contenedor de desplazamiento propio. En el modal, encabezado, motivos, pestañas y contenido comparten un scroller vertical; el pie de cierre queda fuera.
+- **Escritorio, desde 1024 px:** el original permanece a la izquierda y los datos a la derecha, con paneles de desplazamiento independientes.
+
+El ajuste posterior del logo y las clases tiene **73/73 tests, lint, TypeScript y build correctos**. Su verificación visual focalizada pasó **6/6 grupos en Brave**: logo y navegación en 1440/1024/390 px, y textos largos del modal en 320/768/1440 px. Se inspeccionaron ocho capturas, con API sintética, 21 GET y ningún POST real. No hubo desborde de página/modal; la tabla intermedia conserva su desplazamiento horizontal interno. Los 11 escenarios siguientes pertenecen a la base V2, no son una nueva ejecución sobre este ajuste. El estado puntual está en [el seguimiento del ajuste y la guía](../../odd/tasks/mediflow-ui-polish-project-guide.md).
+
+| Evidencia base V2 (`685722f`) | Alcance |
+|---|---|
+| 69/69 tests, lint, TypeScript y build correctos | Lógica, preservación y SSR de iconos; no prueban gestos ni geometría montada. El build conserva la advertencia de importación dinámica preexistente. |
+| Tarjetas y modal funcionan en Brave móvil, Samsung S24 | Confirmación manual reportada por el usuario; no es una prueba automatizada ni de otros dispositivos. |
+| Detector Impeccable: 0 hallazgos | Análisis estático de los cuatro archivos UI modificados, no prueba de interacción. |
+| 11/11 escenarios montados de integración | Vite real en Brave aislado, API sintética interceptada antes de navegar: 320/390/768/1024/1440 px, contenido largo, Tab/Shift+Tab/Escape y retorno de foco, carga/error/vacío, prioridad nula/urgente, contexto, decisiones/conflicto 409 y continuidad de carga con actualización fallida. Sin errores de ejecución ni solicitudes API desconocidas. |
+| Reflow equivalente al 200% | 720 px CSS con DPR 2; no es zoom real del menú del navegador ni del sistema operativo. |
+| Evaluación nativa | No disponible en este entorno; no se afirma aprobación nativa. |
+
+El lote T8 de esa base terminó con salida 0 y limpieza 0; los cuatro archivos UI conservaron las mismas huellas antes y después. Se revisaron las capturas de las cinco anchuras, contenido largo, extracción fallida y carga confirmada con error de actualización. Son **11 escenarios automatizados no táctiles y dos comprobaciones manuales de gestos**, no 13 automatizados.
+
+La muestra portable no aporta bytes originales ni eventos de revisión: la verificación conserva esos estados honestos, sin fabricar evidencia clínica. No acredita bytes originales positivos, mutaciones contra el backend real, persistencia, proveedores ni decisiones clínicas. El seguimiento V2 conserva las limitaciones y el origen de cada comprobación.
+
+### Servicio de detalle, original y revisiones
+
+- `triajeService.provenance` informa `"api"` o `"demo"`; una URL base explícitamente vacía conserva el modo demo y los fallos HTTP no cambian silenciosamente a mocks.
+- `getDetalleTriaje(documentId: string): Promise<TriajeDocumento>` consulta el detalle disponible; en demo solo resuelve IDs de la muestra portable.
+- `getDocumentoOriginal(documentId: string): Promise<DocumentoOriginal>` devuelve `{ blob, contentType, filename? }` desde los bytes y headers HTTP. En demo rechaza porque la muestra no incluye PDF/imagen.
+- `getRevisiones(documentId: string): Promise<ReviewEventResponse[]>` devuelve el array del contrato; el modo demo no inventa eventos y expone una lista vacía para los fixtures conocidos.
+- `TriajeServiceError` conserva `status`, `statusText`, `body` y `detail` para que la UI gestione, entre otros, conflictos `409` sin perder el error del backend.
 
 ---
 
@@ -120,6 +157,25 @@ npm run dev
 ```
 La aplicación estará disponible de forma local en `http://localhost:5173/`.
 
+### Conectar con el backend local
+
+En otra terminal, desde `backend/` del repositorio del backend y con su entorno `.venv` preparado, iniciá FastAPI en el puerto `8002` en modo simulado:
+
+```bash
+AI_MODE=simulated REPOSITORY_MODE=memory STORAGE_MODE=local \
+  .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8002
+```
+
+Al ejecutar `npm run dev`, Vite reenvía únicamente las solicitudes `/api/v1` a `http://127.0.0.1:8002` y conserva la ruta original. Si `VITE_API_URL` no está definida, el cliente usa `/api/v1` y esta ruta pasa por el proxy local.
+
+- Para forzar el proxy sin editar archivos de entorno, ejecutá `VITE_API_URL=/api/v1 npm run dev`.
+- Para optar explícitamente por el modo demo existente, inicia el frontend con `VITE_API_URL="" npm run dev`. Historial, cola y revisión usan sus mocks; la carga de archivos sigue requiriendo un backend configurado.
+- Un `VITE_API_URL` con origen absoluto, por ejemplo `VITE_API_URL=http://127.0.0.1:8002 npm run dev`, reemplaza la base relativa y no usa el proxy de Vite. Esa conexión directa puede requerir CORS en el backend.
+- Vite Preview (`npm run preview`) hereda `server.proxy` por defecto mediante `preview.proxy`. Sirve el build de producción: esa herencia no cambia la base `VITE_API_URL` definida al compilar ni convierte un build mock en modo API.
+- Un despliegue estático de producción no hereda el proxy de Vite. Sin `VITE_API_URL` en el build de producción se conserva el comportamiento mock existente; para una base `/api/v1` en un sitio publicado, el hosting debe proporcionar un reverse proxy de mismo origen.
+
+En una etapa anterior, la comunicación HTTP por proxy se verificó con FastAPI simulado, memoria y almacenamiento temporal: historial/cola, carga multipart, descarga del original y rechazo, incluyendo errores 404/409 sin duplicar revisiones. Los servidores y datos de prueba se limpiaron. Esto no acredita extracción real de PDF, despacho ni una prueba visual en navegador.
+
 > **Nota para pruebas en red local (móviles):**
 > Si querés acceder desde un dispositivo móvil en la misma red Wi-Fi, ejecutá:
 > ```bash
@@ -130,4 +186,10 @@ La aplicación estará disponible de forma local en `http://localhost:5173/`.
 ```bash
 npm run lint
 ```
-Debe finalizar sin errores (`exit code 0`).
+### Registro histórico anterior a V2
+
+El agente de implementación observó `npm run lint` con salida 0 después de agregar únicamente `recovery/**` a los global ignores existentes. El comando y las reglas para código activo se conservaron; no se añadieron ignores para `src/` ni `tests/`. Registró 2/2 pruebas focalizadas y 25/25 en la suite completa. El coordinador repitió las dos pruebas focalizadas con salida 0: la CLI pública ignora el fixture recuperado y sigue rechazando la variable sin usar del fixture `src/` con el mismo error.
+
+**Resultado histórico, anterior al ajuste:** `npm run lint` salió con código 1 por `_documento` sin usar en `recovery/mediflow-v2-reconstruction/src/components/dashboard/puedeRevisarseDocumento.ts:17:39`. El overlay no se modificó; ese fallo ya no representa el estado actual del linter. En la verificación previa del proxy, la suite de 23 pruebas y `npm run build` terminaron con salida 0; no se repitió el build en esta etapa de documentación.
+
+**Especificación UX/UI V2:** [`docs/mediflow-frontend-ai-spec.md`](../../docs/mediflow-frontend-ai-spec.md), secciones 15–16, incorpora el menú, revisión modal y alcance ampliado acordados, con un [mock JSON fiel al backend](../../docs/examples/frontend-review/historial.json). Preserva las cuatro referencias Canva, adaptaciones al contrato y equivalencias Tailwind propuestas; se usaron Shape/Operate de Impeccable. La interfaz implementa el alcance contractual descrito; las propuestas sin soporte API siguen siendo locales y la muestra no contiene originales. La evidencia actual y los pendientes se distinguen en T8.
