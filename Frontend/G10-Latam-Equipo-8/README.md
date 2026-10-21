@@ -28,7 +28,7 @@
 * **Estilos & Diseño:** [Tailwind CSS v4](https://tailwindcss.com/)
 * **Componentes de UI:** [Shadcn UI](https://ui.shadcn.com/) (primitivos accesibles sobre [Radix UI](https://www.radix-ui.com/))
 * **Iconografía:** [ReIcon React](https://reicon.dev/docs/react), mediante imports explícitos por icono en `src/components/ui/icons.ts`. La integración usa los subpaths públicos verificados del paquete `reicon-react` y conserva nombres accesibles, tamaños y estados de los controles.
-* **Calidad de Código:** ESLint 9 (Flat Config con reglas optimizadas para React Refresh)
+* **Calidad de Código:** ESLint 10 (Flat Config con reglas optimizadas para React Refresh)
 
 Los iconos nuevos se agregan manualmente desde el adaptador local; por ejemplo: `import { ClipboardList } from "@/components/ui/icons"`. `components.json` conserva su valor existente para Lucide: la migración no afirma compatibilidad de ReIcon con el generador de shadcn.
 
@@ -65,6 +65,10 @@ src/
 
 ---
 
+## 📚 Guía técnica del proyecto
+
+Para entender qué hace cada archivo importante, cómo se conectan las capas y qué piezas son heredadas, consultá la [guía técnica de MediFlow](../../docs/mediflow-project-guide.md).
+
 ## 🗺️ Estado de implementación V2
 
 | Unidad | Estado |
@@ -72,7 +76,7 @@ src/
 | T1–T3: base, servicios, navegación y carga compartida | Implementadas y verificadas como unidades de código. |
 | T4–T6: bandejas, modal y decisiones | Implementadas; pruebas de lógica, revisiones independientes y los 11 escenarios montados de T8 verificados dentro de sus respectivos alcances. |
 | T7: migración a ReIcon | Implementada con `reicon-react@1.2.6`; generador de shadcn sin cambios no verificados. |
-| T8: integración y cierre | Verificada: 11/11 escenarios montados no táctiles sobre la versión actual, checks locales y confirmación manual de los dos gestos móviles. |
+| T8: integración y cierre | Base V2 `685722f` verificada: 11/11 escenarios montados no táctiles, checks locales y confirmación manual de los dos gestos móviles. |
 
 El detalle de requisitos, evidencia y commits está en [el seguimiento V2](../../odd/tasks/mediflow-frontend-v2.md). Este estado no acredita despliegue, activación de proveedores ni persistencia en OCI.
 
@@ -105,7 +109,9 @@ Una decisión confirmada cierra el modal y vuelve a consultar las colecciones; u
 - **Móvil, menos de 1024 px:** las tarjetas participan del scroll de la página, sin un contenedor de desplazamiento propio. En el modal, encabezado, motivos, pestañas y contenido comparten un scroller vertical; el pie de cierre queda fuera.
 - **Escritorio, desde 1024 px:** el original permanece a la izquierda y los datos a la derecha, con paneles de desplazamiento independientes.
 
-| Evidencia actual | Alcance |
+El ajuste posterior del logo y las clases tiene **73/73 tests, lint, TypeScript y build correctos**. Su verificación visual focalizada pasó **6/6 grupos en Brave**: logo y navegación en 1440/1024/390 px, y textos largos del modal en 320/768/1440 px. Se inspeccionaron ocho capturas, con API sintética, 21 GET y ningún POST real. No hubo desborde de página/modal; la tabla intermedia conserva su desplazamiento horizontal interno. Los 11 escenarios siguientes pertenecen a la base V2, no son una nueva ejecución sobre este ajuste. El estado puntual está en [el seguimiento del ajuste y la guía](../../odd/tasks/mediflow-ui-polish-project-guide.md).
+
+| Evidencia base V2 (`685722f`) | Alcance |
 |---|---|
 | 69/69 tests, lint, TypeScript y build correctos | Lógica, preservación y SSR de iconos; no prueban gestos ni geometría montada. El build conserva la advertencia de importación dinámica preexistente. |
 | Tarjetas y modal funcionan en Brave móvil, Samsung S24 | Confirmación manual reportada por el usuario; no es una prueba automatizada ni de otros dispositivos. |
@@ -114,7 +120,7 @@ Una decisión confirmada cierra el modal y vuelve a consultar las colecciones; u
 | Reflow equivalente al 200% | 720 px CSS con DPR 2; no es zoom real del menú del navegador ni del sistema operativo. |
 | Evaluación nativa | No disponible en este entorno; no se afirma aprobación nativa. |
 
-El lote actual terminó con salida 0 y limpieza 0; los cuatro archivos UI conservaron las mismas huellas antes y después. Se revisaron las capturas de las cinco anchuras, contenido largo, extracción fallida y carga confirmada con error de actualización. Son **11 escenarios automatizados no táctiles y dos comprobaciones manuales de gestos**, no 13 automatizados.
+El lote T8 de esa base terminó con salida 0 y limpieza 0; los cuatro archivos UI conservaron las mismas huellas antes y después. Se revisaron las capturas de las cinco anchuras, contenido largo, extracción fallida y carga confirmada con error de actualización. Son **11 escenarios automatizados no táctiles y dos comprobaciones manuales de gestos**, no 13 automatizados.
 
 La muestra portable no aporta bytes originales ni eventos de revisión: la verificación conserva esos estados honestos, sin fabricar evidencia clínica. No acredita bytes originales positivos, mutaciones contra el backend real, persistencia, proveedores ni decisiones clínicas. El seguimiento V2 conserva las limitaciones y el origen de cada comprobación.
 
