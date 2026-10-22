@@ -55,6 +55,7 @@ data/tmp/
 
 # === Herramientas locales / editores ===
 .atl/
+.codegraph/
 .vscode/
 .idea/
 *.swp
