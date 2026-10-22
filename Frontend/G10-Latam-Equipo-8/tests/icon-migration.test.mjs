@@ -3,7 +3,6 @@ import { readdir, readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import ts from "typescript";
 
 const sourceRoot = new URL("../src/", import.meta.url);
 
@@ -25,32 +24,6 @@ async function listSourceFiles(directory) {
 function assertAttribute(markup, name, value) {
   const escaped = String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   assert.match(markup, new RegExp(`\\b${name}="${escaped}"`));
-}
-
-async function loadSpinner() {
-  const sourcePath = new URL("../src/components/ui/spinner.tsx", import.meta.url);
-  const source = await readFile(sourcePath, "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: {
-      jsx: ts.JsxEmit.ReactJSX,
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-  }).outputText;
-  const moduleSource = compiled
-    .replace(/(["'])cn\1/g, JSON.stringify(import.meta.resolve("cn")))
-    .replace(
-      /(["'])\.\/icons\1/g,
-      JSON.stringify(new URL("../src/components/ui/icons.ts", import.meta.url).href),
-    )
-    .replace(
-      /(["'])react\/jsx-runtime\1/g,
-      JSON.stringify(import.meta.resolve("react/jsx-runtime")),
-    );
-
-  return import(
-    `data:text/javascript;base64,${Buffer.from(moduleSource).toString("base64")}`
-  );
 }
 
 test("active frontend source contains no Lucide imports", async () => {
@@ -114,25 +87,4 @@ test("mapped ReIcon aliases render Outline SVGs and forward SVG props", async ()
     assertAttribute(forwardedMarkup, "aria-hidden", "true");
     assertAttribute(forwardedMarkup, "data-icon-probe", alias);
   }
-});
-
-test("Spinner preserves its accessible loading SVG and caller attributes", async () => {
-  const { Spinner } = await loadSpinner();
-  const markup = renderToStaticMarkup(
-    createElement(Spinner, {
-      className: "consumer-spinner",
-      "data-testid": "spinner-probe",
-      "aria-live": "polite",
-    }),
-  );
-
-  assert.match(markup, /^<svg\b/);
-  assert.match(markup, /<(?:path|line|polyline|circle|rect)\b/);
-  assertAttribute(markup, "data-slot", "spinner");
-  assertAttribute(markup, "role", "status");
-  assertAttribute(markup, "aria-label", "Loading");
-  assertAttribute(markup, "aria-live", "polite");
-  assertAttribute(markup, "data-testid", "spinner-probe");
-  assertAttribute(markup, "class", "reicon size-4 animate-spin consumer-spinner");
-  assert.doesNotMatch(markup, /\baria-hidden=/);
 });

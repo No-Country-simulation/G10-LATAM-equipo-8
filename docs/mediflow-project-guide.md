@@ -2,7 +2,7 @@
 
 Este repositorio contiene el frontend y documentación del proyecto. El backend que atiende las peticiones es otro servicio: no hay una implementación de backend en esta carpeta.
 
-Los caminos siguientes parten de `Frontend/G10-Latam-Equipo-8/`, salvo la sección final de documentación. Se omiten dependencias, compilados y cachés; las copias locales de recuperación y práctica no forman parte de la aplicación activa.
+Los caminos siguientes parten de `Frontend/G10-Latam-Equipo-8/`, salvo la sección final de documentación. Se omiten dependencias, compilados y cachés.
 
 ## La idea en un minuto
 
@@ -43,7 +43,6 @@ Ubicación: `src/layout/`.
 | [DashboardLayout.tsx](../Frontend/G10-Latam-Equipo-8/src/layout/DashboardLayout.tsx) | Organiza lateral, encabezado y contenido; ofrece un destino lógico de foco. |
 | [Header.tsx](../Frontend/G10-Latam-Equipo-8/src/layout/Header.tsx) | Muestra el encabezado y abre la navegación lateral en móvil. |
 | [Sidebar.tsx](../Frontend/G10-Latam-Equipo-8/src/layout/Sidebar.tsx) | Muestra el logo, los cuatro destinos, el destino activo y sus contadores. |
-| [DocumentCount.tsx](../Frontend/G10-Latam-Equipo-8/src/layout/DocumentCount.tsx) | Es un diseño heredado de contadores; no forma parte del flujo activo. |
 
 ## Pantallas y revisión documental
 
@@ -59,20 +58,7 @@ Ubicación: `src/components/dashboard/`.
 | [ReviewDocumentFields.tsx](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/ReviewDocumentFields.tsx) | Muestra cada valor recibido junto a una propuesta distinta; identifica campos solo locales. |
 | [ReviewDecisionFields.tsx](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/ReviewDecisionFields.tsx) | Presenta revisor, comentario, destino, verificación y confirmación de rechazo. |
 | [reviewDraft.ts](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/reviewDraft.ts) | Compara propuestas con el original y construye únicamente correcciones admitidas. |
-| [resumenPaginacionHistorial.ts](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/resumenPaginacionHistorial.ts) | Calcula rangos y páginas; sigue activo aunque también lo use una pantalla antigua. |
-
-## Componentes de pantalla heredados
-
-Ubicación: `src/components/dashboard/`.
-
-| Archivo | Para qué sirve |
-|---|---|
-| [AllDocumentsView.tsx](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/AllDocumentsView.tsx) | Es una versión anterior de la vista de historial, no importada por App. |
-| [CriticalCasesQueue.tsx](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/CriticalCasesQueue.tsx) | Es una cola anterior con su propio flujo; no es la bandeja V2 activa. |
-| [DashboardFooter.tsx](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/DashboardFooter.tsx) | Es un pie de pantalla anterior que el flujo actual no utiliza. |
-| [DocumentCount.tsx](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/DocumentCount.tsx) | Es otro contador anterior; no confundirlo con el archivo homónimo de layout. |
-| [LoadingState.tsx](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/LoadingState.tsx) | Es una vista de carga antigua que consume Spinner. |
-| [crearSolicitudRevision.ts](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/crearSolicitudRevision.ts) | Construye solicitudes del flujo anterior; conserva pruebas, pero no lo llama App V2. |
+| [resumenPaginacionHistorial.ts](../Frontend/G10-Latam-Equipo-8/src/components/dashboard/resumenPaginacionHistorial.ts) | Calcula rangos y páginas de la colección de historial. |
 
 ## Piezas visuales reutilizables
 
@@ -92,9 +78,6 @@ Ubicación: `src/components/ui/`.
 | [tabs.tsx](../Frontend/G10-Latam-Equipo-8/src/components/ui/tabs.tsx) | Ofrece pestañas y paneles para alternar datos y original en móvil. |
 | [sheet.tsx](../Frontend/G10-Latam-Equipo-8/src/components/ui/sheet.tsx) | Es el panel lateral accesible que usa la navegación móvil. |
 | [icons.ts](../Frontend/G10-Latam-Equipo-8/src/components/ui/icons.ts) | Es el adaptador de iconos ReIcon y conserva nombres compatibles con los consumidores. |
-| [spinner.tsx](../Frontend/G10-Latam-Equipo-8/src/components/ui/spinner.tsx) | Es el indicador de carga reutilizable; su consumidor actual es el LoadingState heredado. |
-| [alert.tsx](../Frontend/G10-Latam-Equipo-8/src/components/ui/alert.tsx) | Define piezas reutilizables de aviso; no tiene consumidor activo en App. |
-| [separator.tsx](../Frontend/G10-Latam-Equipo-8/src/components/ui/separator.tsx) | Define un separador visual reutilizable; no tiene consumidor activo en App. |
 
 ## Estado, peticiones y React
 
@@ -109,7 +92,6 @@ Ubicación: `src/hooks/`.
 | [useDocumentReview.ts](../Frontend/G10-Latam-Equipo-8/src/hooks/useDocumentReview.ts) | Carga detalle, original y revisiones por separado y descarta resultados obsoletos. |
 | [documentReviewDecisionController.ts](../Frontend/G10-Latam-Equipo-8/src/hooks/documentReviewDecisionController.ts) | Valida decisiones, evita envíos duplicados y trata conflictos y confirmaciones. |
 | [useDocumentReviewDecision.ts](../Frontend/G10-Latam-Equipo-8/src/hooks/useDocumentReviewDecision.ts) | Conecta el controlador de decisiones con el modal y sus callbacks. |
-| [useTriajes.ts](../Frontend/G10-Latam-Equipo-8/src/hooks/useTriajes.ts) | Es la orquestación anterior de triajes; no la utiliza la App V2. |
 
 ## Comunicación y contratos
 
@@ -147,11 +129,10 @@ Ubicación: `tests/`.
 | [document-review-resources.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/document-review-resources.test.mjs) | Prueba cargas independientes, MIME seguros y liberación de recursos temporales. |
 | [document-review.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/document-review.test.mjs) | Prueba presentación, borradores, edición permitida y construcción de correcciones. |
 | [eslint-scope.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/eslint-scope.test.mjs) | Comprueba qué archivos analiza o excluye el lint. |
-| [icon-migration.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/icon-migration.test.mjs) | Comprueba ReIcon real, aliases, atributos SVG y el Spinner renderizado. |
+| [icon-migration.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/icon-migration.test.mjs) | Comprueba que el código activo no importe Lucide y valida el adaptador ReIcon, sus aliases y atributos SVG. |
 | [mock-review.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/mock-review.test.mjs) | Comprueba decisiones del demo y que los rechazos inválidos no muten sus datos. |
 | [navigation-upload.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/navigation-upload.test.mjs) | Prueba destinos, continuidad de carga y separación entre confirmación y refresco. |
 | [pagination-history.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/pagination-history.test.mjs) | Prueba cálculos de rangos, offsets y páginas. |
-| [review-request.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/review-request.test.mjs) | Mantiene pruebas del constructor de solicitudes heredado. |
 | [triaje-service.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/triaje-service.test.mjs) | Prueba peticiones, payloads y errores del cliente de triajes. |
 | [ui-polish.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/ui-polish.test.mjs) | Prueba logo en HTML, navegación, migración de clases y CSS de Tailwind. |
 | [vite-proxy.test.mjs](../Frontend/G10-Latam-Equipo-8/tests/vite-proxy.test.mjs) | Comprueba que el proxy de desarrollo conserve el prefijo de la API. |
@@ -183,7 +164,6 @@ Ubicación: `public/`.
 | Archivo | Para qué sirve |
 |---|---|
 | [favicon.svg](../Frontend/G10-Latam-Equipo-8/public/favicon.svg) | Es el icono de la pestaña, enlazado desde index.html. |
-| [icons.svg](../Frontend/G10-Latam-Equipo-8/public/icons.svg) | Es un sprite SVG disponible, sin referencias activas encontradas en la aplicación. |
 
 ## Documentación y seguimiento en la raíz del repositorio
 
@@ -212,8 +192,6 @@ Estos caminos ya son relativos a la raíz del repositorio, no a la del frontend.
 5. **Demo no es fallback de red.** El error de la API no hace que aparezcan datos ficticios silenciosamente.
 6. **Contrato no es promesa clínica ni de infraestructura.** No se afirma autenticación, despacho, persistencia OCI o validación clínica activa.
 7. **SSR no es una captura real.** Las pruebas de HTML y controladores no demuestran por sí solas el tamaño visual, los gestos o el foco en un navegador.
-
-Hay archivos heredados que se conservaron para no mezclar esta mejora con una limpieza de código. Para saber qué ejecuta la aplicación, seguí los imports desde App, no solo el nombre de una carpeta.
 
 ## Por dónde empezar a leer
 
