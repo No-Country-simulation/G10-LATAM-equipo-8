@@ -258,9 +258,18 @@ devolver `detail` como array con `loc`, `msg`, `type`. Usar tipo defensivo strin
 Errores Gemini suelen registrarse dentro de 201/DTO (`processing_error`, `audit_reasons`),
 no como 503 automáticamente. Códigos no son umbrales clínicos.
 
-**Todavía no hay auth ni middleware CORS configurados.** Frontend Vite en otro origen
-puede ser bloqueado por el navegador; configurar origen/proxy será un cambio separado,
-no está resuelto por este documento ni corresponde usar wildcard con datos sensibles.
+### Orígenes locales y CORS
+
+El backend permite por defecto los orígenes exactos `http://localhost:5173` y
+`http://localhost:5174`. Para cambiar la lista en desarrollo, configure
+`CORS_ALLOWED_ORIGINS` en `backend/.env` como un array JSON de orígenes HTTP(S), por
+ejemplo `["http://localhost:5173","http://localhost:5174"]` (sin espacios dentro de
+las URLs ni rutas). No use `*`: los orígenes no autorizados no reciben autorización
+CORS. Las credenciales CORS están deshabilitadas; se permiten solicitudes GET/POST y
+el encabezado `Content-Type` para preflight JSON.
+
+Todavía no hay autenticación. CORS no es control de acceso del servidor ni acredita
+seguridad para exponer esta API fuera del entorno local.
 No exponer esta API como servicio clínico. Downloads sin autorización y revisor declarado
 son limitaciones reales, no una política de seguridad aprobada.
 

@@ -5,7 +5,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 
 from dotenv import dotenv_values
-from pydantic import AliasChoices, Field, SecretStr, model_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     gemini_max_retries: int = Field(default=1, ge=0, le=2)
     storage_dir: Path = Path("storage")
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
+    cors_allowed_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:5173", "http://localhost:5174"]
+    )
     repository_mode: Literal["memory", "postgres"] = "memory"
     storage_mode: Literal["local", "neon", "oci"] = "local"
     database_url: SecretStr | None = None
@@ -47,6 +50,23 @@ class Settings(BaseSettings):
     oci_bucket: str | None = None
     oci_access_key_id: SecretStr | None = None
     oci_secret_access_key: SecretStr | None = None
+
+    @field_validator("cors_allowed_origins")
+    @classmethod
+    def validate_cors_allowed_origins(cls, origins: list[str]) -> list[str]:
+        normalized = [origin.strip() for origin in origins]
+        if not normalized or any(
+            not origin
+            or origin == "*"
+            or urlsplit(origin).scheme not in {"http", "https"}
+            or not urlsplit(origin).netloc
+            or urlsplit(origin).path
+            or urlsplit(origin).query
+            or urlsplit(origin).fragment
+            for origin in normalized
+        ):
+            raise ValueError("CORS_ALLOWED_ORIGINS debe contener orígenes HTTP(S) explícitos")
+        return normalized
 
     @model_validator(mode="after")
     def validate_adapters(self):

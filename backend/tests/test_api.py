@@ -166,6 +166,51 @@ def test_health_and_openapi(client):
     assert "/api/v1/audit/queue" in schema["paths"]
 
 
+@pytest.mark.parametrize("origin", ["http://localhost:5173", "http://localhost:5174"])
+def test_json_preflight_allows_configured_frontend_origins(client, origin):
+    response = client.options(
+        "/api/v1/triajes",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == origin
+    assert "access-control-allow-credentials" not in response.headers
+    assert "POST" in response.headers["access-control-allow-methods"]
+    assert "content-type" in response.headers["access-control-allow-headers"]
+
+
+def test_json_preflight_does_not_authorize_unconfigured_origin(client):
+    response = client.options(
+        "/api/v1/triajes",
+        headers={
+            "Origin": "http://localhost:5175",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert "access-control-allow-origin" not in response.headers
+
+
+def test_cors_allowed_origins_can_be_overridden_with_json_environment_value(monkeypatch):
+    monkeypatch.setenv("CORS_ALLOWED_ORIGINS", '["https://frontend.example"]')
+
+    settings = Settings(_env_file=None)
+
+    assert settings.cors_allowed_origins == ["https://frontend.example"]
+
+
+@pytest.mark.parametrize("origins", [["*"], ["not-an-origin"], ["https://example.com/path"]])
+def test_cors_allowed_origins_reject_wildcard_and_malformed_values(origins):
+    with pytest.raises(ValueError, match="CORS_ALLOWED_ORIGINS"):
+        Settings(_env_file=None, cors_allowed_origins=origins)
+
+
 def test_new_application_has_empty_history(tmp_path):
     settings = Settings(_env_file=None, storage_dir=tmp_path)
     with TestClient(create_app(settings)) as first:
