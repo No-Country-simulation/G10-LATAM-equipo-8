@@ -44,7 +44,7 @@ Enable local frontend/backend integration while keeping the allowed browser orig
 - [x] T1 — Add explicit local CORS configuration, tests, and contract documentation.
   - Checks: `uv run --locked pytest -q`; `uv run --locked ruff check app tests`; `uv run --locked ruff format --check app tests`; `git diff --check`.
   - Verification evidence: `.venv/Scripts/python.exe -m pytest -q` (241 passed); focused CORS settings regressions: 4 passed; `.venv/Scripts/python.exe -m ruff check app tests` (passed); `.venv/Scripts/python.exe -m ruff format --check app tests` (45 files already formatted); `git diff --check` (passed). Tests cover JSON environment override parsing and wildcard/malformed origin rejection. `uv` is unavailable in this environment. Pytest needed an unsandboxed run because Windows asyncio's local socket pair was blocked inside the sandbox. A pre-implementation RED result was not captured because of that runner limitation.
-  - Commit identity: pending.
+  - Commit identity: `eb9afb4` (`feat(api): habilitar CORS para frontend local`).
 
 ## Next step
-Parent review and work-unit commit remain; do not push.
+Implementation is complete on the current feature branch. Push only after separate user authorization.
