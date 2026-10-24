@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createDashboardRenderer } from "./helpers/dashboard-renderer.mjs";
 import {
   buildCorrectionProposal,
   clearAgeProposal,
@@ -10,6 +11,128 @@ import {
   updateReviewDraft,
 } from "../src/components/dashboard/reviewDraft.ts";
 import { syntheticDocument } from "./helpers/document-review-fixture.mjs";
+
+test("registered review events render readable status transitions and preserve event values", async (t) => {
+  const renderer = await createDashboardRenderer(
+    "/src/components/dashboard/DocumentReviewDialog.tsx",
+    "ReviewEvents",
+  );
+  t.after(renderer.close);
+
+  const resource = {
+    status: "loaded",
+    value: [
+      {
+        review_id: "SYNTHETIC-REVIEW-EVENT-1",
+        document_id: "SYNTHETIC-REVIEW-1",
+        action: "aprobar",
+        reviewer: "Revisor sintético",
+        comment: "Comentario sintético",
+        created_at: "2026-10-08T12:00:00Z",
+        previous_status: "NEEDS_AUDIT",
+        new_status: "APPROVED",
+        previous_destination: "REVISION_HUMANA",
+        new_destination: "HISTORIA_CLINICA",
+        before: {},
+        after: {},
+        corrections: [],
+      },
+      {
+        review_id: "SYNTHETIC-REVIEW-EVENT-2",
+        document_id: "SYNTHETIC-REVIEW-1",
+        action: "aprobar",
+        reviewer: "Revisor sintético",
+        comment: "Transición futura sintética",
+        created_at: "2026-10-08T12:01:00Z",
+        previous_status: "FUTURE_STATUS",
+        new_status: "APPROVED",
+        previous_destination: "REVISION_HUMANA",
+        new_destination: "HISTORIA_CLINICA",
+        before: {},
+        after: {},
+        corrections: [],
+      },
+    ],
+  };
+  const original = JSON.stringify(resource);
+  const html = renderer.render({ resource });
+
+  assert.equal(html.includes("Necesita Auditoria -&gt; Aprobado"), true);
+  assert.equal(html.includes("FUTURE_STATUS -&gt; Aprobado"), true);
+  assert.equal(html.includes("REVISION_HUMANA → HISTORIA_CLINICA"), true);
+  assert.equal(html.includes("Revisor sintético"), true);
+  assert.equal(JSON.stringify(resource), original);
+});
+
+test("read-only review metadata displays readable statuses", async (t) => {
+  const renderer = await createDashboardRenderer(
+    "/src/components/dashboard/ReviewDocumentFields.tsx",
+    "ReviewDocumentFields",
+  );
+  t.after(renderer.close);
+
+  const document = syntheticDocument({
+    status: "APPROVED",
+    processing_status: "FAILED",
+  });
+  const original = JSON.stringify(document);
+  const html = renderer.render({
+    document,
+    draft: createReviewDraft(document),
+    onDraftChange: () => {},
+    onAgeClear: () => {},
+    onEnableEditing: () => {},
+  });
+
+  assert.equal(html.includes("Aprobado"), true);
+  assert.equal(html.includes("Procesamiento fallido"), true);
+  assert.equal(html.includes(">APPROVED</dd>"), false);
+  assert.equal(html.includes(">FAILED</dd>"), false);
+  assert.equal(JSON.stringify(document), original);
+});
+
+test("conflict presentation displays readable latest-document statuses", async (t) => {
+  const renderer = await createDashboardRenderer(
+    "/src/components/dashboard/ReviewDecisionFields.tsx",
+    "ReviewDecisionFields",
+  );
+  t.after(renderer.close);
+
+  const latestDocument = syntheticDocument({
+    status: "APPROVED",
+    processing_status: "FAILED",
+  });
+  const html = renderer.render({
+    snapshot: {
+      phase: "conflict",
+      error: "Conflicto sintético",
+      latestDocument,
+      form: { reviewer: "", comment: "", destination: "", verified: false },
+      rejectionConfirmationOpen: false,
+    },
+    busy: false,
+    canApprove: false,
+    canReject: false,
+    hasEffectiveCorrections: false,
+    onFieldChange: () => {},
+    onVerificationChange: () => {},
+    onRequestRejection: () => {},
+    onCancelRejection: () => {},
+    onConfirmRejection: () => {},
+    onApprove: () => {},
+  });
+
+  assert.equal(
+    html.includes(
+      "Estado actualizado del servidor: Aprobado · Procesamiento: Procesamiento fallido.",
+    ),
+    true,
+  );
+  assert.equal(
+    html.includes("Estado actualizado del servidor: APPROVED · Procesamiento: FAILED."),
+    false,
+  );
+});
 
 test("review draft keeps immutable originals beside separate proposed values", () => {
   const document = syntheticDocument();

@@ -3,6 +3,10 @@ import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { NativeSelect } from "../ui/native-select";
 import { Textarea } from "../ui/textarea";
+import {
+  processingStatusLabel,
+  reviewStatusLabel,
+} from "../../lib/documentLabels";
 import type {
   FinalReviewDestination,
   ReviewDecisionField,
@@ -176,7 +180,9 @@ export function ReviewDecisionFields({
           <p>{snapshot.error} No se enviará otra decisión desde esta revisión.</p>
           {snapshot.latestDocument ? (
             <p>
-              Estado actualizado del servidor: {snapshot.latestDocument.status} · Procesamiento: {snapshot.latestDocument.processing_status}.
+              Estado actualizado del servidor:{" "}
+              {reviewStatusLabel(snapshot.latestDocument.status)} · Procesamiento:{" "}
+              {processingStatusLabel(snapshot.latestDocument.processing_status)}.
             </p>
           ) : null}
         </div>

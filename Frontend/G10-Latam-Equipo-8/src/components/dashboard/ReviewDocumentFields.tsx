@@ -4,6 +4,10 @@ import { Input } from "../ui/input";
 import { NativeSelect } from "../ui/native-select";
 import { Textarea } from "../ui/textarea";
 import {
+  processingStatusLabel,
+  reviewStatusLabel,
+} from "../../lib/documentLabels";
+import {
   presentReviewDocument,
   reviewEligibility,
   type ReadOnlyFieldPresentation,
@@ -20,6 +24,16 @@ interface ReviewDocumentFieldsProps {
   onAgeClear: () => void;
 }
 
+function readonlyMetadataValue(field: ReadOnlyFieldPresentation): string {
+  if (field.label === "Estado de revisión") {
+    return reviewStatusLabel(field.value);
+  }
+  if (field.label === "Estado del procesamiento") {
+    return processingStatusLabel(field.value);
+  }
+  return field.value;
+}
+
 function MetadataList({
   title,
   fields,
@@ -34,7 +48,9 @@ function MetadataList({
         {fields.map((field) => (
           <div key={field.label} className="min-w-0 space-y-1">
             <dt className="text-xs font-medium text-slate-600">{field.label}</dt>
-            <dd className="wrap-break-word text-sm text-slate-900">{field.value}</dd>
+            <dd className="wrap-break-word text-sm text-slate-900">
+              {readonlyMetadataValue(field)}
+            </dd>
           </div>
         ))}
       </dl>

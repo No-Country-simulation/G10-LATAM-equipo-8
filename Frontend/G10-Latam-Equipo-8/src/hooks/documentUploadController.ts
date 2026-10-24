@@ -1,4 +1,5 @@
 import type { EstadoProcesamiento, TriajeDocumento } from "@/types/triaje";
+import { processingStatusLabel, reviewStatusLabel } from "../lib/documentLabels.ts";
 
 export type DocumentUploadPhase = "idle" | "uploading" | "failed" | "confirmed";
 
@@ -62,23 +63,11 @@ function errorMessage(error: unknown): string {
 }
 
 export function estadoProcesamientoLegible(status: EstadoProcesamiento): string {
-  const labels: Record<EstadoProcesamiento, string> = {
-    PENDING: "Pendiente",
-    PROCESSING: "En procesamiento",
-    SUCCEEDED: "Procesamiento finalizado",
-    FAILED: "Procesamiento fallido",
-  };
-  return labels[status];
+  return processingStatusLabel(status);
 }
 
 export function estadoRevisionLegible(status: TriajeDocumento["status"]): string {
-  const labels: Record<TriajeDocumento["status"], string> = {
-    PROCESSED: "Procesado",
-    NEEDS_AUDIT: "Revisión pendiente",
-    APPROVED: "Aprobado",
-    REJECTED: "Rechazado",
-  };
-  return labels[status];
+  return reviewStatusLabel(status);
 }
 
 export function prioridadClinicaLegible(

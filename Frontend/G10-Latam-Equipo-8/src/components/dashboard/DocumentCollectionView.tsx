@@ -11,11 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prioridadClinicaLegible } from "@/hooks/documentUploadController";
 import {
-  estadoProcesamientoLegible,
-  estadoRevisionLegible,
-  prioridadClinicaLegible,
-} from "@/hooks/documentUploadController";
+  auditReasonLabel,
+  processingStatusLabel,
+  reviewStatusLabel,
+} from "../../lib/documentLabels";
 import {
   countUrgentAlerts,
   filterCollectionDocuments,
@@ -43,10 +44,10 @@ interface Props {
 }
 
 const reviewStatuses: Array<{ value: StatusTriaje; label: string }> = [
-  { value: "PROCESSED", label: "Procesado" },
-  { value: "NEEDS_AUDIT", label: "Revisión pendiente" },
-  { value: "APPROVED", label: "Aprobado" },
-  { value: "REJECTED", label: "Rechazado" },
+  { value: "PROCESSED", label: reviewStatusLabel("PROCESSED") },
+  { value: "NEEDS_AUDIT", label: reviewStatusLabel("NEEDS_AUDIT") },
+  { value: "APPROVED", label: reviewStatusLabel("APPROVED") },
+  { value: "REJECTED", label: reviewStatusLabel("REJECTED") },
 ];
 
 function formatDate(value: string): string {
@@ -56,7 +57,7 @@ function formatDate(value: string): string {
 
 function auditReason(document: TriajeDocumento): string {
   return document.audit_reasons.length > 0
-    ? document.audit_reasons.join(" · ")
+    ? document.audit_reasons.map(auditReasonLabel).join(" · ")
     : "Sin motivos de auditoría informados";
 }
 
@@ -91,10 +92,10 @@ function CollectionDocumentDetails({
       </p>
       <div className="flex flex-wrap gap-2">
         <Badge variant={statusVariant(document.status)}>
-          Estado: {estadoRevisionLegible(document.status)}
+          Estado: {reviewStatusLabel(document.status)}
         </Badge>
         <Badge variant={document.processing_status === "FAILED" ? "destructive" : "outline"}>
-          Procesamiento: {estadoProcesamientoLegible(document.processing_status)}
+          Procesamiento: {processingStatusLabel(document.processing_status)}
         </Badge>
         {document.decision_enrutamiento.alerta_urgente === true ? (
           <Badge variant="destructive">Alerta inmediata</Badge>

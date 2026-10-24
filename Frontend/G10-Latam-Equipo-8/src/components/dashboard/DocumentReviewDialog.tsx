@@ -11,6 +11,12 @@ import { DocumentOriginalViewer } from "./DocumentOriginalViewer";
 import { ReviewDecisionFields } from "./ReviewDecisionFields";
 import { ReviewDocumentFields } from "./ReviewDocumentFields";
 import {
+  auditReasonLabel,
+  processingStatusLabel,
+  reviewStatusLabel,
+  statusTransitionLabel,
+} from "../../lib/documentLabels";
+import {
   clearAgeProposal,
   createReviewDraft,
   displayReviewValue,
@@ -117,7 +123,10 @@ function ReviewEventsContent({
                     Estado de revisión
                   </dt>
                   <dd className="wrap-break-word text-slate-900">
-                    {event.previous_status} → {event.new_status}
+                    {statusTransitionLabel(
+                      event.previous_status,
+                      event.new_status,
+                    )}
                   </dd>
                 </div>
                 <div>
@@ -344,7 +353,8 @@ export function DocumentReviewDialog({
               {displayReviewValue(context.datos_extraidos.paciente.nombre)} · {documentId}
             </DialogDescription>
             <p className="wrap-break-word text-sm text-slate-600">
-              Estado: {context.status} · Procesamiento: {context.processing_status}
+              Estado: {reviewStatusLabel(context.status)} · Procesamiento:{" "}
+              {processingStatusLabel(context.processing_status)}
             </p>
             <p className="text-sm text-slate-700">
               Prioridad clínica: {eligibility.priorityLabel}
@@ -412,7 +422,7 @@ export function DocumentReviewDialog({
                       key={`${reason}-${index}`}
                       className="min-w-0 max-w-full wrap-anywhere rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"
                     >
-                      {reason}
+                      {auditReasonLabel(reason)}
                     </li>
                   ))}
                 </ul>
