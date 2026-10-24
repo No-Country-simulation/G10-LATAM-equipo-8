@@ -314,6 +314,11 @@ export const revisionDocumento = (
               ? {}
               : { destino_principal: solicitud.destino! }),
             requiere_auditoria_humana: false,
+            alerta_urgente:
+              documento.decision_enrutamiento.alerta_urgente ||
+              (solicitud.accion !== "rechazar" &&
+                (correcciones?.nivel_prioridad ??
+                  documento.clasificacion.nivel_prioridad) === "Urgente"),
           },
         };
 

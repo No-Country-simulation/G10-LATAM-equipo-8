@@ -98,6 +98,117 @@ test("collections use only supported server filters and derive initial totals fr
   assert.equal(prioridadClinicaLegible(documents[0].clasificacion.nivel_prioridad), "Rutinaria");
 });
 
+test("document search ignores accents in patient names, document IDs and the query", () => {
+  const accented = syntheticDocument({
+    documento_id: "T2-ÁCTIVO",
+    datos_extraidos: { paciente: { nombre: "Álvaro Demo" } },
+    decision_enrutamiento: { alerta_urgente: true },
+  });
+  const plain = syntheticDocument({
+    documento_id: "T2-PLAIN",
+    datos_extraidos: { paciente: { nombre: "Alvaro Demo" } },
+  });
+  const source = page([accented, plain], 41, 20, 20);
+  const before = JSON.stringify(source);
+
+  for (const search of ["alvaro demo", "ÁLVARO DÉMO", "A\u0301lvaro De\u0301mo"]) {
+    const matches = filterCollectionDocuments(source.items, { search, documentType: "" });
+    assert.equal(matches.length, 2, "both query and document accents must be ignored");
+    assert.ok(matches[0] === accented && matches[1] === plain, "matching preserves DTO references and order");
+    const urgent = filterCollectionDocuments(source.items, { search, documentType: "" }, true);
+    assert.equal(urgent.length, 1);
+    assert.ok(urgent[0] === accented);
+  }
+  const identifierMatch = filterCollectionDocuments(source.items, {
+    search: "t2-activo",
+    documentType: "",
+  });
+  assert.equal(identifierMatch.length, 1);
+  assert.ok(identifierMatch[0] === accented);
+  assert.ok(JSON.stringify(source) === before, "search must not rewrite displayed values, DTOs or page metadata");
+});
+
+test("existing search trimming, case, type and urgent-only behavior is preserved", () => {
+  const urgent = syntheticDocument({
+    documento_id: "T2-Mixed-Case",
+    datos_extraidos: { paciente: { nombre: "Demo Neutral" } },
+    decision_enrutamiento: { alerta_urgente: true },
+  });
+  const other = syntheticDocument({
+    documento_id: "T2-OTHER",
+    clasificacion: { tipo_documento: "Otro tipo" },
+  });
+  const source = [urgent, other];
+  const before = JSON.stringify(source);
+  assert.equal(filterCollectionDocuments(source, { search: "", documentType: "" }).length, 2);
+  for (const urgentOnly of [false, true]) {
+    const matches = filterCollectionDocuments(source, {
+      search: "  t2-MIXED-case  ",
+      documentType: "Orden de Procedimiento",
+    }, urgentOnly);
+    assert.equal(matches.length, 1);
+    assert.ok(matches[0] === urgent);
+    assert.equal(filterCollectionDocuments(source, {
+      search: "t2-mixed-case",
+      documentType: "Otro tipo",
+    }, urgentOnly).length, 0);
+    assert.equal(filterCollectionDocuments(source, {
+      search: "   ",
+      documentType: "Orden de Procedimiento",
+    }, urgentOnly).length, 1);
+  }
+  assert.ok(JSON.stringify(source) === before, "existing filtering must remain non-mutating");
+});
+
+test("approved documents remain in All documents but leave the immediate-alert list and count", () => {
+  const approvedUrgent = syntheticDocument({
+    documento_id: "T3-APPROVED-URGENT",
+    status: "APPROVED",
+    decision_enrutamiento: { alerta_urgente: true },
+  });
+  const needsAuditUrgent = syntheticDocument({
+    documento_id: "T3-NEEDS-AUDIT",
+    decision_enrutamiento: { alerta_urgente: true },
+  });
+  const approvedRoutine = syntheticDocument({ documento_id: "T3-APPROVED-ROUTINE", status: "APPROVED" });
+  const source = page([approvedUrgent, needsAuditUrgent, approvedRoutine], 41, 20, 20);
+  const before = JSON.stringify(source);
+  const filters = { search: "", documentType: "" };
+
+  const all = filterCollectionDocuments(source.items, filters);
+  assert.equal(all.length, 3);
+  assert.ok(all[0] === approvedUrgent && all[2] === approvedRoutine);
+  const alerts = filterCollectionDocuments(source.items, filters, true);
+  assert.equal(alerts.length, 1, "APPROVED must not remain visible in immediate alerts");
+  assert.ok(alerts[0] === needsAuditUrgent);
+  assert.equal(countUrgentAlerts(source.items), 1, "the alert count must use the same eligibility as its list");
+  assert.equal(filterCollectionDocuments(source.items, {
+    search: "t3-approved-urgent",
+    documentType: "",
+  }).length, 1, "approval must not hide the document from All documents");
+  assert.ok(JSON.stringify(source) === before, "view filtering must not clear urgency or change DTOs, totals or pagination");
+});
+
+test("non-approved urgent flags retain their previous list and count behavior", () => {
+  const needsAudit = syntheticDocument({ decision_enrutamiento: { alerta_urgente: true } });
+  const rejected = syntheticDocument({
+    status: "REJECTED",
+    decision_enrutamiento: { alerta_urgente: true },
+  });
+  const routine = syntheticDocument({
+    clasificacion: { nivel_prioridad: "Urgente" },
+    decision_enrutamiento: { alerta_urgente: false },
+  });
+  const source = [needsAudit, rejected, routine];
+  const before = JSON.stringify(source);
+  const alerts = filterCollectionDocuments(source, { search: "", documentType: "" }, true);
+  assert.equal(alerts.length, 2);
+  assert.ok(alerts[0] === needsAudit && alerts[1] === rejected);
+  assert.equal(countUrgentAlerts(source), 2);
+  assert.equal(filterCollectionDocuments(source, { search: "", documentType: "" }).length, 3);
+  assert.ok(JSON.stringify(source) === before, "the stored flag still defines urgency for every other status");
+});
+
 test("urgent alerts and local filters stay scoped to the loaded page without changing server pagination", () => {
   const urgent = syntheticDocument({
     documento_id: "ALERTA-001",

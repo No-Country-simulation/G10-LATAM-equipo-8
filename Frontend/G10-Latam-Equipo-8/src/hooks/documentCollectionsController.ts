@@ -242,14 +242,22 @@ export function createDocumentCollectionsController(
   };
 }
 
+function normalizeDocumentSearch(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
+}
+
+function isImmediateAlert(document: TriajeDocumento): boolean {
+  return document.status !== "APPROVED" && document.decision_enrutamiento.alerta_urgente === true;
+}
+
 export function filterCollectionDocuments(
   documents: TriajeDocumento[],
   filters: { search: string; documentType: string },
   urgentOnly = false,
 ): TriajeDocumento[] {
-  const query = filters.search.trim().toLocaleLowerCase();
+  const query = normalizeDocumentSearch(filters.search.trim());
   return documents.filter((document) => {
-    if (urgentOnly && document.decision_enrutamiento.alerta_urgente !== true) {
+    if (urgentOnly && !isImmediateAlert(document)) {
       return false;
     }
     if (
@@ -261,13 +269,11 @@ export function filterCollectionDocuments(
     if (!query) return true;
     const patientName = document.datos_extraidos.paciente.nombre ?? "";
     return [document.documento_id, patientName].some((value) =>
-      value.toLocaleLowerCase().includes(query),
+      normalizeDocumentSearch(value).includes(query),
     );
   });
 }
 
 export function countUrgentAlerts(documents: TriajeDocumento[]): number {
-  return documents.filter(
-    (document) => document.decision_enrutamiento.alerta_urgente === true,
-  ).length;
+  return documents.filter(isImmediateAlert).length;
 }

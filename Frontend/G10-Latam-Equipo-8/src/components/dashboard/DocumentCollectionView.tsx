@@ -183,9 +183,7 @@ export function DocumentCollectionView({
             </p>
           ) : (
             <p className="mt-2 text-sm text-slate-600">
-              {hasPage
-                ? `Solo incluye registros con alerta_urgente igual a true entre los ${page.items.length} documentos cargados en esta página del historial. No es un conteo global.`
-                : "Las alertas se identifican entre los documentos cargados del historial; no es un conteo global."}
+              Esta página reúne las alertas que necesitan atención inmediata.
             </p>
           )}
         </div>

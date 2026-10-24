@@ -15,7 +15,7 @@
 * **Shell y bandejas:** navegación entre cuatro destinos, colecciones, filtros y paginación integrados; el alcance de verificación se detalla en T8.
 * **Cuatro destinos en memoria:** Cargar documentos, Pendientes, Todos los documentos y Alertas inmediatas, sin rutas URL nuevas.
 * **Carga compartida:** Selector PDF/PNG/JPG/JPEG con estado, errores y resultado consultables al navegar; la API valida límites y confirma los registros.
-* **Colecciones conectadas:** Pendientes muestra la cola de auditoría; Alertas inmediatas se limita a `alerta_urgente === true` en el historial cargado, no a un total global.
+* **Colecciones conectadas:** Pendientes muestra la cola de auditoría; Alertas inmediatas se limita a documentos con `alerta_urgente === true` y estado distinto de `APPROVED` en el historial cargado, no a un total global.
 * **Revisión HITL:** El modal conserva el original y las propuestas locales, con aprobación/corrección y rechazo confirmados mediante los métodos vigentes de la API.
 * **Desplazamiento móvil:** tarjetas y encabezado/contenido del modal validados manualmente por el usuario en Brave móvil, Samsung S24. La integración montada de T8 pasó además sus 11 escenarios no táctiles.
 
@@ -89,8 +89,8 @@ La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia
 ### Bandejas, filtros y contexto (T4)
 
 - **Pendientes** consulta la cola de auditoría con `offset` y `limit`, sin añadir un filtro HTTP de estado.
-- **Todos los documentos** y **Alertas inmediatas** comparten la página de historial y su filtro de estado de revisión. El historial admite ese filtro HTTP; Alertas selecciona únicamente `alerta_urgente === true` entre los registros recibidos, sin aparentar una consulta o un total global de alertas.
-- **Paciente o documento** y **Tipo de documento** filtran solo la página cargada. Las coincidencias locales no sustituyen el total ni la paginación del servidor; una página sin coincidencias puede tener páginas siguientes.
+- **Todos los documentos** y **Alertas inmediatas** comparten la página de historial y su filtro de estado de revisión. El historial admite ese filtro HTTP; Alertas selecciona únicamente registros con `alerta_urgente === true` y estado distinto de `APPROVED` entre los registros recibidos, sin aparentar una consulta o un total global de alertas.
+- **Paciente o documento** y **Tipo de documento** filtran solo la página cargada. La búsqueda de paciente o identificador ignora mayúsculas, minúsculas y tildes, sin cambiar el texto mostrado ni los datos originales. La introducción de Alertas inmediatas usa lenguaje sencillo; el contador y la paginación mantienen explícito el alcance de la página cargada. Las coincidencias locales no sustituyen el total ni la paginación del servidor; una página sin coincidencias puede tener páginas siguientes.
 - **Revisar** abre el modal sobre la colección actual para cualquier estado recibido. Cerrar la selección no reinicia destino, búsqueda, tipo, estado ni página. El resultado confirmado de una carga también puede abrirse sin navegación automática.
 - Los errores de lectura permiten reintentar la consulta, no la extracción de IA. Una actualización fallida conserva las páginas previas y se informa por separado del documento cuya carga ya fue confirmada.
 
