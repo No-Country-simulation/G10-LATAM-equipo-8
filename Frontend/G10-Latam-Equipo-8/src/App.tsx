@@ -63,6 +63,23 @@ function App() {
   const urgentAlertCount = collections.hasHistory
     ? countUrgentAlerts(collections.history.items)
     : null;
+  const reviewRefreshErrorNotice = reviewRefreshError ? (
+    <div className="mb-4 flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+      <p>
+        {reviewRefreshError.decisionConfirmed
+          ? "La decisión quedó confirmada por el servidor, pero falló la actualización de las colecciones:"
+          : "La decisión no se confirmó. El documento se volvió a leer, pero falló la actualización de las colecciones:"} {reviewRefreshError.message} No se enviará otra decisión automáticamente.
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setReviewRefreshError(null)}
+      >
+        Cerrar aviso
+      </Button>
+    </div>
+  ) : null;
 
   return (
     <>
@@ -75,56 +92,49 @@ function App() {
         allDocumentsCount={collections.allDocumentsTotal ?? null}
         provenance={triajeService.provenance}
       >
-        {reviewRefreshError ? (
-          <div className="mb-4 flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              {reviewRefreshError.decisionConfirmed
-                ? "La decisión quedó confirmada por el servidor, pero falló la actualización de las colecciones:"
-                : "La decisión no se confirmó. El documento se volvió a leer, pero falló la actualización de las colecciones:"} {reviewRefreshError.message} No se enviará otra decisión automáticamente.
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setReviewRefreshError(null)}
-            >
-              Cerrar aviso
-            </Button>
-          </div>
-        ) : null}
-
-        <UploadStatus
-          uploadState={uploadState}
-          onOpenConfirmedDocument={collections.openDocument}
-        />
-
         {activeView === "upload" ? (
-          <DocumentUpload uploadState={uploadState} onFileSelected={uploadFile} />
+          <>
+            <DocumentUpload uploadState={uploadState} onFileSelected={uploadFile} />
+            {reviewRefreshErrorNotice}
+            <UploadStatus
+              uploadState={uploadState}
+              resultPresentation="history"
+              onOpenConfirmedDocument={collections.openDocument}
+            />
+          </>
         ) : (
-          <DocumentCollectionView
-            kind={activeView}
-            page={page}
-            hasPage={hasPage}
-            isLoading={isLoading}
-            error={error}
-            search={collections.search}
-            documentType={collections.documentType}
-            reviewStatusFilter={collections.reviewStatusFilter}
-            onSearchChange={collections.setSearch}
-            onDocumentTypeChange={collections.setDocumentType}
-            onReviewStatusChange={collections.setReviewStatus}
-            onPageChange={
-              activeView === "pending"
-                ? collections.loadAuditPage
-                : collections.loadHistoryPage
-            }
-            onRetry={
-              activeView === "pending"
-                ? collections.retryAuditQueue
-                : collections.retryHistory
-            }
-            onOpenDocument={collections.openDocument}
-          />
+          <>
+            {reviewRefreshErrorNotice}
+            <UploadStatus
+              uploadState={uploadState}
+              resultPresentation="latest"
+              onOpenConfirmedDocument={collections.openDocument}
+            />
+            <DocumentCollectionView
+              kind={activeView}
+              page={page}
+              hasPage={hasPage}
+              isLoading={isLoading}
+              error={error}
+              search={collections.search}
+              documentType={collections.documentType}
+              reviewStatusFilter={collections.reviewStatusFilter}
+              onSearchChange={collections.setSearch}
+              onDocumentTypeChange={collections.setDocumentType}
+              onReviewStatusChange={collections.setReviewStatus}
+              onPageChange={
+                activeView === "pending"
+                  ? collections.loadAuditPage
+                  : collections.loadHistoryPage
+              }
+              onRetry={
+                activeView === "pending"
+                  ? collections.retryAuditQueue
+                  : collections.retryHistory
+              }
+              onOpenDocument={collections.openDocument}
+            />
+          </>
         )}
       </DashboardLayout>
 

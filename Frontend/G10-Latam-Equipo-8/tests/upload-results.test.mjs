@@ -68,3 +68,49 @@ test("other destinations expose only the latest confirmed result behind a compac
   assert.equal(markup.includes("DOCUMENT-NEW"), true);
   assert.equal(markup.includes("DOCUMENT-OLD"), false);
 });
+
+test("existing upload status and result details remain visible by default", () => {
+  const failedResult = documento("DOCUMENT-FAILED", {
+    processing_status: "FAILED",
+    processing_error: "GEMINI_TIMEOUT",
+  });
+  const markup = renderer.render({
+    uploadState: {
+      phase: "confirmed",
+      fileName: "fallo.pdf",
+      confirmedFileName: "fallo.pdf",
+      error: null,
+      collectionRefreshError: null,
+      confirmedDocument: failedResult,
+    },
+    onOpenConfirmedDocument: () => {},
+  });
+
+  assert.equal(markup.includes("Resultado confirmado"), true);
+  assert.equal(markup.includes("DOCUMENT-FAILED"), true);
+  assert.equal(markup.includes("no es una extracción exitosa"), true);
+  assert.equal(markup.includes("GEMINI_TIMEOUT"), true);
+  assert.equal(markup.includes("Abrir resultado"), true);
+});
+
+test("busy and refresh-error awareness remains separate from upload history", () => {
+  const state = uploadState([
+    { document: documento("DOCUMENT-NEW"), fileName: "nuevo.pdf" },
+    { document: documento("DOCUMENT-OLD"), fileName: "anterior.pdf" },
+  ], "uploading");
+  state.fileName = "en-curso.pdf";
+  state.collectionRefreshError = "No se pudo actualizar la lista";
+  const markup = renderer.render({
+    uploadState: state,
+    resultPresentation: "history",
+  });
+
+  const status = markup.indexOf("Cargando…");
+  const newest = markup.indexOf("DOCUMENT-NEW");
+  const older = markup.indexOf("DOCUMENT-OLD");
+  assert.equal(markup.includes("role=\"status\""), true);
+  assert.equal(markup.includes("role=\"alert\""), true);
+  assert.equal(markup.includes("No se pudo actualizar la lista"), true);
+  assert.equal(status >= 0 && status < newest, true);
+  assert.equal(newest >= 0 && newest < older, true);
+});
