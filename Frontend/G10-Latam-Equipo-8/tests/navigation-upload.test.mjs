@@ -179,3 +179,67 @@ test("a collection refresh error remains separate from a confirmed upload", asyn
   assert.equal(controller.getSnapshot().confirmedDocument, savedResult);
   assert.match(controller.getSnapshot().collectionRefreshError, /actualizar la lista/);
 });
+
+test("confirmed upload history retains each result newest-first through refresh errors", async () => {
+  const firstResult = documento({ documento_id: "UPLOAD-HISTORY-001" });
+  const secondResult = documento({ documento_id: "UPLOAD-HISTORY-002" });
+  const confirmed = [];
+  const controller = createDocumentUploadController({
+    uploadFile: async (file) => file.name === "segundo.pdf" ? secondResult : firstResult,
+    onConfirmed: async (uploaded) => {
+      confirmed.push(uploaded.documento_id);
+      if (uploaded === secondResult) throw new Error("No se pudo actualizar la lista");
+    },
+  });
+
+  await controller.upload(archivo("primero.pdf", "application/pdf"));
+  await controller.upload(archivo("segundo.pdf", "application/pdf"));
+
+  const results = controller.getSnapshot().confirmedResults;
+  assert.deepEqual(
+    results.map(({ document, fileName }) => [document.documento_id, fileName]),
+    [
+      ["UPLOAD-HISTORY-002", "segundo.pdf"],
+      ["UPLOAD-HISTORY-001", "primero.pdf"],
+    ],
+  );
+  assert.equal(results.length, 2);
+  assert.deepEqual(confirmed, ["UPLOAD-HISTORY-001", "UPLOAD-HISTORY-002"]);
+  assert.equal(controller.getSnapshot().confirmedDocument, secondResult);
+  assert.match(controller.getSnapshot().collectionRefreshError, /actualizar la lista/);
+});
+
+test("invalid and rejected uploads preserve confirmed history and confirmation counts", async () => {
+  const savedResult = documento({ documento_id: "UPLOAD-RETAINED-001" });
+  let requests = 0;
+  let confirmations = 0;
+  const controller = createDocumentUploadController({
+    uploadFile: async () => {
+      requests += 1;
+      if (requests === 1) return savedResult;
+      throw new Error("Error HTTP 413: archivo demasiado grande");
+    },
+    onConfirmed: () => { confirmations += 1; },
+  });
+  await controller.upload(archivo("guardado.pdf", "application/pdf"));
+  const originalHistory = controller.getSnapshot().confirmedResults.map(
+    ({ document, fileName }) => [document.documento_id, fileName],
+  );
+
+  assert.equal(await controller.upload(archivo("invalido.gif", "image/gif")), null);
+  assert.deepEqual(
+    controller.getSnapshot().confirmedResults.map(({ document, fileName }) => [document.documento_id, fileName]),
+    originalHistory,
+  );
+  assert.equal(requests, 1);
+  assert.equal(confirmations, 1);
+
+  assert.equal(await controller.upload(archivo("rechazado.pdf", "application/pdf")), null);
+  assert.deepEqual(
+    controller.getSnapshot().confirmedResults.map(({ document, fileName }) => [document.documento_id, fileName]),
+    originalHistory,
+  );
+  assert.equal(controller.getSnapshot().confirmedDocument, savedResult);
+  assert.equal(requests, 2);
+  assert.equal(confirmations, 1);
+});

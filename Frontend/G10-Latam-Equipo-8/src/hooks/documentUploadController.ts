@@ -2,6 +2,11 @@ import type { EstadoProcesamiento, TriajeDocumento } from "@/types/triaje";
 
 export type DocumentUploadPhase = "idle" | "uploading" | "failed" | "confirmed";
 
+export interface ConfirmedDocumentUploadResult {
+  readonly document: TriajeDocumento;
+  readonly fileName: string | null;
+}
+
 export interface DocumentUploadSnapshot {
   phase: DocumentUploadPhase;
   fileName: string | null;
@@ -9,6 +14,7 @@ export interface DocumentUploadSnapshot {
   error: string | null;
   collectionRefreshError: string | null;
   confirmedDocument: TriajeDocumento | null;
+  readonly confirmedResults?: readonly ConfirmedDocumentUploadResult[];
 }
 
 export interface DocumentUploadControllerOptions {
@@ -36,6 +42,7 @@ const initialSnapshot: DocumentUploadSnapshot = {
   error: null,
   collectionRefreshError: null,
   confirmedDocument: null,
+  confirmedResults: [],
 };
 
 export function validateSupportedUploadFile(file: File): string | null {
@@ -145,6 +152,10 @@ export function createDocumentUploadController(
         error: null,
         collectionRefreshError: null,
         confirmedDocument: document,
+        confirmedResults: [
+          { document, fileName: snapshot.fileName },
+          ...(snapshot.confirmedResults ?? []),
+        ],
       });
 
       try {
