@@ -38,8 +38,8 @@ export type ModoIA = "simulado" | "gemini" | "desconocido";
 /** Clase de confianza reportada. */
 export type ConfianzaTipo = "fixture" | "autodeclarada_modelo" | "desconocida";
 
-/** Proveedor de almacenamiento del original. */
-export type ProveedorAlmacenamiento = "local" | "neon";
+/** Proveedor de almacenamiento del original; OCI se informa aquí. */
+export type ProveedorAlmacenamiento = "local" | "neon" | "oci";
 
 /** Acciones de revisión humana admitidas por el backend. */
 export type AccionRevision = "aprobar" | "corregir_aprobar" | "rechazar";
@@ -90,7 +90,7 @@ export interface DecisionEnrutamiento {
   justificacion_enrutamiento: string;
   /** Alerta urgente independiente; no significa autorización ni envío. */
   alerta_urgente: boolean;
-  /** Siempre null: notificaciones no implementadas (no inventar UI para esto). */
+  /** Siempre null en la respuesta pública: no hay dispatcher ni señal de entrega; PostgreSQL persiste internamente la intención pendiente. */
   notificacion_generada: null;
 }
 
@@ -133,7 +133,7 @@ export interface TriajeDocumento {
   /** Motivos de auditoría; mostrar códigos desconocidos sin romper la UI. */
   audit_reasons: string[];
   almacenamiento: Almacenamiento;
-  /** Siempre null: OCI no implementado aún en el backend. */
+  /** Siempre null; OCI se informa mediante almacenamiento.proveedor. */
   almacenamiento_oci: null;
   modo_ia: ModoIA;
   confianza_tipo: ConfianzaTipo;

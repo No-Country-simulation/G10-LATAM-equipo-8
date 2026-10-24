@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
+import ts from "typescript";
+import { fileURLToPath } from "node:url";
 import { createTriajeService } from "../src/services/triajeServiceCore.ts";
 
 function jsonResponse(body, status = 200, statusText = "OK") {
@@ -13,6 +16,48 @@ function jsonResponse(body, status = 200, statusText = "OK") {
 function demoService(mock) {
   return createTriajeService({ apiBaseUrl: "", mock });
 }
+
+test("storage provider type accepts local, neon and OCI through TypeScript", () => {
+  const entryPath = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "__virtual-provider-contract__.ts",
+  );
+  const source = `
+    import type { ProveedorAlmacenamiento } from "../src/types/triaje";
+    const local: ProveedorAlmacenamiento = "local";
+    const neon: ProveedorAlmacenamiento = "neon";
+    const oci: ProveedorAlmacenamiento = "oci";
+    void [local, neon, oci];
+  `;
+  const options = {
+    target: ts.ScriptTarget.ES2023,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    strict: true,
+    noEmit: true,
+    skipLibCheck: true,
+    types: [],
+  };
+  const host = ts.createCompilerHost(options);
+  const originalFileExists = host.fileExists.bind(host);
+  const originalReadFile = host.readFile.bind(host);
+  const originalGetSourceFile = host.getSourceFile.bind(host);
+  host.fileExists = (fileName) =>
+    path.resolve(fileName) === entryPath || originalFileExists(fileName);
+  host.readFile = (fileName) =>
+    path.resolve(fileName) === entryPath ? source : originalReadFile(fileName);
+  host.getSourceFile = (fileName, languageVersion, onError, shouldCreateNewSourceFile) =>
+    path.resolve(fileName) === entryPath
+      ? ts.createSourceFile(fileName, source, languageVersion, true)
+      : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
+
+  const program = ts.createProgram([entryPath], options, host);
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+  assert.deepEqual(
+    diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\\n")),
+    [],
+  );
+});
 
 test("document detail uses the encoded public document ID route", async () => {
   const calls = [];
