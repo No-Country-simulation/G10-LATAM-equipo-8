@@ -59,7 +59,7 @@ const correctionLabels: Record<string, string> = {
   nivel_prioridad: "Prioridad clínica",
 };
 
-function ReviewEvents({
+function ReviewEventsContent({
   resource,
 }: {
   resource: ReturnType<typeof useDocumentReview>["reviews"];
@@ -155,6 +155,18 @@ function ReviewEvents({
         </ol>
       ) : null}
     </section>
+  );
+}
+
+export function ReviewEvents({
+  resource,
+}: {
+  resource: ReturnType<typeof useDocumentReview>["reviews"];
+}) {
+  return (
+    <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+      <ReviewEventsContent resource={resource} />
+    </div>
   );
 }
 

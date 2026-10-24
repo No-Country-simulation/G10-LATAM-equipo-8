@@ -104,6 +104,8 @@ Los valores originales permanecen visibles junto a propuestas distintas. Datos d
 
 Una decisión confirmada cierra el modal y vuelve a consultar las colecciones; un error posterior de actualización se comunica como separado de la decisión ya confirmada. Un `409` vuelve a leer el detalle y bloquea otra acción en ese modal; los errores de red/servidor inciertos tampoco ofrecen reenvío automático. No hay persistencia de borradores ni afirmaciones de despacho. Escape/clic exterior/cierre piden confirmar el descarte si hay cambios y bloquean el cierre durante el envío. T8 verificó el foco, la geometría y los estados montados con respuestas sintéticas. Al cerrar se restaura un disparador visible o un destino lógico de la colección; si la última fila desaparece tras confirmar la revisión, el área principal recibe el foco sin desplazar la página ni quitarle un foco deliberado al usuario.
 
+La sección **Revisiones registradas** dispone de un contenedor padre con el mismo espaciado horizontal móvil y de escritorio que los paneles superiores. Sus estados de carga, error, vacío y eventos se mantienen separados de la edición del documento.
+
 ### Desplazamiento y verificación (T8)
 
 - **Móvil, menos de 1024 px:** las tarjetas participan del scroll de la página, sin un contenedor de desplazamiento propio. En el modal, encabezado, motivos, pestañas y contenido comparten un scroller vertical; el pie de cierre queda fuera.
