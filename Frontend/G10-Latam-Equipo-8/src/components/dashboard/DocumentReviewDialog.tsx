@@ -197,6 +197,10 @@ export function DocumentReviewDialog({
   });
   const [storedDraftSession, setStoredDraftSession] =
     useState<DraftSession | null>(null);
+  const [reviewEditMode, setReviewEditMode] = useState<{
+    documentId: string;
+    enabled: boolean;
+  } | null>(null);
   const [discardPrompt, setDiscardPrompt] = useState(() => ({
     documentId,
     open: false,
@@ -239,6 +243,8 @@ export function DocumentReviewDialog({
     : false) || isReviewDecisionDirty(decision.snapshot);
   const context = loadedDetail ?? document;
   const eligibility = reviewEligibility(context);
+  const editingEnabled =
+    reviewEditMode?.documentId === documentId && reviewEditMode.enabled;
   const decisionBusy =
     decision.snapshot.phase === "submitting" ||
     decision.snapshot.phase === "reloading-conflict";
@@ -258,6 +264,11 @@ export function DocumentReviewDialog({
       return;
     }
     onClose();
+  }
+
+  function enableReviewEditing() {
+    if (closeBlocked || !activeSession || !reviewEligibility(activeSession.baseline).editable) return;
+    setReviewEditMode({ documentId, enabled: true });
   }
 
   function handleDraftChange(field: ReviewDraftTextField, value: string) {
@@ -477,6 +488,9 @@ export function DocumentReviewDialog({
                           draft={activeSession.draft}
                           onDraftChange={handleDraftChange}
                           onAgeClear={handleAgeClear}
+                          editingEnabled={editingEnabled}
+                          editingDisabled={closeBlocked}
+                          onEnableEditing={enableReviewEditing}
                         />
                         <ReviewDecisionFields
                           snapshot={decision.snapshot}

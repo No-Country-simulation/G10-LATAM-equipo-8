@@ -101,6 +101,8 @@ Con la carga inicial resuelta, el frontend consulta historial y cola de auditor�
 
 Si hay un filtro de estado en el historial, se añade una lectura del historial sin filtro para actualizar el total global; sin ese filtro se reutiliza el total de la respuesta habitual. Esa lectura adicional no sustituye la página filtrada ni convierte su total en global.
 
+La actualización consulta colecciones, no recarga la página, el detalle activo ni los bytes del original. Las propuestas y el comentario de una revisión viven solo en memoria mientras su diálogo permanece abierto; no se guardan en el backend ni sobreviven a cerrar el diálogo, recargar o cerrar la pestaña. La continuidad integrada de valores, foco y confirmación de descarte durante una lectura periódica aún requiere la comprobación de interfaz T13; las pruebas del controlador no la sustituyen.
+
 ### Modal de revisión documental (T5–T6, integrado mediante T4)
 
 `src/components/dashboard/DocumentReviewDialog.tsx` exporta `DocumentReviewDialog` con `document`, `onClose`, `onReturnFocus` opcional y `busy` opcional (por defecto `false`). `App` lo monta con `key={document.documento_id}`. Las acciones de las filas conservan un destino de foco; el modal admite además `onReturnFocus` o un elemento lógico marcado con `data-review-dialog-return-focus`.
@@ -114,6 +116,10 @@ Una decisión confirmada cierra el modal y vuelve a consultar las colecciones; u
 Los estados conocidos de revisión y procesamiento y los motivos de revisión contemplados se muestran con etiquetas legibles. Los códigos desconocidos conservan su texto original; los valores del contrato, filtros y decisiones no cambian. Por ejemplo, `NEEDS_AUDIT -> APPROVED` se presenta como `Necesita Auditoria -> Aprobado`.
 
 La sección **Revisiones registradas** dispone de un contenedor padre con el mismo espaciado horizontal móvil y de escritorio que los paneles superiores. Sus estados de carga, error, vacío y eventos se mantienen separados de la edición del documento.
+
+#### Modo explícito de edición (T6, S6)
+
+Los documentos elegibles empiezan con sus datos extraídos en solo lectura. La acción **Modificar datos** habilita explícitamente la edición de propuestas; activarla por sí sola no cambia el borrador, no invalida la verificación ni envía solicitudes. Durante una acción en curso, **Modificar datos** permanece deshabilitado. Al editar un campo se conserva la invalidación de verificación existente. Si hay cambios sin guardar, **Continuar editando** conserva el modo, el borrador y el comentario; cerrar la revisión y volver a abrirla inicia en solo lectura. No hay guardado automático ni modificación del archivo original. El resaltado de campos faltantes, ilegibles o ambiguos está diferido con T7 de las correcciones UX/UI.
 
 ### Desplazamiento y verificación (T8)
 

@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useEffect, useId, useRef, type Ref } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { NativeSelect } from "../ui/native-select";
@@ -22,6 +22,9 @@ interface ReviewDocumentFieldsProps {
   draft: ReviewDraft;
   onDraftChange: (field: ReviewDraftTextField, value: string) => void;
   onAgeClear: () => void;
+  editingEnabled?: boolean;
+  editingDisabled?: boolean;
+  onEnableEditing: () => void;
 }
 
 function readonlyMetadataValue(field: ReadOnlyFieldPresentation): string {
@@ -65,6 +68,7 @@ function ReviewField({
   onChange,
   ageExplicitlyCleared = false,
   onAgeClear,
+  inputRef,
 }: {
   field: ReviewFieldPresentation;
   id: string;
@@ -72,6 +76,7 @@ function ReviewField({
   onChange: (field: ReviewDraftTextField, value: string) => void;
   ageExplicitlyCleared?: boolean;
   onAgeClear?: () => void;
+  inputRef?: Ref<HTMLInputElement>;
 }) {
   const noteId = `${id}-local-note`;
   const localOnly = field.persistence === "local-only";
@@ -100,6 +105,7 @@ function ReviewField({
         {field.key === "priority" ? (
           <NativeSelect
             id={id}
+            data-review-edit-control={field.key}
             value={field.proposedValue}
             aria-describedby={localOnly ? noteId : undefined}
             onChange={(event) => onChange(field.key, event.currentTarget.value)}
@@ -114,6 +120,7 @@ function ReviewField({
           field.key === "suggestedCIE10" ? (
           <Textarea
             id={id}
+            data-review-edit-control={field.key}
             value={field.proposedValue}
             aria-describedby={localOnly ? noteId : undefined}
             onChange={(event) => onChange(field.key, event.currentTarget.value)}
@@ -121,6 +128,8 @@ function ReviewField({
         ) : (
           <Input
             id={id}
+            data-review-edit-control={field.key}
+            ref={inputRef}
             type={field.key === "patientAge" ? "number" : "text"}
             min={field.key === "patientAge" ? 0 : undefined}
             max={field.key === "patientAge" ? 130 : undefined}
@@ -162,12 +171,21 @@ export function ReviewDocumentFields({
   draft,
   onDraftChange,
   onAgeClear,
+  editingEnabled = false,
+  editingDisabled = false,
+  onEnableEditing,
 }: ReviewDocumentFieldsProps) {
   const idPrefix = useId();
+  const firstEditInputRef = useRef<HTMLInputElement>(null);
   const presentation = presentReviewDocument(document, draft);
   const eligibility = reviewEligibility(document);
-  const editable = eligibility.editable;
+  const canEnableEditing = eligibility.editable;
+  const editable = canEnableEditing && editingEnabled;
   const fieldId = (field: ReviewDraftTextField) => `${idPrefix}-${field}`;
+
+  useEffect(() => {
+    if (editable) firstEditInputRef.current?.focus();
+  }, [editable]);
 
   const renderField = (field: ReviewFieldPresentation) => (
     <ReviewField
@@ -178,11 +196,17 @@ export function ReviewDocumentFields({
       onChange={onDraftChange}
       ageExplicitlyCleared={draft.ageExplicitlyCleared}
       onAgeClear={onAgeClear}
+      inputRef={field.key === "patientName" ? firstEditInputRef : undefined}
     />
   );
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div
+      className="space-y-6 p-4 sm:p-6"
+      data-review-edit-mode={
+        editable ? "editing" : canEnableEditing ? "read-only" : "ineligible"
+      }
+    >
       <header className="space-y-2">
         <h2 className="text-lg font-semibold text-slate-900">Datos extraídos</h2>
         <p className="text-sm text-slate-600">
@@ -225,6 +249,25 @@ export function ReviewDocumentFields({
         <p role="status" className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
           Este documento no admite edición en su estado actual.
         </p>
+      ) : null}
+
+      {canEnableEditing && !editable ? (
+        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-700">
+            Los campos se muestran en solo lectura. Si necesitas proponer una
+            corrección, activa la edición.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            data-review-edit-mode-button="true"
+            disabled={editingDisabled}
+            onClick={onEnableEditing}
+          >
+            Modificar datos
+          </Button>
+        </div>
       ) : null}
 
       {editable ? (
