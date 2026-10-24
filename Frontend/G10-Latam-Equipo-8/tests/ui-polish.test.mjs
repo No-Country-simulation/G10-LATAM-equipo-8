@@ -1,12 +1,25 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
-import { test } from "node:test";
+import { after, before, test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { createDashboardRenderer } from "./helpers/dashboard-renderer.mjs";
 import { compile } from "tailwindcss";
 import ts from "typescript";
 
 const sourceRoot = new URL("../src/", import.meta.url);
+let dashboardRenderer;
+
+before(async () => {
+  dashboardRenderer = await createDashboardRenderer(
+    "/src/layout/DashboardLayout.tsx",
+    "DashboardLayout",
+  );
+});
+
+after(async () => {
+  await dashboardRenderer?.close();
+});
 
 async function sourceFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -79,6 +92,35 @@ test("sidebar keeps all destinations, the active view and distinct count descrip
   assert.match(markup, /aria-current="page"[^>]*>[\s\S]*?Pendientes/);
   assert.match(markup, /2 pendientes de auditoría/);
   assert.match(markup, /0 alertas urgentes en la página de historial cargada/);
+});
+
+test("All documents shows an accessible global badge, including zero, while unknown remains hidden", () => {
+  const base = {
+    children: "contenido",
+    pageTitle: "Todos los documentos",
+    activeView: "all",
+    onViewChange() {},
+    auditPendingCount: 2,
+    urgentAlertCount: 0,
+    provenance: "demo",
+  };
+  const zero = dashboardRenderer.render({ ...base, allDocumentsCount: 0 });
+  assert.match(
+    zero,
+    /<span aria-hidden="true" class="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">0<\/span>/,
+  );
+  assert.match(zero, /<span class="sr-only">0 documentos en total<\/span>/);
+  assert.match(zero, /0 alertas urgentes en la página de historial cargada/);
+
+  const populated = dashboardRenderer.render({ ...base, allDocumentsCount: 19 });
+  assert.match(
+    populated,
+    /<span aria-hidden="true" class="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">19<\/span>/,
+  );
+  assert.match(populated, /<span class="sr-only">19 documentos en total<\/span>/);
+
+  const unknown = dashboardRenderer.render(base);
+  assert.doesNotMatch(unknown, /documentos en total/);
 });
 
 test("installed Tailwind emits the requested wrapping and documented logo utilities", async () => {

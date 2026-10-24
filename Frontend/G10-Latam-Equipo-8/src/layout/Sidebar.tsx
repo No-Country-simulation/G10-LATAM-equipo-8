@@ -25,6 +25,7 @@ interface Props {
   onViewChange: (view: DashboardView) => void;
   auditPendingCount: number | null;
   urgentAlertCount: number | null;
+  allDocumentsCount?: number | null;
 }
 
 const destinationIcons: Record<DashboardView, IconComponent> = {
@@ -39,6 +40,7 @@ export function Sidebar({
   onViewChange,
   auditPendingCount,
   urgentAlertCount,
+  allDocumentsCount,
 }: Props) {
   const navItems: NavItem[] = DASHBOARD_DESTINATIONS.map(({ view, label }) => {
     if (view === "pending") {
@@ -58,6 +60,15 @@ export function Sidebar({
         count: urgentAlertCount,
         countDescription: (count) =>
           `${count} alertas urgentes en la página de historial cargada`,
+      };
+    }
+    if (view === "all") {
+      return {
+        label,
+        icon: destinationIcons[view],
+        target: view,
+        count: allDocumentsCount ?? null,
+        countDescription: (count) => `${count} documentos en total`,
       };
     }
     return {

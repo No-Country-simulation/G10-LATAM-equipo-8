@@ -22,6 +22,7 @@ export interface DocumentCollectionsSnapshot {
   auditQueueError: string | null;
   hasHistory: boolean;
   hasAuditQueue: boolean;
+  allDocumentsTotal?: number | null;
   historyRequestOffset: number;
   auditRequestOffset: number;
   reviewStatusFilter: StatusTriaje | "";
@@ -74,6 +75,7 @@ export function createDocumentCollectionsController(
     auditQueueError: null,
     hasHistory: false,
     hasAuditQueue: false,
+    allDocumentsTotal: null,
     historyRequestOffset: 0,
     auditRequestOffset: 0,
     reviewStatusFilter: "",
@@ -83,6 +85,7 @@ export function createDocumentCollectionsController(
   };
   let historyRequestId = 0;
   let auditRequestId = 0;
+  let allDocumentsTotalRequestId = 0;
   let initialLoadPromise: Promise<void> | null = null;
   const listeners = new Set<() => void>();
 
@@ -91,11 +94,23 @@ export function createDocumentCollectionsController(
     for (const listener of [...listeners]) listener();
   }
 
+  async function requestAllDocumentsTotal(): Promise<void> {
+    const requestId = ++allDocumentsTotalRequestId;
+    try {
+      const response = await service.getTriajes({ offset: 0, limit: pageSize });
+      if (requestId !== allDocumentsTotalRequestId) return;
+      publish({ allDocumentsTotal: response.total });
+    } catch {
+      // Keep the last confirmed total, or null when no unfiltered total is known yet.
+    }
+  }
+
   async function requestHistory(
     offset: number,
     status: StatusTriaje | "",
     requestId: number,
   ): Promise<string | null> {
+    const totalRequestId = status ? null : ++allDocumentsTotalRequestId;
     try {
       const page = await service.getTriajes({
         offset,
@@ -103,7 +118,15 @@ export function createDocumentCollectionsController(
         ...(status ? { status } : {}),
       });
       if (requestId !== historyRequestId) return null;
-      publish({ history: page, historyState: "loaded", historyError: null, hasHistory: true });
+      publish({
+        history: page,
+        historyState: "loaded",
+        historyError: null,
+        hasHistory: true,
+        ...(totalRequestId !== null && totalRequestId === allDocumentsTotalRequestId
+          ? { allDocumentsTotal: page.total }
+          : {}),
+      });
       return null;
     } catch (error) {
       const message = messageOf(error);
@@ -151,6 +174,7 @@ export function createDocumentCollectionsController(
     initialLoadPromise = Promise.all([
       requestHistory(snapshot.historyRequestOffset, snapshot.reviewStatusFilter, historyId),
       requestAuditQueue(snapshot.auditRequestOffset, auditId),
+      ...(snapshot.reviewStatusFilter ? [requestAllDocumentsTotal()] : []),
     ]).then(() => undefined);
     return initialLoadPromise;
   }
@@ -179,7 +203,10 @@ export function createDocumentCollectionsController(
 
   async function setReviewStatus(status: StatusTriaje | ""): Promise<void> {
     publish({ reviewStatusFilter: status, hasHistory: false });
-    await loadHistoryPage(0);
+    await Promise.all([
+      loadHistoryPage(0),
+      ...(status ? [requestAllDocumentsTotal()] : []),
+    ]);
   }
 
   async function refreshCollections(): Promise<void> {
@@ -198,6 +225,7 @@ export function createDocumentCollectionsController(
     const [historyError, auditError] = await Promise.all([
       requestHistory(historyOffset, status, historyId),
       requestAuditQueue(auditOffset, auditId),
+      ...(status ? [requestAllDocumentsTotal()] : []),
     ]);
     const errors = [
       historyError ? `No se pudo actualizar el historial: ${historyError}` : null,

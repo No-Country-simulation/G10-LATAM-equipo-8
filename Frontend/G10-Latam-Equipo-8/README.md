@@ -89,10 +89,13 @@ La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia
 ### Bandejas, filtros y contexto (T4)
 
 - **Pendientes** consulta la cola de auditoría con `offset` y `limit`, sin añadir un filtro HTTP de estado.
+- El badge de **Todos los documentos**, tanto en escritorio como en el menú móvil, muestra el último total global confirmado de una respuesta sin filtros. Un total desconocido no se representa como cero; un cero confirmado sí se muestra. La paginación conserva el total del historial filtrado y un fallo de la lectura adicional conserva el último total conocido.
 - **Todos los documentos** y **Alertas inmediatas** comparten la página de historial y su filtro de estado de revisión. El historial admite ese filtro HTTP; Alertas selecciona únicamente registros con `alerta_urgente === true` y estado distinto de `APPROVED` entre los registros recibidos, sin aparentar una consulta o un total global de alertas.
 - **Paciente o documento** y **Tipo de documento** filtran solo la página cargada. La búsqueda de paciente o identificador ignora mayúsculas, minúsculas y tildes, sin cambiar el texto mostrado ni los datos originales. La introducción de Alertas inmediatas usa lenguaje sencillo; el contador y la paginación mantienen explícito el alcance de la página cargada. Las coincidencias locales no sustituyen el total ni la paginación del servidor; una página sin coincidencias puede tener páginas siguientes.
 - **Revisar** abre el modal sobre la colección actual para cualquier estado recibido. Cerrar la selección no reinicia destino, búsqueda, tipo, estado ni página. El resultado confirmado de una carga también puede abrirse sin navegación automática.
 - Los errores de lectura permiten reintentar la consulta, no la extracción de IA. Una actualización fallida conserva las páginas previas y se informa por separado del documento cuya carga ya fue confirmada.
+
+Si hay un filtro de estado en el historial, se añade una lectura del historial sin filtro para actualizar el total global; sin ese filtro se reutiliza el total de la respuesta habitual. Esa lectura adicional no sustituye la página filtrada ni convierte su total en global.
 
 ### Modal de revisión documental (T5–T6, integrado mediante T4)
 

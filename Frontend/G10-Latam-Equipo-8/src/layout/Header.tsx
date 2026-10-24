@@ -18,6 +18,7 @@ interface Props {
   onViewChange: (view: DashboardView) => void;
   auditPendingCount: number | null;
   urgentAlertCount: number | null;
+  allDocumentsCount?: number | null;
   provenance: TriajeServiceProvenance;
 }
 
@@ -27,6 +28,7 @@ export function Header({
   onViewChange,
   auditPendingCount,
   urgentAlertCount,
+  allDocumentsCount = null,
   provenance,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -71,6 +73,7 @@ export function Header({
                 onViewChange={changeMobileView}
                 auditPendingCount={auditPendingCount}
                 urgentAlertCount={urgentAlertCount}
+                allDocumentsCount={allDocumentsCount}
               />
             </SheetContent>
           </Sheet>

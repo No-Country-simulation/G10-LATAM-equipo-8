@@ -72,6 +72,7 @@ function App() {
         onViewChange={setActiveView}
         auditPendingCount={collections.hasAuditQueue ? collections.auditQueue.total : null}
         urgentAlertCount={urgentAlertCount}
+        allDocumentsCount={collections.allDocumentsTotal ?? null}
         provenance={triajeService.provenance}
       >
         {reviewRefreshError ? (

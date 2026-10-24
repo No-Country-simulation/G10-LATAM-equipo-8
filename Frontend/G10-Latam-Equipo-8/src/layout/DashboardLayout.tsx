@@ -10,6 +10,7 @@ interface Props {
   onViewChange: (view: DashboardView) => void;
   auditPendingCount: number | null;
   urgentAlertCount: number | null;
+  allDocumentsCount?: number | null;
   provenance: TriajeServiceProvenance;
 }
 
@@ -20,6 +21,7 @@ export function DashboardLayout({
   onViewChange,
   auditPendingCount,
   urgentAlertCount,
+  allDocumentsCount,
   provenance,
 }: Props) {
   return (
@@ -30,6 +32,7 @@ export function DashboardLayout({
           onViewChange={onViewChange}
           auditPendingCount={auditPendingCount}
           urgentAlertCount={urgentAlertCount}
+          allDocumentsCount={allDocumentsCount}
         />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -39,6 +42,7 @@ export function DashboardLayout({
           onViewChange={onViewChange}
           auditPendingCount={auditPendingCount}
           urgentAlertCount={urgentAlertCount}
+          allDocumentsCount={allDocumentsCount}
           provenance={provenance}
         />
         <main
