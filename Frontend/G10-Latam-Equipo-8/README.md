@@ -95,6 +95,10 @@ La procedencia distingue el modo demo (`Datos ficticios`) del modo API; `modo_ia
 - **Revisar** abre el modal sobre la colección actual para cualquier estado recibido. Cerrar la selección no reinicia destino, búsqueda, tipo, estado ni página. El resultado confirmado de una carga también puede abrirse sin navegación automática.
 - Los errores de lectura permiten reintentar la consulta, no la extracción de IA. Una actualización fallida conserva las páginas previas y se informa por separado del documento cuya carga ya fue confirmada.
 
+### Actualización de colecciones y borradores en sesión
+
+Con la carga inicial resuelta, el frontend consulta historial y cola de auditoría mediante los GET existentes cada aproximadamente cinco segundos mientras la pestaña está visible. Los ciclos periódicos esperan a que termine la lectura anterior; la pestaña oculta pausa los temporizadores y volver a mostrarla provoca una única reconciliación. Un error mantiene la última página buena, aparece en el aviso existente y separa los siguientes intentos con espera exponencial limitada a 60 segundos. La actualización manual y las actualizaciones tras carga/revisión conservan su estado de carga y errores habituales, y tienen prioridad sobre una lectura periódica.
+
 Si hay un filtro de estado en el historial, se añade una lectura del historial sin filtro para actualizar el total global; sin ese filtro se reutiliza el total de la respuesta habitual. Esa lectura adicional no sustituye la página filtrada ni convierte su total en global.
 
 ### Modal de revisión documental (T5–T6, integrado mediante T4)

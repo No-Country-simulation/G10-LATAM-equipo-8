@@ -1,6 +1,7 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { triajeService } from "../services/triajeService";
 import { createDocumentCollectionsController } from "./documentCollectionsController";
+import { startDocumentCollectionsPolling } from "./documentCollectionsPolling";
 
 export function useDocumentCollections() {
   const [controller] = useState(() =>
@@ -11,9 +12,26 @@ export function useDocumentCollections() {
     controller.getSnapshot,
     controller.getSnapshot,
   );
+  const refreshCollections = useCallback(
+    () => controller.refreshCollections(),
+    [controller],
+  );
 
   useEffect(() => {
-    void controller.loadInitial();
+    let active = true;
+    let stopPolling: (() => void) | null = null;
+    const startPolling = () => {
+      if (!active) return;
+      stopPolling = startDocumentCollectionsPolling(() =>
+        controller.refreshCollections({ background: true }),
+      );
+    };
+
+    void controller.loadInitial().then(startPolling, startPolling);
+    return () => {
+      active = false;
+      stopPolling?.();
+    };
   }, [controller]);
 
   return {
@@ -22,7 +40,7 @@ export function useDocumentCollections() {
     loadAuditPage: controller.loadAuditPage,
     loadHistoryPage: controller.loadHistoryPage,
     openDocument: controller.openDocument,
-    refreshCollections: controller.refreshCollections,
+    refreshCollections,
     retryAuditQueue: controller.retryAuditQueue,
     retryHistory: controller.retryHistory,
     setDocumentType: controller.setDocumentType,

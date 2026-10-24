@@ -312,6 +312,199 @@ test("opening and closing any loaded case retains collection filters and page", 
   assert.equal(afterClose.history.total, 45);
 });
 
+test("refreshing a collection preserves the open document while a newly available page appears", async () => {
+  const activeDocument = syntheticDocument({ documento_id: "NEUTRAL-REVIEW-A" });
+  const arrivingDocument = syntheticDocument({ documento_id: "NEUTRAL-REVIEW-B" });
+  let arrivingDocumentAvailable = false;
+  const historyRequests = [];
+  const service = {
+    getTriajes: ({ offset, limit, status = "" }) => {
+      historyRequests.push({ offset, status });
+      const items = offset === 0
+        ? [activeDocument]
+        : arrivingDocumentAvailable
+          ? [arrivingDocument]
+          : [];
+      return Promise.resolve(
+        page(items, arrivingDocumentAvailable ? 2 : 1, offset, limit),
+      );
+    },
+    getAuditQueue: ({ offset = 0, limit = 20 }) =>
+      Promise.resolve(page([], 0, offset, limit)),
+  };
+  const controller = createDocumentCollectionsController(service, 1);
+  await controller.loadInitial();
+  controller.openDocument(activeDocument);
+  await controller.setReviewStatus("NEEDS_AUDIT");
+  await controller.loadHistoryPage(1);
+  controller.setSearch("NEUTRAL-REVIEW-B");
+  controller.setDocumentType(arrivingDocument.clasificacion.tipo_documento ?? "");
+  arrivingDocumentAvailable = true;
+
+  await controller.refreshCollections();
+
+  const refreshed = controller.getSnapshot();
+  assert.equal(refreshed.selectedDocument, activeDocument);
+  assert.deepEqual(refreshed.history.items, [arrivingDocument]);
+  assert.deepEqual(
+    filterCollectionDocuments(refreshed.history.items, {
+      search: refreshed.search,
+      documentType: refreshed.documentType,
+    }),
+    [arrivingDocument],
+  );
+  assert.equal(refreshed.history.offset, 1);
+  assert.equal(refreshed.history.total, 2);
+  assert.equal(refreshed.search, "NEUTRAL-REVIEW-B");
+  assert.equal(refreshed.documentType, arrivingDocument.clasificacion.tipo_documento);
+  assert.equal(refreshed.reviewStatusFilter, "NEEDS_AUDIT");
+  assert.equal(refreshed.auditQueue.offset, 0);
+  assert.deepEqual(historyRequests.at(-2), { offset: 1, status: "NEEDS_AUDIT" });
+  assert.deepEqual(historyRequests.at(-1), { offset: 0, status: "" }, "filtered refresh separately reads the unfiltered global total");
+});
+
+test("manual refresh keeps foreground loading semantics and takes precedence over background polling", async () => {
+  const activeDocument = syntheticDocument({ documento_id: "NEUTRAL-MANUAL-A" });
+  const refreshedDocument = syntheticDocument({ documento_id: "NEUTRAL-MANUAL-B" });
+  const historyResponse = deferred();
+  const auditResponse = deferred();
+  const requests = [];
+  let deferRefreshes = false;
+  const service = {
+    getTriajes: ({ offset, limit, status = "" }) => {
+      requests.push({ collection: "history", offset, status });
+      return deferRefreshes
+        ? historyResponse.promise
+        : Promise.resolve(page([activeDocument], 2, offset, limit));
+    },
+    getAuditQueue: ({ offset = 0, limit = 20 }) => {
+      requests.push({ collection: "audit", offset });
+      return deferRefreshes
+        ? auditResponse.promise
+        : Promise.resolve(page([activeDocument], 2, offset, limit));
+    },
+  };
+  const controller = createDocumentCollectionsController(service, 1);
+  await controller.loadInitial();
+  await controller.setReviewStatus("NEEDS_AUDIT");
+  await controller.loadHistoryPage(1);
+  controller.setSearch("NEUTRAL-MANUAL-B");
+  controller.setDocumentType(refreshedDocument.clasificacion.tipo_documento ?? "");
+  controller.openDocument(activeDocument);
+  const requestsBeforeRefresh = requests.length;
+  deferRefreshes = true;
+
+  const manualRefresh = controller.refreshCollections();
+  const whileRefreshing = controller.getSnapshot();
+  assert.equal(whileRefreshing.historyState, "loading");
+  assert.equal(whileRefreshing.auditQueueState, "loading");
+  assert.equal(whileRefreshing.selectedDocument, activeDocument);
+  assert.equal(whileRefreshing.history.offset, 1);
+  assert.equal(whileRefreshing.reviewStatusFilter, "NEEDS_AUDIT");
+
+  const backgroundRefresh = controller.refreshCollections({ background: true });
+  const requestCountWhileForegroundRefreshRuns = requests.length;
+  historyResponse.resolve(page([refreshedDocument], 2, 1, 1));
+  auditResponse.resolve(page([refreshedDocument], 2, 0, 1));
+  await Promise.all([manualRefresh, backgroundRefresh]);
+
+  assert.equal(requestCountWhileForegroundRefreshRuns, requestsBeforeRefresh + 3);
+  assert.deepEqual(requests.slice(requestsBeforeRefresh), [
+    { collection: "history", offset: 1, status: "NEEDS_AUDIT" },
+    { collection: "audit", offset: 0 },
+    { collection: "history", offset: 0, status: "" },
+  ], "filtered refresh adds only the unfiltered count read alongside the existing collection reads");
+  const refreshed = controller.getSnapshot();
+  assert.equal(refreshed.history.items[0], refreshedDocument);
+  assert.equal(refreshed.selectedDocument, activeDocument);
+  assert.equal(refreshed.history.offset, 1);
+  assert.equal(refreshed.reviewStatusFilter, "NEEDS_AUDIT");
+  assert.equal(refreshed.search, "NEUTRAL-MANUAL-B");
+  assert.equal(refreshed.documentType, refreshedDocument.clasificacion.tipo_documento);
+  assert.equal(refreshed.auditQueue.offset, 0);
+});
+
+test("background refresh yields to a manually selected page instead of replacing its result", async () => {
+  const currentPage = syntheticDocument({ documento_id: "NEUTRAL-MANUAL-PAGE" });
+  const stalePollPage = syntheticDocument({ documento_id: "NEUTRAL-STALE-POLL" });
+  const manualResponse = deferred();
+  const requests = [];
+  let pageRequests = 0;
+  const service = {
+    getTriajes: ({ offset = 0, limit = 20 }) => {
+      requests.push({ collection: "history", offset });
+      if (offset !== 20) return Promise.resolve(page([], 41, offset, limit));
+      pageRequests += 1;
+      return pageRequests === 1
+        ? manualResponse.promise
+        : Promise.resolve(page([stalePollPage], 41, offset, limit));
+    },
+    getAuditQueue: ({ offset = 0, limit = 20 }) => {
+      requests.push({ collection: "audit", offset });
+      return Promise.resolve(page([], 0, offset, limit));
+    },
+  };
+  const controller = createDocumentCollectionsController(service);
+  await controller.loadInitial();
+  const requestsBeforePageChange = requests.length;
+
+  const manualPageChange = controller.loadHistoryPage(20);
+  const backgroundRefresh = controller.refreshCollections({ background: true });
+  const requestsWhilePageChangeRuns = requests.length;
+  manualResponse.resolve(page([currentPage], 41, 20, 20));
+  await Promise.all([manualPageChange, backgroundRefresh]);
+
+  assert.equal(requestsWhilePageChangeRuns, requestsBeforePageChange + 1);
+  assert.equal(pageRequests, 1);
+  assert.deepEqual(controller.getSnapshot().history.items, [currentPage]);
+  assert.equal(controller.getSnapshot().history.offset, 20);
+});
+
+test("background refresh preserves last-good pages and reports errors without replacing loaded state", async () => {
+  const knownHistory = syntheticDocument({ documento_id: "NEUTRAL-HISTORY-A" });
+  const knownAudit = syntheticDocument({ documento_id: "NEUTRAL-AUDIT-A" });
+  const refreshedHistory = syntheticDocument({ documento_id: "NEUTRAL-HISTORY-B" });
+  const refreshedAudit = syntheticDocument({ documento_id: "NEUTRAL-AUDIT-B" });
+  let shouldFail = false;
+  let shouldRefresh = false;
+  const service = {
+    getTriajes: ({ offset = 0, limit = 20 }) =>
+      shouldFail
+        ? Promise.reject(new Error("history unavailable"))
+        : Promise.resolve(page([shouldRefresh ? refreshedHistory : knownHistory], 1, offset, limit)),
+    getAuditQueue: ({ offset = 0, limit = 20 }) =>
+      shouldFail
+        ? Promise.reject(new Error("audit unavailable"))
+        : Promise.resolve(page([shouldRefresh ? refreshedAudit : knownAudit], 1, offset, limit)),
+  };
+  const controller = createDocumentCollectionsController(service);
+  await controller.loadInitial();
+  shouldFail = true;
+
+  await assert.rejects(
+    controller.refreshCollections({ background: true }),
+    /No se pudo actualizar el historial: history unavailable; No se pudo actualizar la cola de auditoría: audit unavailable/,
+  );
+  const failed = controller.getSnapshot();
+  assert.deepEqual(failed.history.items, [knownHistory]);
+  assert.deepEqual(failed.auditQueue.items, [knownAudit]);
+  assert.equal(failed.historyState, "loaded");
+  assert.equal(failed.auditQueueState, "loaded");
+  assert.equal(failed.historyError, "history unavailable");
+  assert.equal(failed.auditQueueError, "audit unavailable");
+
+  shouldFail = false;
+  shouldRefresh = true;
+  await controller.refreshCollections({ background: true });
+  const recovered = controller.getSnapshot();
+  assert.deepEqual(recovered.history.items, [refreshedHistory]);
+  assert.deepEqual(recovered.auditQueue.items, [refreshedAudit]);
+  assert.equal(recovered.historyState, "loaded");
+  assert.equal(recovered.auditQueueState, "loaded");
+  assert.equal(recovered.historyError, null);
+  assert.equal(recovered.auditQueueError, null);
+});
+
 test("refresh propagates both collection errors while retaining the last confirmed pages", async () => {
   const historyRecord = syntheticDocument({ documento_id: "HISTORY-001" });
   const auditRecord = syntheticDocument({ documento_id: "AUDIT-001" });

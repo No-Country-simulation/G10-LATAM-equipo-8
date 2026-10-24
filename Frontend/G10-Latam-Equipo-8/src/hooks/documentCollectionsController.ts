@@ -13,6 +13,10 @@ export interface DocumentCollectionsService {
   getAuditQueue: (page: { offset: number; limit: number }) => Promise<HistoryResponse>;
 }
 
+export interface DocumentCollectionsRefreshOptions {
+  background?: boolean;
+}
+
 export interface DocumentCollectionsSnapshot {
   history: HistoryResponse;
   auditQueue: HistoryResponse;
@@ -42,7 +46,7 @@ export interface DocumentCollectionsController {
   setReviewStatus: (status: StatusTriaje | "") => Promise<void>;
   retryHistory: () => Promise<void>;
   retryAuditQueue: () => Promise<void>;
-  refreshCollections: () => Promise<void>;
+  refreshCollections: (options?: DocumentCollectionsRefreshOptions) => Promise<void>;
   openDocument: (document: TriajeDocumento) => void;
   closeDocument: () => void;
 }
@@ -87,6 +91,8 @@ export function createDocumentCollectionsController(
   let auditRequestId = 0;
   let allDocumentsTotalRequestId = 0;
   let initialLoadPromise: Promise<void> | null = null;
+  let foregroundRefreshCount = 0;
+  let backgroundRefreshPromise: Promise<void> | null = null;
   const listeners = new Set<() => void>();
 
   function publish(update: Partial<DocumentCollectionsSnapshot>) {
@@ -109,6 +115,7 @@ export function createDocumentCollectionsController(
     offset: number,
     status: StatusTriaje | "",
     requestId: number,
+    background = false,
   ): Promise<string | null> {
     const totalRequestId = status ? null : ++allDocumentsTotalRequestId;
     try {
@@ -131,15 +138,19 @@ export function createDocumentCollectionsController(
     } catch (error) {
       const message = messageOf(error);
       if (requestId === historyRequestId) {
-        publish({ historyState: "error", historyError: message });
+        publish({
+          historyState: background && snapshot.hasHistory ? "loaded" : "error",
+          historyError: message,
+        });
       }
-      return message;
+      return background && requestId !== historyRequestId ? null : message;
     }
   }
 
   async function requestAuditQueue(
     offset: number,
     requestId: number,
+    background = false,
   ): Promise<string | null> {
     try {
       const page = await service.getAuditQueue({ offset, limit: pageSize });
@@ -154,9 +165,12 @@ export function createDocumentCollectionsController(
     } catch (error) {
       const message = messageOf(error);
       if (requestId === auditRequestId) {
-        publish({ auditQueueState: "error", auditQueueError: message });
+        publish({
+          auditQueueState: background && snapshot.hasAuditQueue ? "loaded" : "error",
+          auditQueueError: message,
+        });
       }
-      return message;
+      return background && requestId !== auditRequestId ? null : message;
     }
   }
 
@@ -209,22 +223,24 @@ export function createDocumentCollectionsController(
     ]);
   }
 
-  async function refreshCollections(): Promise<void> {
+  async function performCollectionRefresh(background: boolean): Promise<void> {
     const historyId = ++historyRequestId;
     const auditId = ++auditRequestId;
     const historyOffset = snapshot.historyRequestOffset;
     const auditOffset = snapshot.auditRequestOffset;
     const status = snapshot.reviewStatusFilter;
-    publish({
-      historyState: "loading",
-      historyError: null,
-      auditQueueState: "loading",
-      auditQueueError: null,
-    });
+    if (!background) {
+      publish({
+        historyState: "loading",
+        historyError: null,
+        auditQueueState: "loading",
+        auditQueueError: null,
+      });
+    }
 
     const [historyError, auditError] = await Promise.all([
-      requestHistory(historyOffset, status, historyId),
-      requestAuditQueue(auditOffset, auditId),
+      requestHistory(historyOffset, status, historyId, background),
+      requestAuditQueue(auditOffset, auditId, background),
       ...(status ? [requestAllDocumentsTotal()] : []),
     ]);
     const errors = [
@@ -232,6 +248,39 @@ export function createDocumentCollectionsController(
       auditError ? `No se pudo actualizar la cola de auditoría: ${auditError}` : null,
     ].filter((message): message is string => message !== null);
     if (errors.length > 0) throw new Error(errors.join("; "));
+  }
+
+  async function refreshCollections(
+    options: DocumentCollectionsRefreshOptions = {},
+  ): Promise<void> {
+    const background = options.background === true;
+    if (background) {
+      if (
+        foregroundRefreshCount > 0 ||
+        snapshot.historyState === "loading" ||
+        snapshot.auditQueueState === "loading"
+      ) {
+        return;
+      }
+      if (backgroundRefreshPromise) return backgroundRefreshPromise;
+      const pendingRefresh = performCollectionRefresh(true);
+      backgroundRefreshPromise = pendingRefresh;
+      try {
+        await pendingRefresh;
+      } finally {
+        if (backgroundRefreshPromise === pendingRefresh) {
+          backgroundRefreshPromise = null;
+        }
+      }
+      return;
+    }
+
+    foregroundRefreshCount += 1;
+    try {
+      await performCollectionRefresh(false);
+    } finally {
+      foregroundRefreshCount -= 1;
+    }
   }
 
   function retryHistory(): Promise<void> {

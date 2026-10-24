@@ -103,6 +103,33 @@ test("known zero stays distinct from unknown when a separate global read fails",
   assert.equal(unknown.auditQueueError, null);
 });
 
+test("a failed extra count refresh retains the last-good global total and successful collections", async () => {
+  const document = syntheticDocument({ documento_id: "T10-LAST-GOOD-001" });
+  let failGlobalRead = false;
+  const controller = createDocumentCollectionsController({
+    getTriajes: (filters) => {
+      if (filters.status) return Promise.resolve(page([document], 3, filters.offset, filters.limit));
+      if (failGlobalRead) return Promise.reject(new Error("global total unavailable"));
+      return Promise.resolve(page([document], 19, filters.offset, filters.limit));
+    },
+    getAuditQueue: auditPage,
+  });
+
+  await controller.loadInitial();
+  await controller.setReviewStatus("NEEDS_AUDIT");
+  failGlobalRead = true;
+  await controller.refreshCollections({ background: true });
+
+  const refreshed = controller.getSnapshot();
+  assert.equal(refreshed.allDocumentsTotal, 19);
+  assert.equal(refreshed.history.total, 3);
+  assert.equal(refreshed.history.items[0], document);
+  assert.equal(refreshed.historyState, "loaded");
+  assert.equal(refreshed.historyError, null);
+  assert.equal(refreshed.auditQueueState, "loaded");
+  assert.equal(refreshed.auditQueueError, null);
+});
+
 test("an older filtered total response cannot replace a newer authoritative total", async () => {
   const staleCount = deferred();
   const latestCount = deferred();
