@@ -20,6 +20,30 @@ interface ActivePreview {
   url: string;
 }
 
+const originalDownloadClassName =
+  "inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-teal-700 bg-white px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:w-auto";
+
+export function OriginalDocumentDownload({
+  url,
+  filename,
+}: {
+  url: string | null;
+  filename: string | null;
+}) {
+  if (!url) {
+    return (
+      <button type="button" disabled className={`${originalDownloadClassName} cursor-not-allowed opacity-50`}>
+        Descargar original
+      </button>
+    );
+  }
+  return (
+    <a href={url} download={filename || "documento-original"} className={originalDownloadClassName}>
+      Descargar original
+    </a>
+  );
+}
+
 export function DocumentOriginalViewer({
   documentId,
   resource,
@@ -144,6 +168,11 @@ export function DocumentOriginalViewer({
           />
         ) : null}
       </div>
+      {original ? (
+        <footer className="flex shrink-0 flex-wrap justify-end">
+          <OriginalDocumentDownload url={preview?.url ?? null} filename={original.filename ?? null} />
+        </footer>
+      ) : null}
     </section>
   );
 }
