@@ -57,7 +57,7 @@ Hay capacidades implementadas, pendientes y propuestas mezcladas entre la rúbri
 - T2.1: `decide()` aplica la condición de nombre faltante y hay pruebas parametrizadas para nulo/vacío/espacios y nombre presente; matriz actualizada.
 - Verificación T2.1: RED observado (3 casos fallaron antes del cambio); GREEN con `backend/.venv/Scripts/pytest.exe -q tests/test_triage_pipeline.py --basetemp C:/Users/dark_/Desktop/G10-LATAM-equipo-8/backend/.pytest-independent-t21 -p no:cacheprovider` (9 passed, repetido por verificador independiente); Ruff check/format y `git diff --check` reportados como pasados. `uv` no está instalado, por eso no se pudo usar la invocación prescrita.
 - Evaluación RDD: modo clone-local `off`; `gentle-ai review assess` resultó `unassessable/high` porque el sandbox denegó acceso al índice `.git`. Se hizo revisión estructural del padre y verificación independiente; no se inició RDD.
-- Commit de unidad T2.1: pendiente de crear y registrar.
+- Commit de unidad T2.1: `2b44279` (`fix(triaje): enviar nombres faltantes a revisión humana`).
 - Próximo paso: acordar T2.2 (contradicciones) y T2.3 (fallo de almacenamiento) antes de implementarlas.
 
 ## Estrategia de entrega
