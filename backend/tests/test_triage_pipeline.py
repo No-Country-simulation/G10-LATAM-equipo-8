@@ -1,5 +1,6 @@
 from unittest.mock import Mock
 
+import pytest
 from google.genai import errors
 
 from app.adapters.outbound.gemini_ai import GeminiExtractor
@@ -9,7 +10,7 @@ from app.adapters.outbound.simulated_ai import ROUTINE, SimulatedExtractor
 from app.application.process_document import ProcessDocument
 from app.application.triage_pipeline import TriagePipeline
 from app.domain.extraction import ProcessingStatus
-from app.domain.triaje import Destination, Extraction, Priority, Status
+from app.domain.triaje import Destination, Extraction, Priority, Status, decide
 
 
 class FixedExtractor:
@@ -44,6 +45,30 @@ def test_ambiguous_extraction_takes_human_review_branch_without_confidence_cutof
 
     assert result["trace"][-1] == "ambiguous_review"
     assert result["extraction"] == extraction
+
+
+@pytest.mark.parametrize("patient_name", [None, "", "   "])
+def test_missing_patient_name_requires_human_review_without_changing_extraction(patient_name):
+    extraction = Extraction("Informe de Laboratorio", Priority.ROUTINE, 0.42, patient_name)
+
+    decision = decide(extraction)
+
+    assert decision.status == Status.NEEDS_AUDIT
+    assert decision.destination == Destination.REVIEW
+    assert decision.urgent_alert is False
+    assert extraction.confidence == 0.42
+    assert extraction.priority == Priority.ROUTINE
+
+
+def test_populated_patient_name_preserves_existing_routine_decision():
+    extraction = Extraction("Informe de Laboratorio", Priority.ROUTINE, 0.42, "Demo")
+
+    decision = decide(extraction)
+
+    assert decision.status == Status.PROCESSED
+    assert decision.destination == Destination.HISTORY
+    assert extraction.confidence == 0.42
+    assert extraction.priority == Priority.ROUTINE
 
 
 def test_urgent_extraction_takes_urgent_human_review_branch():

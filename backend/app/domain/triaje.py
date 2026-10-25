@@ -112,6 +112,8 @@ def decide(extraction: Extraction) -> Decision:
     if (
         urgent
         or extraction.audit_reasons
+        or not extraction.patient_name
+        or not extraction.patient_name.strip()
         or any(
             value is None
             for value in (extraction.document_type, extraction.priority, extraction.confidence)

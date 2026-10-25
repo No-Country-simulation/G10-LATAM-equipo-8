@@ -24,12 +24,17 @@ Hay capacidades implementadas, pendientes y propuestas mezcladas entre la rúbri
 
 ## Tareas y estado
 - [x] T1 — Crear la matriz inicial de aceptación contrastando la rúbrica con código, tests y documentos existentes.
-- [ ] T2 — Resolver brechas de flujo seguro a partir de la matriz; el alcance de código se concreta después de revisar T1.
+- [ ] T2 — Resolver brechas de flujo seguro a partir de la matriz mediante subtareas pequeñas y verificables.
 - [ ] T3 — Verificar persistencia Neon/OCI con fixtures sintéticos y autorización remota cuando aplique.
 - [ ] T4 — Validar contrato con el frontend y controles de acceso antes de datos no sintéticos.
 - [ ] T5 — Especificar e implementar el alcance acordado de voz/audio.
 - [ ] T6 — Evaluar JEV; su integración requiere una decisión explícita y no altera decisiones clínicas.
 - [ ] T7 — Ejecutar aceptación E2E y actualizar documentación.
+
+## Decisiones del contrato T2
+- **T2.1 aceptada e implementada:** si `patient_name` falta, es nulo, vacío o contiene solo espacios, el documento queda en `NEEDS_AUDIT` para revisión humana. No se rechaza ni se enruta automáticamente; el score/confianza y prioridad no cambian.
+- **T2.2 pendiente:** definir evidencia y semántica determinista para marcar contradicciones entre valores extraídos.
+- **T2.3 pendiente:** definir el contrato observable ante fallo de almacenamiento: `503`/sin triaje visible o estado de fallo persistido y reintentable.
 
 ## Criterios de aceptación de T1
 - Todos los requisitos explícitos del checklist de Alura aparecen en filas separadas o en subfilas legibles.
@@ -48,7 +53,12 @@ Hay capacidades implementadas, pendientes y propuestas mezcladas entre la rúbri
 - T1 terminado: `docs/ALURA_ACCEPTANCE_MATRIX.md` creado, leído de vuelta y cotejado con checklist, módulos y pruebas citadas; el spot-check confirmó campos de medicamentos/dosis ausentes, score no calibrado y ausencia de verificación OCI en vivo.
 - Verificación de T1: `git diff --check` sin errores; no se ejecutaron pruebas funcionales ni accesos externos porque el cambio es documental.
 - Commit de unidad de trabajo T1: `e7b9360` (`docs(alura): documentar matriz de aceptación`).
-- Próximo paso: T2, definir y probar las salidas condicionales para incompleto, evidencia contradictoria, urgencia, error del proveedor y fallo de almacenamiento; sin umbrales clínicos inventados.
+- T2 auditoría de solo lectura: condiciones actuales y pruebas existentes quedaron registrados en Engram (`backend/conditional-flow-contract`); no hubo cambios funcionales.
+- T2.1: `decide()` aplica la condición de nombre faltante y hay pruebas parametrizadas para nulo/vacío/espacios y nombre presente; matriz actualizada.
+- Verificación T2.1: RED observado (3 casos fallaron antes del cambio); GREEN con `backend/.venv/Scripts/pytest.exe -q tests/test_triage_pipeline.py --basetemp C:/Users/dark_/Desktop/G10-LATAM-equipo-8/backend/.pytest-independent-t21 -p no:cacheprovider` (9 passed, repetido por verificador independiente); Ruff check/format y `git diff --check` reportados como pasados. `uv` no está instalado, por eso no se pudo usar la invocación prescrita.
+- Evaluación RDD: modo clone-local `off`; `gentle-ai review assess` resultó `unassessable/high` porque el sandbox denegó acceso al índice `.git`. Se hizo revisión estructural del padre y verificación independiente; no se inició RDD.
+- Commit de unidad T2.1: pendiente de crear y registrar.
+- Próximo paso: acordar T2.2 (contradicciones) y T2.3 (fallo de almacenamiento) antes de implementarlas.
 
 ## Estrategia de entrega
 - `ask-on-risk`; no se crean PRs. El push y cualquier merge quedan fuera de este alcance.
