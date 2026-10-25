@@ -151,26 +151,32 @@ class GeminiExtractor:
                 return re.search(rf"(?<!\d){re.escape(normalized_value)}(?!\d)", normalized_quote)
             return normalized_value in normalized_quote
 
-        def supports(item):
-            if (
-                not item.quote
-                or item.quote not in original
-                or item.page is not None
-                or item.field not in populated
-            ):
+        def has_supported_quote(item):
+            return (
+                bool(item.quote)
+                and item.quote in original
+                and item.page is None
+                and item.field in populated
+            )
+
+        def supports_extracted_value(item):
+            return has_supported_quote(item) and value_is_literal(values[item.field], item.quote)
+
+        def supports_reference_value(item):
+            if not has_supported_quote(item):
                 return False
             value = item.asserted_value if item.asserted_value is not None else values[item.field]
             return value_is_literal(value, item.quote)
 
-        supported = {item.field for item in parsed.evidence if supports(item)}
+        supported = {item.field for item in parsed.evidence if supports_extracted_value(item)}
         reasons = []
         if populated - supported:
             reasons.append("MISSING_LITERAL_EVIDENCE")
-        if any(not supports(item) for item in parsed.evidence):
+        if any(not supports_reference_value(item) for item in parsed.evidence):
             reasons.append("UNVERIFIED_TEXT_EVIDENCE")
         assertions_by_field = {}
         for item in parsed.evidence:
-            if supports(item) and item.asserted_value is not None:
+            if supports_reference_value(item) and item.asserted_value is not None:
                 assertions_by_field.setdefault(item.field, set()).add(
                     normalize(item.asserted_value)
                 )

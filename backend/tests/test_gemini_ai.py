@@ -225,6 +225,31 @@ def test_asserted_value_must_be_literally_supported_by_its_quote():
     assert extraction.evidence[0].asserted_value == "Invented"
 
 
+def test_valid_asserted_value_does_not_mask_unsupported_aggregate_field_value():
+    value = payload(
+        document_type=None,
+        priority=None,
+        confidence=None,
+        patient_name="Invented",
+        evidence=[
+            {
+                "field": "patient_name",
+                "page": None,
+                "quote": "Patient: Demo",
+                "asserted_value": "Demo",
+            }
+        ],
+    )
+
+    extraction = GeminiExtractor("fake", "gemini-test", client=make_client(value)).extract(
+        b"Patient: Demo", "text/plain"
+    )
+
+    assert "MISSING_LITERAL_EVIDENCE" in extraction.audit_reasons
+    assert "POSSIBLE_EVIDENCE_CONFLICT" not in extraction.audit_reasons
+    assert extraction.evidence[0].asserted_value == "Demo"
+
+
 def test_missing_evidence_is_not_reported_as_a_conflict():
     extraction = GeminiExtractor(
         "fake", "gemini-test", client=make_client(payload(evidence=[]))
