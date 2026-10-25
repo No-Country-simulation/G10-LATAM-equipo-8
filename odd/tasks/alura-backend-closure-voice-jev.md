@@ -47,7 +47,7 @@ Hay capacidades implementadas, pendientes y propuestas mezcladas entre la rúbri
 - T1: ruta delegada directa para lectura de evidencia y creación del artefacto documental; selección motivada por el requisito de leer fuentes antes de redactar y preservar evidencia. El padre hará un spot-check de requisitos/estados.
 - T1 terminado: `docs/ALURA_ACCEPTANCE_MATRIX.md` creado, leído de vuelta y cotejado con checklist, módulos y pruebas citadas; el spot-check confirmó campos de medicamentos/dosis ausentes, score no calibrado y ausencia de verificación OCI en vivo.
 - Verificación de T1: `git diff --check` sin errores; no se ejecutaron pruebas funcionales ni accesos externos porque el cambio es documental.
-- Commit de unidad de trabajo T1: pendiente de crear y registrar.
+- Commit de unidad de trabajo T1: `e7b9360` (`docs(alura): documentar matriz de aceptación`).
 - Próximo paso: T2, definir y probar las salidas condicionales para incompleto, evidencia contradictoria, urgencia, error del proveedor y fallo de almacenamiento; sin umbrales clínicos inventados.
 
 ## Estrategia de entrega
