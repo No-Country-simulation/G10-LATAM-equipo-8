@@ -33,7 +33,7 @@ Hay capacidades implementadas, pendientes y propuestas mezcladas entre la rúbri
 
 ## Decisiones del contrato T2
 - **T2.1 aceptada e implementada:** si `patient_name` falta, es nulo, vacío o contiene solo espacios, el documento queda en `NEEDS_AUDIT` para revisión humana. No se rechaza ni se enruta automáticamente; el score/confianza y prioridad no cambian.
-- **T2.2 pendiente:** definir evidencia y semántica determinista para marcar contradicciones entre valores extraídos.
+- **T2.2 aceptada para implementación:** añadir `asserted_value` opcional por referencia de evidencia; validar que el valor aparezca literalmente en su cita y, si hay valores distintos para el mismo campo, señalar un posible conflicto y requerir revisión humana. Conservar todas las evidencias y valores, sin seleccionar uno ni tratar el conflicto como riesgo clínico. Mantener compatibilidad con extracciones JSON existentes que no tengan la propiedad; no se prevé migración de columnas de Neon/Postgres.
 - **T2.3 pendiente:** definir el contrato observable ante fallo de almacenamiento: `503`/sin triaje visible o estado de fallo persistido y reintentable.
 
 ## Criterios de aceptación de T1
@@ -58,7 +58,11 @@ Hay capacidades implementadas, pendientes y propuestas mezcladas entre la rúbri
 - Verificación T2.1: RED observado (3 casos fallaron antes del cambio); GREEN con `backend/.venv/Scripts/pytest.exe -q tests/test_triage_pipeline.py --basetemp C:/Users/dark_/Desktop/G10-LATAM-equipo-8/backend/.pytest-independent-t21 -p no:cacheprovider` (9 passed, repetido por verificador independiente); Ruff check/format y `git diff --check` reportados como pasados. `uv` no está instalado, por eso no se pudo usar la invocación prescrita.
 - Evaluación RDD: modo clone-local `off`; `gentle-ai review assess` resultó `unassessable/high` porque el sandbox denegó acceso al índice `.git`. Se hizo revisión estructural del padre y verificación independiente; no se inició RDD.
 - Commit de unidad T2.1: `2b44279` (`fix(triaje): enviar nombres faltantes a revisión humana`).
-- Próximo paso: acordar T2.2 (contradicciones) y T2.3 (fallo de almacenamiento) antes de implementarlas.
+- T2.2 feasibility audit: evidencia actual usa `field/page/quote`; hay múltiples referencias por campo, pero el extractor solo valida literalidad y no compara valores. El padre no implementó comparación semántica especulativa.
+- T2.2 implementada: `SourceReference.asserted_value` es opcional; Gemini requiere apoyo literal en la cita, conserva evidencias múltiples y marca `POSSIBLE_EVIDENCE_CONFLICT` solo entre valores distintos del mismo campo, tras normalizar únicamente mayúsculas/minúsculas y espacios. La salida requiere revisión humana y no altera prioridad, confianza, urgencia ni estado técnico. El esquema de extracción pasa a versión 3; JSON anterior sin el campo se decodifica como `None`; no se agrega columna SQL. La respuesta HTTP incluye el valor por referencia.
+- Verificación T2.2: RED observado antes del cambio (fallas por campo de dominio/schema ausente); GREEN focalizado, y suite disponible: 128 passed, 3 deselected. Postgres/contrato: 37 pruebas pasaron; Ruff check/format y `git diff --check` pasaron. La suite completa requerida no finalizó: `test_http_failure_original_and_null_safe_review_audit` quedó bloqueado al crear el socket-pair del event loop asyncio de Windows en TestClient; no se atribuye a la implementación y queda pendiente repetir en un entorno compatible. No hubo proveedor externo, documentos clínicos reales ni validación clínica.
+- Commit de unidad T2.2: `a863745` (`feat(triaje): marcar posibles conflictos de evidencia`).
+- Próximo paso: definir y verificar T2.3, que requiere una decisión aparte.
 
 ## Estrategia de entrega
 - `ask-on-risk`; no se crean PRs. El push y cualquier merge quedan fuera de este alcance.

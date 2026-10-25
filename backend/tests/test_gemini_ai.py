@@ -50,6 +50,7 @@ def test_structured_text_is_untrusted_and_real_results_always_reviewed():
     assert "GEMINI_REQUIRES_HUMAN_REVIEW" in result.audit_reasons
     kwargs = client.models.generate_content.call_args.kwargs
     assert "dispatch" not in kwargs["config"].system_instruction.lower()
+    assert "retain multiple assertions" in kwargs["config"].system_instruction.lower()
     assert kwargs["model"] == "gemini-test"
 
 
@@ -201,6 +202,93 @@ def test_literal_quote_not_supporting_claimed_value_is_unverified():
         b"Demo", "text/plain"
     )
     assert "UNVERIFIED_TEXT_EVIDENCE" in extraction.audit_reasons
+
+
+def test_asserted_value_must_be_literally_supported_by_its_quote():
+    value = payload(
+        evidence=[
+            {
+                "field": "patient_name",
+                "page": None,
+                "quote": "Patient: Demo",
+                "asserted_value": "Invented",
+            }
+        ]
+    )
+
+    extraction = GeminiExtractor("fake", "gemini-test", client=make_client(value)).extract(
+        b"Patient: Demo", "text/plain"
+    )
+
+    assert "UNVERIFIED_TEXT_EVIDENCE" in extraction.audit_reasons
+    assert "POSSIBLE_EVIDENCE_CONFLICT" not in extraction.audit_reasons
+    assert extraction.evidence[0].asserted_value == "Invented"
+
+
+def test_missing_evidence_is_not_reported_as_a_conflict():
+    extraction = GeminiExtractor(
+        "fake", "gemini-test", client=make_client(payload(evidence=[]))
+    ).extract(b"Patient: Demo", "text/plain")
+
+    assert "MISSING_LITERAL_EVIDENCE" in extraction.audit_reasons
+    assert "POSSIBLE_EVIDENCE_CONFLICT" not in extraction.audit_reasons
+
+
+def test_distinct_supported_values_for_same_field_flag_possible_conflict():
+    value = payload(
+        priority="Rutina",
+        evidence=[
+            {
+                "field": "patient_name",
+                "page": None,
+                "quote": "Patient: Demo",
+                "asserted_value": "Demo",
+            },
+            {
+                "field": "patient_name",
+                "page": None,
+                "quote": "Patient: Alex",
+                "asserted_value": "Alex",
+            },
+        ],
+    )
+
+    extraction = GeminiExtractor("fake", "gemini-test", client=make_client(value)).extract(
+        b"Patient: Demo\nPatient: Alex", "text/plain"
+    )
+
+    assert "POSSIBLE_EVIDENCE_CONFLICT" in extraction.audit_reasons
+    assert [item.asserted_value for item in extraction.evidence] == ["Demo", "Alex"]
+    assert decide(extraction).status == Status.NEEDS_AUDIT
+    assert extraction.priority == Priority.ROUTINE
+    assert extraction.confidence == 0.99
+
+
+def test_repeated_asserted_values_ignore_only_presentation_case_and_whitespace():
+    value = payload(
+        evidence=[
+            {
+                "field": "patient_name",
+                "page": None,
+                "quote": "Patient: Demo",
+                "asserted_value": "Demo",
+            },
+            {
+                "field": "patient_name",
+                "page": None,
+                "quote": "Patient: DEMO",
+                "asserted_value": "  demo  ",
+            },
+        ]
+    )
+
+    extraction = GeminiExtractor("fake", "gemini-test", client=make_client(value)).extract(
+        b"Patient: Demo\nPatient: DEMO", "text/plain"
+    )
+
+    assert "POSSIBLE_EVIDENCE_CONFLICT" not in extraction.audit_reasons
+    assert "UNVERIFIED_TEXT_EVIDENCE" not in extraction.audit_reasons
+    assert [item.asserted_value for item in extraction.evidence] == ["Demo", "  demo  "]
 
 
 @pytest.mark.parametrize(

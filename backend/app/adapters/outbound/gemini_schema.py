@@ -23,6 +23,7 @@ class EvidencePayload(BaseModel):
     field: str
     page: int | None = Field(ge=1)
     quote: str | None
+    asserted_value: str | None = None
 
 
 class GeminiPayload(BaseModel):

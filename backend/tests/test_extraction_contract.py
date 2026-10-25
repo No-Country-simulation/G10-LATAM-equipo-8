@@ -31,7 +31,7 @@ def test_optional_common_fields_have_source_references_without_implied_truth():
         study="Synthetic study",
         evidence=(SourceReference("study", page=1, quote="Synthetic study"),),
     )
-    assert extraction.schema_version == 2
+    assert extraction.schema_version == 3
     assert extraction.confidence is None
     assert extraction.diagnosis is None
     assert ExtractionProvenance().model is None
@@ -48,8 +48,47 @@ def test_v2_evidence_roundtrip_is_typed():
         "Receta Medica",
         Priority.ROUTINE,
         0.2,
+        schema_version=2,
         evidence=(SourceReference("patient_name", page=1, quote="Synthetic Demo"),),
     )
+    assert decode_extraction(asdict(original)) == original
+
+
+def test_evidence_without_asserted_value_remains_backward_compatible():
+    legacy = {
+        "document_type": "Receta Medica",
+        "priority": "Rutina",
+        "confidence": 0.2,
+        "patient_name": None,
+        "patient_age": None,
+        "audit_reasons": [],
+        "schema_version": 2,
+        "professional_name": None,
+        "professional_registration": None,
+        "study": "Synthetic study",
+        "indication": None,
+        "diagnosis": None,
+        "cie10_suggested": None,
+        "evidence": [{"field": "study", "page": 1, "quote": "Synthetic study"}],
+    }
+
+    decoded = decode_extraction(legacy)
+
+    assert decoded.evidence[0].asserted_value is None
+
+
+def test_asserted_values_survive_extraction_json_roundtrip():
+    original = Extraction(
+        "Receta Medica",
+        Priority.ROUTINE,
+        0.2,
+        evidence=(
+            SourceReference("study", page=1, quote="Study: Alpha", asserted_value="Alpha"),
+            SourceReference("study", page=2, quote="Study: Beta", asserted_value="Beta"),
+        ),
+        audit_reasons=("POSSIBLE_EVIDENCE_CONFLICT",),
+    )
+
     assert decode_extraction(asdict(original)) == original
 
 

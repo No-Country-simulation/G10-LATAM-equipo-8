@@ -45,6 +45,7 @@ class SourceReference:
     field: str
     page: int | None = None
     quote: str | None = None
+    asserted_value: str | None = None
 
     def __post_init__(self):
         if not isinstance(self.field, str) or not self.field.strip():
@@ -52,6 +53,7 @@ class SourceReference:
         if self.page is not None and (type(self.page) is not int or self.page < 1):
             raise ValueError("Invalid source page")
         validate_optional_text(self.quote)
+        validate_optional_text(self.asserted_value)
 
 
 @dataclass(frozen=True)

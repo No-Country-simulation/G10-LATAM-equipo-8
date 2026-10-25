@@ -3,13 +3,14 @@ from unittest.mock import Mock
 import pytest
 from google.genai import errors
 
+from app.adapters.inbound.http.schemas import TriageResponse
 from app.adapters.outbound.gemini_ai import GeminiExtractor
 from app.adapters.outbound.local_storage import LocalDocumentStorage
 from app.adapters.outbound.memory import MemoryTriageRepository
 from app.adapters.outbound.simulated_ai import ROUTINE, SimulatedExtractor
 from app.application.process_document import ProcessDocument
 from app.application.triage_pipeline import TriagePipeline
-from app.domain.extraction import ProcessingStatus
+from app.domain.extraction import ProcessingStatus, SourceReference
 from app.domain.triaje import Destination, Extraction, Priority, Status, decide
 
 
@@ -71,6 +72,40 @@ def test_populated_patient_name_preserves_existing_routine_decision():
     assert extraction.priority == Priority.ROUTINE
 
 
+def test_possible_evidence_conflict_requires_review_without_changing_triage_or_api_evidence(
+    tmp_path,
+):
+    extraction = Extraction(
+        "Informe de Laboratorio",
+        Priority.ROUTINE,
+        0.42,
+        "Demo",
+        audit_reasons=("POSSIBLE_EVIDENCE_CONFLICT",),
+        evidence=(
+            SourceReference("patient_name", quote="Patient: Demo", asserted_value="Demo"),
+            SourceReference("patient_name", quote="Patient: Alex", asserted_value="Alex"),
+        ),
+    )
+    pipeline = TriagePipeline(FixedExtractor(extraction))
+    repository = MemoryTriageRepository()
+    storage = LocalDocumentStorage(tmp_path)
+
+    result = ProcessDocument(pipeline, repository, storage).execute(
+        "POSSIBLE-CONFLICT", "web", b"Patient: Demo\nPatient: Alex", "text/plain"
+    )
+    response = TriageResponse.from_domain(result).model_dump(mode="json")
+
+    assert result.processing_status == ProcessingStatus.SUCCEEDED
+    assert result.decision.status == Status.NEEDS_AUDIT
+    assert result.decision.destination == Destination.REVIEW
+    assert result.decision.urgent_alert is False
+    assert result.extraction.priority == Priority.ROUTINE
+    assert result.extraction.confidence == 0.42
+    assert result.extraction.evidence == extraction.evidence
+    assert response["extraction_evidence"][0]["asserted_value"] == "Demo"
+    assert response["extraction_evidence"][1]["asserted_value"] == "Alex"
+
+
 def test_urgent_extraction_takes_urgent_human_review_branch():
     extraction = Extraction("Informe de Laboratorio", Priority.URGENT, 0.99, "Demo")
     pipeline = TriagePipeline(FixedExtractor(extraction))
@@ -109,5 +144,5 @@ def test_graph_provider_failure_keeps_original_and_persists_safe_code(tmp_path):
     assert result.extraction.confidence is None
     assert result.provenance.provider == "google-gemini"
     assert result.provenance.model == "gemini-test"
-    assert result.provenance.prompt_version == "mediflow-extraction-v1"
+    assert result.provenance.prompt_version == "mediflow-extraction-v2"
     assert storage.read(result.object_key) == b"synthetic"

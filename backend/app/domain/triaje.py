@@ -50,7 +50,7 @@ class Extraction:
     patient_name: str | None = None
     patient_age: int | None = None
     audit_reasons: tuple[str, ...] = ()
-    schema_version: int = 2
+    schema_version: int = 3
     professional_name: str | None = None
     professional_registration: str | None = None
     study: str | None = None
@@ -60,7 +60,7 @@ class Extraction:
     evidence: tuple[SourceReference, ...] = ()
 
     def __post_init__(self):
-        if type(self.schema_version) is not int or self.schema_version not in (1, 2):
+        if type(self.schema_version) is not int or self.schema_version not in (1, 2, 3):
             raise ValueError("Unsupported extraction schema")
         if self.document_type is not None and (
             not isinstance(self.document_type, str)
