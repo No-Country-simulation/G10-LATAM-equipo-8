@@ -1,0 +1,56 @@
+name: mediflow
+
+services:
+  frontend:
+    image: mediflow/frontend:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: deploy/frontend.Dockerfile
+    environment:
+      SITE_ADDRESS: "${SITE_ADDRESS:-:80}"
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_HTTP_PORT:-8080}:80"
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_HTTPS_PORT:-8443}:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  backend:
+    image: mediflow/backend:${IMAGE_TAG:-local}
+    build:
+      context: ./backend-oci-storage-current-reference.local/backend
+      dockerfile: ../../deploy/backend.Dockerfile
+    env_file:
+      - "${BACKEND_CONFIG_FILE:?Set BACKEND_CONFIG_FILE to a simulated local config or secured runtime config}"
+    environment:
+      STORAGE_DIR: /var/lib/mediflow
+    expose:
+      - "8002"
+    volumes:
+      - backend-storage:/var/lib/mediflow
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  backend-storage:
+  caddy-config:
+  caddy-data:

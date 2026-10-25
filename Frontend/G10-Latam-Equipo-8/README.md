@@ -155,6 +155,8 @@ La muestra portable no aporta bytes originales ni eventos de revisión: la verif
 
 ## 💻 Guía de Ejecución Local
 
+La preparación local de contenedores con Caddy y el despliegue futuro del propietario están descritos en la [guía de contenedores](deploy/README.md). No implica una instalación o verificación en OCI.
+
 ### Prerrequisitos
 * **Node.js**: Versión 20.x o superior recomendada.
 * **npm**: Versión 10.x o superior.
