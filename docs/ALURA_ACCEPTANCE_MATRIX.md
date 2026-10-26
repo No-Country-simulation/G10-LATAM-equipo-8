@@ -6,7 +6,13 @@ This matrix reconciles the explicit evaluation checklist with the current backen
 
 **T7.3 y T2.3 cerradas técnicamente:** 258 pruebas sintéticas aprobadas en dos particiones disjuntas (254 + 4), sin cambios de código ni accesos externos. El subconjunto HTTP T7.3 aprobó seis casos en 0,92 s. Windows/Python 3.12.14 funciona fuera del sandbox: dentro de este, el socketpair loopback de `ProactorEventLoop` bloqueaba la inicialización; un diagnóstico idéntico fuera del sandbox terminó inmediatamente. No se requiere Linux/WSL.
 
-Las filas conservan pruebas y alcances históricos; las menciones a «not run now» corresponden a sus tareas originales. Los pendientes HTTP anteriores quedan resueltos por esta ejecución. Persistencia SQL local usa SQLite y OCI/Gemini usan dobles: no se acredita comportamiento remoto nuevo, seguridad clínica ni aceptación Alura completa. Frontend, autenticación/autorización, audio y JEV siguen pendientes. Comandos y resultados exactos están en `odd/tasks/alura-backend-closure-voice-jev.md`, sección «Cierre de pruebas en Windows».
+Las filas conservan pruebas y alcances históricos; las menciones a «not run now» corresponden a sus tareas originales. Los pendientes HTTP anteriores quedan resueltos por esta ejecución. Persistencia SQL local usa SQLite y OCI/Gemini usan dobles: no se acredita comportamiento remoto nuevo, seguridad clínica ni aceptación Alura completa. La integración frontend sintética T4.1 se verificó posteriormente; T4 completo, autenticación/autorización, audio y JEV siguen pendientes. Comandos y resultados exactos están en `odd/tasks/alura-backend-closure-voice-jev.md`, sección «Cierre de pruebas en Windows».
+
+## Integración visible T4.1 — 2026-10-26
+
+**Verificado parcialmente en navegador Windows:** frontend aislado `ae2ec99`, modo API con `VITE_API_URL=/api/v1` y proxy hacia backend `memory/local/simulated`. Carga de PDF sintético `rutina-001.pdf`, consulta de detalle, descarga del original con SHA-256 idéntico, rechazo humano declarado y un evento de auditoría observado. ID `web-b934848b-87f4-4f50-bbcb-f7b826f75001`: `NEEDS_AUDIT → REJECTED`, destino `REVISION_HUMANA` conservado; procesamiento `SUCCEEDED`. El extractor simulado produjo `AI_UNAVAILABLE`, no extracción Gemini. Historial final: un rechazado; pendientes: cero. `npm ci`, build y lint aprobados; fuentes del frontend intactas. Comandos, captura y recuperación: tracker, sección «Integración local frontend/backend T4.1».
+
+**T4 y aceptación Alura siguen abiertas:** esta prueba no acredita persistencia entre reinicios, CORS directo del navegador, aprobación/corrección, urgencia en navegador, proveedores reales, autenticación/autorización ni seguridad clínica. Audio y JEV no se ejecutaron. Los intentos y resultados anteriores mantienen su alcance histórico.
 
 ## Reading guide
 
