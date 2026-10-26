@@ -1,5 +1,5 @@
 # MediFlow Docker preparation
-Objective: prepare and locally verify container deployment files, without changing OCI or publishing.
+Objective: prepare container files and support owner-executed OCI verification; no agent SSH, remote changes or publishing without separate authorization.
 Branch: feat/dashboard-mvp | Baseline: ae2ec9950240b91c232c667160e5b39064fa7249 | Delivery: ask-on-risk; no PR/push | Forecast: about 360 authored lines | Checks: focused configuration tests, existing frontend suite/build, independent security/environment review; real Docker/ARM proof separately tracked.
 
 ## Specs
@@ -10,12 +10,15 @@ Branch: feat/dashboard-mvp | Baseline: ae2ec9950240b91c232c667160e5b39064fa7249 
 - S5. Provider preference: "gemini con plan gratuito por lo que no veo necesario un limite de consumo". Expected use: "se esperan procesar quizas de 10 a 20 documentos pero eso es en 1 o 2 dias de un mes entero, es solo para probar".
 - S6. Selected public hostname: "http://mediflow-grupo8.duckdns.org/". Administrative evidence: "(ALL) NOPASSWD: ALL" and "sudo_exit=0". These are planning facts, not remote-operation authorization; S1 excludes OCI installation and push.
 - S7. Accepted switch: "Sí, usar Caddy y actualizar la documentación", answering "¿Confirmas sustituir Nginx por Caddy y actualizar el README del frontend y la guía de despliegue, manteniendo el alcance local, sin cambios en OCI ni push?". Accepted effect: "Continuar la preparación autorizada con HTTPS integrado de Caddy. Mantener intactos el backend de referencia, la aplicación y sus contratos."
+- S8. Owner request, verbatim: "si sigamos con una guia ejecutadas por mi, aunque, es posible que tu puedas conectarte a la instancia si te doy algun acceso? quizas algun agente en segundo plano con una referencia de la clave ssg real durante un tiempo o algo parecido o es muy complicado?".
+
+- S9. Reported frontend failure, verbatim: "src/mocks/frontendReview.ts(2,35): error TS2307: Cannot find module '../../../../docs/examples/frontend-review/historial.json' or its corresponding type declarations." and "frontend_build_exit=1". Owner correction, verbatim: "el backend tuvo correctamente su resultado" with "backend_build_exit=0".
 
 ## Tasks
-- T1 | S1-S7 | delegated gentle-ai-worker (context backstop already signaled; one coherent containerization unit including tests/docs) | done | Prepare Caddy files and self-check them; no application/reference edits | commit: `77b90dfe9031526d5aef54885dc16076187cceb5`. Self-check: structural focused6/6; existing Node117/117; parent build0; runtime reserved toT4.
-- T2 | S1-S7 | delegated gentle-ai-verify after assessed escalation | done | Independent security/environment verification of prepared files and local proof; runtime image proof belongs to T4 | commit: `77b90dfe9031526d5aef54885dc16076187cceb5`. Verifier mvoc5mrh-6-s978: prepared-contract PASS; isolated6/6/YAML/context checks exit0; no blockingfindings; runtimeT4unverified.
-- T3 | S1-S7 | inline orchestration | done | Record a reviewable local work-unit commit and native RDD outcome; never push or change OCI | commit: `77b90dfe9031526d5aef54885dc16076187cceb5`. Observed job4exit0; nativeoutcomeunavailable/notapproved; no push.
-- T4 | S1 | inline only when an authorized Docker environment is available | blocked: Docker/Podman/Buildah absent locally; no installation authorized | Build/run images and validate ARM/container/proxy behavior; no fabricated runtime proof | commit: pending.
+- T1 | S1,S7-S9 | inline container-only fix with test-first reproduction | done | Declare and supply the canonical frontend review fixture without changing MVP source/data or backend | prior commit: 77b90dfe9031526d5aef54885dc16076187cceb5; correction commit: pending. Evidence: isolated tsc RED2 to GREEN0, new regression RED1, focused7/7 and full Node118/118 exit0.
+- T2 | S1,S7-S9 | one independent gentle-ai-verify for named risk items 2 and 5 | done | Verify the new narrow fixture build context, regression proof and package layout; actual frontend ARM rebuild belongs to T4 | prior commit: 77b90dfe9031526d5aef54885dc16076187cceb5; correction commit: pending. Evidence: mvokfx86-7-37yk PASS prepared correction, S1/S7-S9; isolated7/7 exit0 and YAMLsemantic mapping unchanged except intended frontend named context.
+- T3 | S1,S7-S9 | inline orchestration | in_progress | Record the bounded correction commit and regenerate a pinned allowlist bundle that preserves repository-relative fixture paths; never push | prior commit: 77b90dfe9031526d5aef54885dc16076187cceb5; correction commit: pending.
+- T4 | S1,S8-S9 | owner-executed OCI guide; no agent SSH | pending | After the corrected bundle, rebuild only frontend; backend_build_exit=0 already observed; inspect images then validate startup/proxy/TLS/provider behavior | commit: pending.
 
 ## Log
 - L1. Original request, verbatim: "funciona correctamente, ahora, tanto el backend como el frontend debemos contenerizarlo en docker, y luego subir este docker en la instancia de OCI y hechar a correr la pagina desde la instancia, para poder acceder desde cualquier lugar, investiga los procedemientos que debemos aclarar antes de seguir, dime que datos necesitas ahora para empezar a seguir con esta integracion, la instancia de OCI la tengo en mi cuenta de cloud con una instancia ARM en santiago dentro de un compartimento llamado Mediflow-NoCOuntry-Grupo-8, la instancia se llama de la misma manera, ademas puedo acceder desde ssh a la instancia desde mi terminal o tambien puedo acceder desde la web como localhost:8080 por tener instalado code-server en la instancia, asi podria subir y descargar achivos"
@@ -39,3 +42,76 @@ Branch: feat/dashboard-mvp | Baseline: ae2ec9950240b91c232c667160e5b39064fa7249 
 - L19. T3 records only a local preparation workunit, not delivery or nativeapproval. Stageonlythe11ownedpaths; preservepreexistingrootdocs/oldODDfiles. Nativeoutcome isunavailable(package-local-binary-missing), no lineage/consent/receipt; do not retryrawnativeCLI. Recordactualcommitafterobservinggitcompletion; neverpush.
 - L20. Local preparation commit `77b90dfe9031526d5aef54885dc16076187cceb5` observed fromjob4exit0: build(deploy): prepare ARM64 Caddy container definitions;11ownedfiles,386insertions. Scopeguardverifiedexactpaths/emptypriorindex; stagedwhitespacecheckpassed. No push/remoteoperation; preexistingrootdocsandoldODDfilesremainuntouched.
 - L21. T1-T3preparedoutcomes arecomplete; feature isNOTfullyruntimeverified. T4awaitsexplicitlyauthorizedDockerinstallation/environment; noengineavailable,noOCIauthorization. Nativeassessment/reviewalso unavailable(package-local-binary-missing), noauthority/approval/receipt. ClosingresultmustbeNeeds your decision, namingmissingproof; do notstartnewverification/install/reviewretries.
+- L22. User request, verbatim: "si sigamos con una guia ejecutadas por mi, aunque, es posible que tu puedas conectarte a la instancia si te doy algun acceso? quizas algun agente en segundo plano con una referencia de la clave ssg real durante un tiempo o algo parecido o es muy complicado?". Manual guidance is accepted; SSH is a hypothetical capability question, not an access grant. No credential path, private-file permission, direct SSH or remote mutation is authorized. Earlier no-agent-OCI and no-push boundaries remain.
+- L23. Reconciled exact Engram807/file before continuation; branch remainsfeat/dashboard-mvp with77b90df/06887fb and preexisting unrelateddocs/oldODDfiles only. Consulted officialDockerUbuntu24.04arm64 install docs andContext7/docker/docs; OpenSSHssh-add-t limitsagentidentitylifetime, not originalkeyvalidity/existingsessions. Owner guidance starts with read-only dpkg package inventory for officialDocker conflictlist; no blinduninstall, curl-pipe-shell,local/remoteinstall ornetworkchange. No SSH/key reads/probes attempted. T4waitsowneroutput; priorruntime/nativeprooflimits unchanged.
+- L24. Owner's package inventory output, verbatim:
+
+```text
+ubuntu@vnic-mediflow-principal:~$  dpkg --get-selections \
+     docker.io docker-compose docker-compose-v2 docker-doc docker-buildx \
+     podman-docker containerd runc
+dpkg: no packages found matching docker.io
+dpkg: no packages found matching docker-compose
+dpkg: no packages found matching docker-compose-v2
+dpkg: no packages found matching docker-doc
+dpkg: no packages found matching docker-buildx
+dpkg: no packages found matching podman-docker
+dpkg: no packages found matching containerd
+dpkg: no packages found matching runc
+ubuntu@vnic-mediflow-principal:~$ printf 'inventory_exit=%s\n' "$?"
+inventory_exit=0
+ubuntu@vnic-mediflow-principal:~$
+```
+
+- L25. Inventory is successful absence of the eight queried conflictingpackages, not Dockerinstallationproof. Owner may now follow officialDockerUbuntuaptrepository/keyring andEngine/Buildx/Composeinstallation; no uninstalls orfullOSupgrade. Guide usesfailure-stoppingsubshells, keepssudoDocker(no groupgrant), startsDocker only, andasksforEngineclient/serverarchitecture/pluginversions andephemeralhello-world result. No MediFlowbuild/start,TLS/firewall/cloudchecks oragentSSH executed; T4awaitsownerproof.
+- L26. Owner reported verbatim: "algunos comandos solo mostraban \">\"". Relevant input ended with `   EOF` instead of `EOF`, then owner cancelled with `^C`. Exact subsequent error excerpts:
+
+```text
+E: Package 'docker-ce' has no installation candidate
+E: Package 'docker-ce-cli' has no installation candidate
+E: Unable to locate package containerd.io
+E: Unable to locate package docker-buildx-plugin
+E: Unable to locate package docker-compose-plugin
+Failed to enable unit: Unit file docker.service does not exist.
+inactive
+```
+
+- L27. Parent reproduced only the Bash delimiter problem locally: `bash --noprofile --norc -n` returned 0, stdout empty and an unterminated here-document warning for indented EOF. EOF-free printf returned 0, stderr empty and exactly the six expected public Deb822 source lines. No file writes, sudo, SSH, APT or network access in this probe. This is not remote installation proof.
+- L28. Guide correction is a single-line printf piped to owner-run sudo tee for noble/arm64, avoiding heredoc indentation. Reuse successful prerequisites/key steps. Ask owner for apt-get update and apt-cache policy Docker package candidates before any installation/service retry. No blind repeat, OS upgrade, removals, application deployment or direct SSH; T4 remains blocked on owner evidence.
+- L29. Owner apt-get update now fetched Docker noble InRelease and stable arm64 Packages without reported errors. Relevant apt-cache policy excerpts, verbatim:
+
+```text
+docker-ce:
+  Installed: (none)
+  Candidate: 5:29.9.2-1~ubuntu.24.04~noble
+docker-ce-cli:
+  Installed: (none)
+  Candidate: 5:29.9.2-1~ubuntu.24.04~noble
+containerd.io:
+  Installed: (none)
+  Candidate: 2.4.2-3~ubuntu.24.04~noble
+docker-buildx-plugin:
+  Installed: (none)
+  Candidate: 0.38.1-1~ubuntu.24.04~noble
+docker-compose-plugin:
+  Installed: (none)
+  Candidate: 5.6.1-1~ubuntu.24.04~noble
+```
+
+- L30. Repository blocker resolved by owner; all five packages are still uninstalled. Signed-By's indented continuation was accepted by APT, so no cosmetic rewrite or further prerequisite repetition is needed. No explicit command exit codes were supplied; do not invent them. Next owner runs the five-package installation, enables Docker only after success, then checks service/client-server ARM/Compose/Buildx/hello-world. These commands do not deploy MediFlow or validate application containers, TLS or OCI integration; direct SSH/push remain unauthorized.
+- L31. Owner verified Docker service `active`, Engine client/server29.9.2 `linux/arm64`, Compose `Docker Compose version v5.6.1`, Buildx `github.com/docker/buildx v0.38.1 0dbe87f36ed472fe36b6796c3f70b4210a731fc5`, and `Hello from Docker!` using arm64v8. Engine/registry/basic ARM execution proof is now observed, not application image/Caddy/TLS/cloud proof. No explicit exit codes were supplied; do not invent them.
+- L32. Authorized continuation prepares a source-only ignored transfer artifact from exact frontend77b90df/backend9220f50 Git commits using explicit build-input allowlists, not the workingtree. Include backend source export at its existing Compose context path and provenance/checksum; do not include Git metadata, env/SSH/storage/local QA files or publish anything. Owner will copy by SCP into a new directory and run Compose config quietly before builds. Source export is not a Git checkout. Use sudo env for Compose variables and later HTTP8081 to avoid the known code-server8080 listener.
+- L33. Separate read-only Git-cwd incident: a frontend subtree/pathspec metadata query from nestedcwd returned empty; explicit Git-root-C query confirmed all expected files. No source/artifact writes occurred during diagnosis. Both future exports use their canonical Git roots.
+- L34. Created ignored .docker-verification.local/oci-transfer-77b90df/mediflow-src.tar.gz plus SHA256SUMS: 1,358,426 bytes; 64 frontend files +34 backend files +SOURCE_COMMITS.txt. SHA256 `99b6392ec16c30a0bbef465cc8c7d5a869a414d5bba8107f67acf0a3e3cab5e8`. Exported explicit committed allowlists only; all file bytes matched their Git blob IDs; safe paths/regular types/required Docker inputs/archive roundtrip/ignored status passed. No private runtime files or uploaded storage copied. Backend remains read-only.
+- L35. Initial packaging probe exited1 only at its final English-only stdout assertion: sha256sum itself exited0 with `mediflow-src.tar.gz: La suma coincide`. One focused checker correction set LC_ALL=C: exit0, exact `mediflow-src.tar.gz: OK`, stderr empty. No archive regeneration/content edit; preserve this check failure and correction, not a fabricated all-green initial run.
+- L36. Owner next creates a NEW ~/mediflow-77b90df directory (no overwrite/removal), uploads both files from a separate LOCAL terminal using their existing key, verifies SHA256SUMS before extracting, then runs sudo env BACKEND_CONFIG_FILE=./deploy/backend.local.conf WEB_HTTP_PORT=8081 docker compose config --quiet and reports status. This is simulated config validation only, not application start/TLS/provider proof. No direct SSH byagent, publishing, Git source mutation or repeated engine checks.
+- L37. Owner supplied actual transfer/config proof: `mediflow-src.tar.gz: OK`, `archive_check_exit=0`, extraction without reported error, and `compose_config_exit=0` for sudo env BACKEND_CONFIG_FILE=./deploy/backend.local.conf WEB_HTTP_PORT=8081 docker compose config --quiet in ~/mediflow-77b90df. Source/config blockers resolved; no application image build or service startup proof yet.
+- L38. Current Docker v5 documentation confirms named-service compose build does not start services and honors the explicit image tags; image inspect reads local image metadata. Owner next builds backend and frontend sequentially with the same sudo env simulated-config/8081 overrides, captures backend_build_exit/frontend_build_exit, then inspects mediflow/backend:local and mediflow/frontend:local for linux/arm64 only after both builds succeed. No --no-cache, automatic retry, service startup, public port change, provider call, image push or agent SSH. T4 waits actual owner build evidence.
+- L39. Owner frontend build reached npm ci and source COPY, then failed TypeScript at the exact S9 missing canonical fixture, frontend_build_exit=1. Existing structural tests missed the external build dependency; do not claim initial Docker/ARM proof passed. Root fixture is a regular tracked 3374byte public synthetic sample (module comment identifies it as the demo's single source); no payload or credential content was opened.
+- L40. Owner separately confirmed backend15/15buildFINISHED49.6s, mediflow/backend:local Built, backend_build_exit=0. No backend change or rebuild is needed. Reopen only T1-T3 for the correction and keep T4 ordered afterward. Resolve by declaring a narrow named fixture context and preserving canonical paths, not duplicating fixture data, editing MVP imports, copying the whole repository or bypassing checks.
+- L41. Current Docker documentation confirms additional_contexts and COPY --from named contexts. Verify local named-context ignore behavior from provider source before claiming isolation; web summary prose alone is not proof. Then reproduce TypeScript failure against isolated exported inputs before any implementation edit. Native review remains unavailable; do not retry or invent authority.
+- L42. Isolated reproduction at .docker-verification.local/fixture-repro-aijeqybi/repo used the old committed frontend export, same tsc -b and scratch-only cache paths: exit2, stdout exact S9 TS2307, stderr empty. After supplying only canonical committed fixture bytes at the repository-relative path, the same compiler returned0 with stdout/stderr empty. This is Node26 compiler proof, not Docker/ARM proof.
+- L43. New one-rule regression test observed RED exit1 before implementation. Implemented only frontend named context/COPY, canonical fixture-folder deny-all .dockerignore, regression and layout documentation. Focused Docker7/7 exit0; full Node118/118 exit0 (25.99s, stdout captured, stderr empty). Parent self-review/whitespace passed; MVP src/package inputs/canonicalJSON/backendDockerfile unchanged; canonicalJSON Gitblob87147007d9f3e659d23d0b4eaaefeb89adf65b87 and backendpin/cleanstate verified.
+- L44. Risk remains item2 (the added file-transfer/build context must exclude private files) and item5 (Docker build/environment). One independent prepared-correction verifier follows. Native facade is already unavailable(package-local-binary-missing); do not retry it or infer authority. Actual corrected ARM frontend build/startup/proxy/TLS/provider proof is still T4, not a claimed pass.
+- L45. Independent verifier mvokfx86-7-37yk (gentle-ai-verify) launched in background for T2,S1,S7-S9; one isolated7-test run/YAMLcontextreadback permitted, no new proof gates or Docker/SSH/provider operations. Wait for its pushed completion before correction commit and new pinned full-layout bundle; never poll/relaunch. Backend already built0 and stays intact.
+- L46. Verifier mvokfx86-7-37yk returned PASS prepared correction for S1,S7,S8,S9, one isolated focused7/7 exit0/stderr empty, PyYAMLpaths and backend/frontend-settings equality against77b90df except intended additionalcontext PASS. No repository/private/provider access changes, no Docker/native-review proof. Future bundle has not yet been inspected; T3 parent must validate it. The optional extra unrun test is advisory and not added: its directory-equality expectation only fits the stripped replica, while the real canonical directory legitimately contains README.md excluded by .dockerignore. No outside-project scratch cleanup is authorized/performed.

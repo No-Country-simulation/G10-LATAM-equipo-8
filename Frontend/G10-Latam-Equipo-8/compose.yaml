@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: deploy/frontend.Dockerfile
+      additional_contexts:
+        reviewfixtures: ../../docs/examples/frontend-review
     environment:
       SITE_ADDRESS: "${SITE_ADDRESS:-:80}"
     ports:

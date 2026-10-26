@@ -2,9 +2,15 @@
 
 Esta carpeta prepara una imagen estática del frontend con Caddy como proxy y borde HTTPS automático, y una imagen Python para la API. **No se instalaron contenedores, no se desplegó nada en OCI y no se emitieron certificados.** Caddy reemplaza la propuesta histórica de Nginx para esta preparación local; el README del backend de referencia queda intacto.
 
+## Contexto del ejemplo sintético
+
+El frontend importa el fixture canónico `docs/examples/frontend-review/historial.json`, situado en la raíz del repositorio, fuera de `Frontend/G10-Latam-Equipo-8`. Compose lo entrega al build mediante el contexto adicional `reviewfixtures`; su `.dockerignore` solo permite ese JSON. Se copia al compilador, sin modificar el fixture ni los imports del MVP y sin ampliar el contexto principal a todo el repositorio.
+
+Una transferencia debe conservar tanto `docs/examples/frontend-review/{.dockerignore,historial.json}` como `Frontend/G10-Latam-Equipo-8/`. No basta con exportar únicamente la carpeta del frontend. Ejecuta Compose desde esta última; el contexto del backend continúa bajo `backend-oci-storage-current-reference.local/backend`.
+
 ## Comprobación local simulada
 
-Se necesita Docker Engine con Compose v2; no está disponible en el entorno donde se prepararon estos archivos. Desde esta carpeta de frontend:
+Se necesita Docker Engine y un plugin Compose con soporte para `additional_contexts`; no están disponibles en el entorno local donde se prepararon estos archivos. Desde esta carpeta de frontend:
 
 ```bash
 BACKEND_CONFIG_FILE=./deploy/backend.local.conf docker compose config --quiet

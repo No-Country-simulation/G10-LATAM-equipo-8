@@ -6,6 +6,7 @@ COPY index.html vite.config.ts ./
 COPY tsconfig*.json ./
 COPY src ./src
 COPY public ./public
+COPY --from=reviewfixtures historial.json /docs/examples/frontend-review/historial.json
 RUN VITE_API_URL=/api/v1 npm run build
 
 FROM caddy:2.10-alpine
