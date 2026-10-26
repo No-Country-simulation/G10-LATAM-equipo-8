@@ -54,6 +54,50 @@ def test_structured_text_is_untrusted_and_real_results_always_reviewed():
     assert kwargs["model"] == "gemini-test"
 
 
+def test_medication_name_and_dose_are_extracted_only_with_literal_evidence():
+    client = make_client(
+        payload(
+            document_type=None,
+            priority=None,
+            confidence=None,
+            patient_name=None,
+            medication_name="Synthetic Drug",
+            medication_dose="10 mg",
+            evidence=[
+                {
+                    "field": "medication_name",
+                    "page": None,
+                    "quote": "Synthetic Drug 10 mg",
+                    "asserted_value": "Synthetic Drug",
+                },
+                {
+                    "field": "medication_dose",
+                    "page": None,
+                    "quote": "Synthetic Drug 10 mg",
+                    "asserted_value": "10 mg",
+                },
+            ],
+        )
+    )
+
+    result = GeminiExtractor("fake", "gemini-test", client=client).extract(
+        b"Synthetic Drug 10 mg\nDemo", "text/plain"
+    )
+
+    assert result.medication_name == "Synthetic Drug"
+    assert result.medication_dose == "10 mg"
+    assert "MISSING_LITERAL_EVIDENCE" not in result.audit_reasons
+
+
+def test_missing_medication_values_remain_null_and_legacy_payload_is_supported():
+    result = GeminiExtractor("fake", "gemini-test", client=make_client()).extract(
+        b"Demo", "text/plain"
+    )
+
+    assert result.medication_name is None
+    assert result.medication_dose is None
+
+
 def test_binary_input_uses_inline_bytes_and_unverified_evidence():
     client = make_client()
     result = GeminiExtractor("fake", "gemini-test", client=client).extract(

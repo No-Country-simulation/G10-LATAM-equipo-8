@@ -1,14 +1,24 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.adapters.inbound.http.schemas import TriageResponse
 from app.adapters.outbound.simulated_ai import AMBIGUOUS, ROUTINE, URGENT
-from app.domain.triaje import Destination, Extraction, Priority, Status, decide
+from app.domain.triaje import (
+    Decision,
+    Destination,
+    Extraction,
+    Priority,
+    Status,
+    Triage,
+    decide,
+)
 from app.infrastructure.bootstrap import create_app
 from app.infrastructure.settings import Settings
 
@@ -54,6 +64,31 @@ def test_unknown_text_is_not_invented(client):
     assert result["status"] == "NEEDS_AUDIT"
     assert result["datos_extraidos"]["paciente"]["nombre"] is None
     assert result["audit_reasons"] == ["AI_UNAVAILABLE"]
+
+
+def test_response_contract_exposes_optional_medication_name_and_dose():
+    extraction = Extraction(
+        "Receta Medica",
+        Priority.ROUTINE,
+        0.9,
+        "Synthetic Patient",
+        medication_name="Synthetic Drug",
+        medication_dose="10 mg",
+    )
+    response = TriageResponse.from_domain(
+        Triage(
+            "SYNTHETIC-1",
+            "test",
+            "text/plain",
+            "synthetic/SYNTHETIC-1",
+            datetime.now(UTC),
+            extraction,
+            Decision(Status.NEEDS_AUDIT, Destination.REVIEW, False),
+        )
+    ).model_dump(mode="json")
+
+    assert response["datos_extraidos"]["medicamento_nombre"] == "Synthetic Drug"
+    assert response["datos_extraidos"]["medicamento_dosis"] == "10 mg"
 
 
 def test_queue_filters_and_pagination(client):

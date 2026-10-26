@@ -38,6 +38,8 @@ class ExtractedData(BaseModel):
     indicacion: str | None = None
     diagnostico_principal: str | None = None
     cie10_sugerido: str | None = None
+    medicamento_nombre: str | None = None
+    medicamento_dosis: str | None = None
 
 
 class Routing(BaseModel):
@@ -98,6 +100,8 @@ class TriageResponse(BaseModel):
                 indicacion=extraction.indication,
                 diagnostico_principal=extraction.diagnosis,
                 cie10_sugerido=extraction.cie10_suggested,
+                medicamento_nombre=extraction.medication_name,
+                medicamento_dosis=extraction.medication_dose,
             ),
             decision_enrutamiento=Routing(
                 destino_principal=decision.destination,

@@ -31,7 +31,7 @@ def test_optional_common_fields_have_source_references_without_implied_truth():
         study="Synthetic study",
         evidence=(SourceReference("study", page=1, quote="Synthetic study"),),
     )
-    assert extraction.schema_version == 3
+    assert extraction.schema_version == 4
     assert extraction.confidence is None
     assert extraction.diagnosis is None
     assert ExtractionProvenance().model is None
@@ -90,6 +90,48 @@ def test_asserted_values_survive_extraction_json_roundtrip():
     )
 
     assert decode_extraction(asdict(original)) == original
+
+
+def test_medication_fields_survive_json_roundtrip_and_old_json_defaults_to_null():
+    original = Extraction(
+        "Receta Medica",
+        Priority.ROUTINE,
+        0.2,
+        medication_name="Synthetic Drug",
+        medication_dose="10 mg",
+        evidence=(
+            SourceReference(
+                "medication_name",
+                page=1,
+                quote="Synthetic Drug 10 mg",
+                asserted_value="Synthetic Drug",
+            ),
+            SourceReference(
+                "medication_dose", page=1, quote="Synthetic Drug 10 mg", asserted_value="10 mg"
+            ),
+        ),
+    )
+    legacy = {
+        "document_type": "Receta Medica",
+        "priority": "Rutina",
+        "confidence": 0.2,
+        "patient_name": None,
+        "patient_age": None,
+        "audit_reasons": [],
+        "schema_version": 3,
+        "professional_name": None,
+        "professional_registration": None,
+        "study": None,
+        "indication": None,
+        "diagnosis": None,
+        "cie10_suggested": None,
+        "evidence": [],
+    }
+
+    assert decode_extraction(asdict(original)) == original
+    decoded_legacy = decode_extraction(legacy)
+    assert decoded_legacy.medication_name is None
+    assert decoded_legacy.medication_dose is None
 
 
 def test_processing_migration_offline_does_not_overwrite_legacy_originals():

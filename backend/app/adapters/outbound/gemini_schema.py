@@ -39,6 +39,8 @@ class GeminiPayload(BaseModel):
     indication: str | None
     diagnosis: str | None
     cie10_suggested: str | None
+    medication_name: str | None = None
+    medication_dose: str | None = None
     evidence: list[EvidencePayload] = Field(max_length=30)
 
     def to_domain(self, reasons: tuple[str, ...] = ()) -> Extraction:
