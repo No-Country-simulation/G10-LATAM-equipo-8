@@ -108,5 +108,6 @@ operativos existentes sin presentar una propuesta como regla clínica aprobada.
   la decisión en `NEEDS_AUDIT`/`REVISION_HUMANA`, además de conservar el original y
   sanitizar el código de error.
 - P1-T4 conserva prioridad como null ante afirmaciones explícitas conflictivas en el PDF y agrega `POSSIBLE_EVIDENCE_CONFLICT`; `UNVERIFIED_BINARY_EVIDENCE` permanece, y la decisión resulta `NEEDS_AUDIT`/revisión humana. No se elige entre Rutina y Urgente.
+- Commit de unidad de trabajo P1-T4: `2b2039e` (`fix(extraccion): descartar prioridad contradictoria en PDF`).
 - Pendiente explícito: definir con responsables humanos cualquier criterio clínico o
   umbral antes de activarlo; integración OCI sigue pendiente para completar Alura.
