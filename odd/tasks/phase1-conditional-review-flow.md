@@ -65,6 +65,7 @@ operativos existentes sin presentar una propuesta como regla clínica aprobada.
   focalizadas.
 - [x] P1-T3 — Actualizar el estado de fase 1 en el plan y la bitácora con los resultados
   realmente verificados.
+- [x] P1-T4 — Detectar afirmaciones contradictorias en evidencia PDF, retirar prioridad aceptada, conservar ambas evidencias y enviar a revisión humana.
 
 ## Ruta, verificación y entrega
 
@@ -82,6 +83,7 @@ operativos existentes sin presentar una propuesta como regla clínica aprobada.
   `.venv/Scripts/ruff.exe check app tests` (aprobado);
   `.venv/Scripts/ruff.exe format --check app tests` (aprobado, aviso de caché con
   exit code 0). `git diff --check` pasó con advertencias LF/CRLF.
+- P1-T4: prueba primero reprodujo la prioridad Rutina aceptada pese a afirmaciones PDF contradictorias (32 pasaron, 1 falló); tras el cambio, `.venv/Scripts/python.exe -m pytest -q tests/test_gemini_ai.py` con `--basetemp` externo (33 aprobadas), `.venv/Scripts/ruff.exe check app/adapters/outbound/gemini_ai.py tests/test_gemini_ai.py`, `.venv/Scripts/ruff.exe format --check app/adapters/outbound/gemini_ai.py tests/test_gemini_ai.py` y `git diff --check` pasaron. Una primera verificación de formato falló antes de normalizar; la ejecución posterior pasó.
 - El usuario autorizó ejecutar pruebas focalizadas locales para esta fase. No equivale
   a repetir la suite completa ni a validar seguridad clínica.
 - No push, PR, merge ni eliminación de ramas. La rama de trabajo actual es
@@ -105,5 +107,6 @@ operativos existentes sin presentar una propuesta como regla clínica aprobada.
 - La prueba focalizada del fallo técnico verifica explícitamente que el fallback deja
   la decisión en `NEEDS_AUDIT`/`REVISION_HUMANA`, además de conservar el original y
   sanitizar el código de error.
+- P1-T4 conserva prioridad como null ante afirmaciones explícitas conflictivas en el PDF y agrega `POSSIBLE_EVIDENCE_CONFLICT`; `UNVERIFIED_BINARY_EVIDENCE` permanece, y la decisión resulta `NEEDS_AUDIT`/revisión humana. No se elige entre Rutina y Urgente.
 - Pendiente explícito: definir con responsables humanos cualquier criterio clínico o
   umbral antes de activarlo; integración OCI sigue pendiente para completar Alura.

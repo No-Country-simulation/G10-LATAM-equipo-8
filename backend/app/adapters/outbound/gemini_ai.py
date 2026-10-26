@@ -130,13 +130,20 @@ class GeminiExtractor:
         try:
             parsed = GeminiPayload.model_validate_json(text)
             reasons = self._evidence_reasons(parsed, content, media_type)
+            if media_type != "text/plain" and "priority" in self._conflicting_asserted_fields(
+                parsed
+            ):
+                parsed = parsed.model_copy(update={"priority": None})
             return parsed.to_domain(reasons)
         except (ValidationError, ValueError, TypeError):
             raise ProviderExtractionError("GEMINI_INVALID_RESPONSE") from None
 
     def _evidence_reasons(self, parsed, content, media_type):
         if media_type != "text/plain":
-            return ("UNVERIFIED_BINARY_EVIDENCE",)
+            reasons = ["UNVERIFIED_BINARY_EVIDENCE"]
+            if self._conflicting_asserted_fields(parsed):
+                reasons.append("POSSIBLE_EVIDENCE_CONFLICT")
+            return tuple(reasons)
         original = content.decode("utf-8")
         values = parsed.model_dump(exclude={"evidence", "confidence"})
         populated = {key for key, value in values.items() if value is not None}
@@ -185,6 +192,15 @@ class GeminiExtractor:
         if any(len(assertions) > 1 for assertions in assertions_by_field.values()):
             reasons.append("POSSIBLE_EVIDENCE_CONFLICT")
         return tuple(reasons)
+
+    @staticmethod
+    def _conflicting_asserted_fields(parsed):
+        assertions_by_field = {}
+        for item in parsed.evidence:
+            if item.asserted_value is not None:
+                normalized = re.sub(r"\s+", " ", item.asserted_value).strip().casefold()
+                assertions_by_field.setdefault(item.field, set()).add(normalized)
+        return {field for field, assertions in assertions_by_field.items() if len(assertions) > 1}
 
     def close(self):
         self.client.close()

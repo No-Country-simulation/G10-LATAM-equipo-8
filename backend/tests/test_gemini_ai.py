@@ -378,3 +378,34 @@ def test_repeated_asserted_values_ignore_only_presentation_case_and_whitespace()
 def test_adapter_retry_and_timeout_limits_cannot_be_bypassed(kwargs):
     with pytest.raises(ValueError):
         GeminiExtractor("fake", "gemini-test", client=make_client(), **kwargs)
+
+
+def test_conflicting_pdf_priority_assertions_are_not_accepted_and_require_review():
+    conflicting = payload(
+        priority="Rutina",
+        evidence=[
+            {
+                "field": "priority",
+                "page": 1,
+                "quote": "RUTINA",
+                "asserted_value": "Rutina",
+            },
+            {
+                "field": "priority",
+                "page": 1,
+                "quote": "PRIORIDAD ALTA",
+                "asserted_value": "Urgente",
+            },
+        ],
+    )
+    extraction = TriagePipeline(
+        GeminiExtractor("fake", "gemini-test", client=make_client(conflicting))
+    ).extract(b"%PDF-synthetic RUTINA PRIORIDAD ALTA", "application/pdf")
+
+    assert extraction.priority is None
+    assert {item.asserted_value for item in extraction.evidence} == {"Rutina", "Urgente"}
+    assert "POSSIBLE_EVIDENCE_CONFLICT" in extraction.audit_reasons
+    assert "UNVERIFIED_BINARY_EVIDENCE" in extraction.audit_reasons
+    decision = decide(extraction)
+    assert decision.status == Status.NEEDS_AUDIT
+    assert decision.destination == Destination.REVIEW
