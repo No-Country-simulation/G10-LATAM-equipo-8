@@ -111,9 +111,13 @@ def test_urgent_extraction_takes_urgent_human_review_branch():
     pipeline = TriagePipeline(FixedExtractor(extraction))
 
     result = pipeline.run(b"synthetic", "text/plain")
+    decision = decide(result["extraction"])
 
     assert result["trace"][-1] == "urgent_review"
     assert result["extraction"] == extraction
+    assert decision.status == Status.NEEDS_AUDIT
+    assert decision.destination == Destination.REVIEW
+    assert decision.urgent_alert is True
 
 
 def test_low_reported_confidence_without_audit_reason_does_not_change_route():
@@ -144,5 +148,5 @@ def test_graph_provider_failure_keeps_original_and_persists_safe_code(tmp_path):
     assert result.extraction.confidence is None
     assert result.provenance.provider == "google-gemini"
     assert result.provenance.model == "gemini-test"
-    assert result.provenance.prompt_version == "mediflow-extraction-v2"
+    assert result.provenance.prompt_version == "mediflow-extraction-v3"
     assert storage.read(result.object_key) == b"synthetic"

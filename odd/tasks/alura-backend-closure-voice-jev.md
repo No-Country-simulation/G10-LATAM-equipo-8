@@ -30,6 +30,7 @@ Hay capacidades implementadas, pendientes y propuestas mezcladas entre la rúbri
 - [ ] T5 — Especificar e implementar el alcance acordado de voz/audio.
 - [ ] T6 — Evaluar JEV; su integración requiere una decisión explícita y no altera decisiones clínicas.
 - [ ] T7 — Ejecutar aceptación E2E y actualizar documentación.
+- [x] T7.1 — Verificar escenarios sintéticos del pipeline: corregida la expectativa de versión de prompt a `mediflow-extraction-v3` y comprobado que el caso urgente termina en `NEEDS_AUDIT` / `REVISION_HUMANA` con alerta urgente. La decisión no acredita aprobación ni despacho automáticos. Solo se ejecutó `tests/test_triage_pipeline.py` con basetemp escribible fuera del repo: 10 passed. T2.3 permanece diferida, abierta y no aprobada.
 - [x] T2.4 — Incorporar extracción estructurada opcional de nombre y dosis de medicamentos con evidencia literal; mantener revisión humana y no inferir valores ausentes. Prompt versionado como v3 y verificado independientemente. Auth/roles, cancelar/reemplazar, audio y JEV siguen fuera de esta subtarea.
 
 ## Decisiones del contrato T2
