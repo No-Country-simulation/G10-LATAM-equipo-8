@@ -1,0 +1,20 @@
+{$SITE_ADDRESS} {
+    request_body {
+        max_size 12MB
+    }
+
+    @api path /api/v1 /api/v1/*
+    handle @api {
+        reverse_proxy backend:8002 {
+            transport http {
+                response_header_timeout 120s
+            }
+        }
+    }
+
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}
