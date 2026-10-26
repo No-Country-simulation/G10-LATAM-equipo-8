@@ -25,7 +25,7 @@ SYSTEM_PROMPT = (
     "infer, reconcile, or label conflicts. Confidence, if given, is self-reported and "
     "not calibrated medical reliability."
 )
-PROMPT_VERSION = "mediflow-extraction-v2"
+PROMPT_VERSION = "mediflow-extraction-v3"
 logger = logging.getLogger(__name__)
 
 

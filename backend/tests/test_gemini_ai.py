@@ -98,6 +98,12 @@ def test_missing_medication_values_remain_null_and_legacy_payload_is_supported()
     assert result.medication_dose is None
 
 
+def test_extraction_provenance_tracks_current_prompt_version():
+    pipeline = TriagePipeline(GeminiExtractor("fake", "gemini-test", client=make_client()))
+
+    assert pipeline.provenance.prompt_version == "mediflow-extraction-v3"
+
+
 def test_binary_input_uses_inline_bytes_and_unverified_evidence():
     client = make_client()
     result = GeminiExtractor("fake", "gemini-test", client=client).extract(
