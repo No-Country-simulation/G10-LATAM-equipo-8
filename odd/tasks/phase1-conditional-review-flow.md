@@ -87,8 +87,8 @@ operativos existentes sin presentar una propuesta como regla clínica aprobada.
 - El usuario autorizó ejecutar pruebas focalizadas locales para esta fase. No equivale
   a repetir la suite completa ni a validar seguridad clínica.
 - No push, PR, merge ni eliminación de ramas. La rama de trabajo actual es
-  `feature/backend-foundation`; commit de unidad de trabajo se hará después de verificar
-  y revisar solo los archivos de este incremento.
+  `feature/backend-oci-storage`; el commit de comportamiento P1-T4 está registrado
+  más abajo.
 
 ## Estado
 
