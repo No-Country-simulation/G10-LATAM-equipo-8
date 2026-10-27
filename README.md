@@ -1,3 +1,5 @@
+![banner Mediflow](docs/banner-mediflow.png)
+
 # 🏥 MediFlow-G10-LATAM-Equipo-08
 
 ![Status](https://img.shields.io/badge/status-en%20propuesta-yellow)
