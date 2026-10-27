@@ -495,3 +495,33 @@ actual ni una nueva prueba contra OCI durante la resolución del merge.
   nueva de esta integración. No se inspeccionaron credenciales ni buckets, no hubo
   migraciones de objetos, push, PR ni merge a `develop`/`main`. No se modificaron
   scores, urgencia, decisiones clínicas ni autorización humana.
+
+## Pendientes priorizados para integración y seguridad — 2026-10-23
+
+Los cambios de CORS están publicados para `http://localhost:5173` y
+`http://localhost:5174`; eso habilita el navegador, pero no prueba por sí solo la
+integración real ni protege la API. Mantener datos sintéticos hasta cerrar los
+controles de acceso y privacidad.
+
+- [ ] Probar la integración real con el frontend desde `localhost:5173` o
+  `localhost:5174`, verificando la petición `OPTIONS` y la llamada API en el
+  navegador. Si el frontend usa otro origen, acordar y agregarlo explícitamente.
+- [ ] Agregar autenticación y autorización antes de permitir descargar documentos
+  o registrar revisiones. Derivar la identidad del usuario de una sesión/token
+  validado; no confiar en el campo `revisor` enviado por el cliente. Definir roles
+  y una matriz de permisos para consulta, descarga, revisión y administración.
+- [ ] Definir cómo cancelar o reemplazar una carga equivocada con trazabilidad,
+  preservando el original y el historial. No habilitar borrado físico indiscriminado;
+  evaluar purga separada, restringida y sujeta a política de retención.
+- [ ] Evaluar fallback de Gemini y precisión de extracción con datos sintéticos:
+  documentar errores que permiten reintento/cambio de modelo, preservar procedencia
+  del modelo y nunca convertir un fallo en éxito simulado. No hay fallback entre
+  modelos ni validación clínica acreditada actualmente.
+- [ ] Incorporar audio y transcripción solo después de cerrar el flujo base exigido
+  por Alura y aprobar su alcance: formatos/tamaño, consentimiento, retención,
+  transcripción, evidencia, revisión humana y manejo de fallos. No hay soporte de
+  audio implementado en el backend.
+
+La conformidad completa con el reto no se declara hasta contrastar cada requisito de
+`docs/mediflow-agente-autonomo.md` con implementación y evidencia funcional vigente;
+el checklist del reto sigue siendo la fuente de aceptación, no esta lista de tareas.
