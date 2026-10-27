@@ -79,6 +79,8 @@ export interface DatosExtraidos {
   diagnostico_principal: string | null;
   /** Sugerencia técnica, no código validado. */
   cie10_sugerido: string | null;
+  medicamento_nombre: string | null;
+  medicamento_dosis: string | null;
 }
 
 // ─── Decisión y almacenamiento ──────────────────────────────────────────────
@@ -110,6 +112,7 @@ export interface EvidenciaExtraccion {
   page: number | null;
   /** Afirmación de fuente; no es veracidad clínica ni diagnóstico validado. */
   quote: string | null;
+  asserted_value: string | null;
 }
 
 export interface ProvenienciaExtraccion {
