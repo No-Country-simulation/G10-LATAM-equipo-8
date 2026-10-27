@@ -11,7 +11,7 @@
 Proyecto académico desarrollado en el marco del programa ONE G10, Hackathon Oracle Next Education y Alura. <br>
 <br>
 > [!CAUTION]
-> **MediFlow no es un dispositivo médico ni una herramienta de diagnóstico clínico. ** Es un prototipo académico para el procesamiento documental. Sus resultados no sustituyen la evaluación de profesionales de la salud.
+> **MediFlow no es un dispositivo médico ni una herramienta de diagnóstico clínico.** Es un prototipo académico para el procesamiento documental. Sus resultados no sustituyen la evaluación de profesionales de la salud.
 <br>
 
 ## Índice
