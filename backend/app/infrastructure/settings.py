@@ -20,6 +20,8 @@ class Settings(BaseSettings):
         env_file=("../.env.local", ".env"), extra="ignore", hide_input_in_errors=True
     )
     entorno: str = "dev"
+    neon_link_path: Path = Path(__file__).resolve().parents[3] / ".neon"
+    neon_environment_path: Path = Path(__file__).resolve().parents[3] / ".env.local"
     ai_mode: Literal["simulated", "gemini"] = "simulated"
     gemini_api_key: SecretStr | None = None
     gemini_model: str | None = None
@@ -103,8 +105,7 @@ class Settings(BaseSettings):
             if not re.fullmatch(r"[a-z]{2}-[a-z]+-\d+", self.oci_region):
                 raise ValueError("OCI_REGION invalida, ejemplo: sa-santiago-1")
         if self.repository_mode == "postgres":
-            root = Path(__file__).resolve().parents[3]
-            link_path, env_path = root / ".neon", root / ".env.local"
+            link_path, env_path = self.neon_link_path, self.neon_environment_path
             if not link_path.is_file() or not env_path.is_file():
                 raise ValueError(
                     "Vincular Neon development y obtener .env.local antes de activar PostgreSQL"

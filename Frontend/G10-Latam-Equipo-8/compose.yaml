@@ -39,10 +39,20 @@ services:
       - "${BACKEND_CONFIG_FILE:?Set BACKEND_CONFIG_FILE to a simulated local config or secured runtime config}"
     environment:
       STORAGE_DIR: /var/lib/mediflow
+      NEON_LINK_PATH: /run/mediflow-private/.neon
+      NEON_ENVIRONMENT_PATH: /run/mediflow-private/.env.local
     expose:
       - "8002"
     volumes:
       - backend-storage:/var/lib/mediflow
+      - type: bind
+        source: ${NEON_LINK_SOURCE_FILE:-../../.neon}
+        target: /run/mediflow-private/.neon
+        read_only: true
+      - type: bind
+        source: ${NEON_ENVIRONMENT_SOURCE_FILE:-../../.env.local}
+        target: /run/mediflow-private/.env.local
+        read_only: true
     read_only: true
     tmpfs:
       - /tmp

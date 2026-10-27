@@ -89,9 +89,9 @@ No usar Neon `main`/`production` falsificando metadatos o quitando la protecció
 
 ### No alcanza con `REPOSITORY_MODE=postgres` y una URL
 
-La configuración privada del backend debe verificarse contra el código que se despliegue. El Compose actual recibe `BACKEND_CONFIG_FILE` como ruta de `env_file`: Compose lee ese archivo e inyecta sus variables al contenedor; no lo monta como archivo. Esta configuración no declara montajes para `.neon` ni `.env.local`, y esta guía no establece que sean necesarios en runtime.
+El backend valida la URL y el endpoint contra dos archivos privados: `.neon` y `.env.local`. Compose los monta como archivos de solo lectura fuera de la raíz de la aplicación; no se copian a la imagen ni al contexto de build. De forma predeterminada, sus fuentes son esos archivos en la raíz del checkout. Si están en otro lugar, definir `NEON_LINK_SOURCE_FILE` y `NEON_ENVIRONMENT_SOURCE_FILE` con sus rutas del host antes de ejecutar Compose. El backend recibe las rutas montadas mediante `NEON_LINK_PATH` y `NEON_ENVIRONMENT_PATH`.
 
-No inferir que `env_file` satisface requisitos de archivos privados ni añadir montajes basándose solo en el nombre de una ruta. Antes del despliegue, confirmar con la versión exacta del backend si requiere archivos privados adicionales y cómo deben suministrarse, sin imprimir sus valores ni incorporarlos al checkout o a la imagen.
+`BACKEND_CONFIG_FILE` sigue siendo una ruta de `env_file`: Compose lee ese archivo e inyecta sus variables al contenedor, pero no lo monta. Mantener todos los archivos privados fuera de Git y no imprimir sus valores en terminales, logs o capturas. Verificar que el usuario no-root del contenedor tenga permiso de lectura; el montaje no otorga permisos adicionales.
 
 ### Preparar el esquema es un paso separado
 
@@ -133,7 +133,7 @@ En la instancia actual, editar el archivo existente con el editor del propietari
 | Grupo | Configuración prevista para el stack integrado |
 | --- | --- |
 | Modos | `AI_MODE=gemini`, `REPOSITORY_MODE=postgres`, `STORAGE_MODE=oci`. No aplicar todavía al contenedor actual. |
-| Neon | `DATABASE_URL`, `NEON_BRANCH=development`; conexión directa y credenciales de migración en el contexto privado de esa tarea. Provisionar además los dos archivos de validación según el layout probado por el backend. |
+| Neon | `DATABASE_URL`, `NEON_BRANCH=development`; conexión directa y credenciales de migración en el contexto privado de esa tarea. Montar `.neon` y `.env.local` en modo de solo lectura mediante las rutas del host documentadas abajo. |
 | Gemini | `GEMINI_API_KEY`, `GEMINI_MODEL` ya verificado en la cuenta; conservar timeout de 60 segundos y cero reintentos salvo cambio explícito. |
 | OCI | `OCI_NAMESPACE`, `OCI_REGION`, `OCI_BUCKET`, `OCI_ACCESS_KEY_ID`, `OCI_SECRET_ACCESS_KEY` ya funcionales. Son claves Customer Secret Key para S3 compatible, no claves SSH/PEM. |
 | Directorio local escribible | `STORAGE_DIR=/var/lib/mediflow`. Su volumen no sustituye a Neon ni al bucket OCI. |
