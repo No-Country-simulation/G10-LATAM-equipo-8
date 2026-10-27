@@ -360,6 +360,8 @@ export const mockTriajes: TriajeDocumento[] = [
       indicacion: null,
       diagnostico_principal: null,
       cie10_sugerido: null,
+      medicamento_nombre: null,
+      medicamento_dosis: null,
     },
     decision_enrutamiento: {
       destino_principal: "HISTORIA_CLINICA",
@@ -413,6 +415,8 @@ export const triajeAprobadoReferencia: TriajeDocumento = {
     indicacion: null,
     diagnostico_principal: null,
     cie10_sugerido: null,
+    medicamento_nombre: null,
+    medicamento_dosis: null,
   },
   decision_enrutamiento: {
     destino_principal: "HISTORIA_CLINICA",
@@ -439,6 +443,11 @@ export const triajeAprobadoReferencia: TriajeDocumento = {
     prompt_version: "mediflow-extraction-v1",
   },
   extraction_evidence: [
-    { field: "patient_name", page: 1, quote: "Paciente Demo Sintético" },
+    {
+      field: "patient_name",
+      page: 1,
+      quote: "Paciente Demo Sintético",
+      asserted_value: "Paciente Demo Sintético",
+    },
   ],
 };
