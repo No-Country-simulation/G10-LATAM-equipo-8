@@ -7,45 +7,63 @@
 ![Node](https://img.shields.io/badge/node-LTS-blue)
 ![License](https://img.shields.io/badge/hackathon-ONE%20G10-lightgrey)
 
-**Agente autónomo para triaje, extracción y enrutamiento de documentos clínicos.**
-Programa ONE · Grupo 10 — Hackathon Oracle Next Education & Alura.
-
-> ⚠️ **Esto no es un dispositivo médico.** Es un proyecto académico de triaje documental, no una herramienta de diagnóstico clínico.
+**Sistema inteligente para la clasificación, extracción y gestión de documentos clínicos.** <br>
+Proyecto académico desarrollado en el marco del programa ONE G10, Hackathon Oracle Next Education y Alura. <br>
+<br>
+> [!CAUTION]
+> **MediFlow no es un dispositivo médico ni una herramienta de diagnóstico clínico. ** Es un prototipo académico para el procesamiento documental. Sus resultados no sustituyen la evaluación de profesionales de la salud.
+<br>
 
 ## Índice
 
-- [🏥 MediFlow-G10-LATAM-Equipo-08](#-mediflow-g10-latam-equipo-08)
-  - [Índice](#índice)
-  - [Objetivo del proyecto](#objetivo-del-proyecto)
-  - [Qué hace MediFlow](#qué-hace-mediflow)
-  - [Arquitectura del sistema](#arquitectura-del-sistema)
-  - [Grafo de decisión](#grafo-de-decisión)
-  - [Stack tecnológico](#stack-tecnológico)
-  - [Cómo iniciar el proyecto](#cómo-iniciar-el-proyecto)
-    - [Versionado — regla del equipo](#versionado--regla-del-equipo)
-    - [Levantar el entorno (una vez exista `docker-compose.yml`)](#levantar-el-entorno-una-vez-exista-docker-composeyml)
-  - [Estructura del repositorio](#estructura-del-repositorio)
-  - [Equipo](#equipo)
-  - [Documentación del proyecto](#documentación-del-proyecto)
+- [Objetivo del proyecto](#objetivo-del-proyecto)
+- [Qué propone MediFlow](#qué-propone-mediflow)
+- [Estado del proyecto](#estado-del-proyecto)
+- [Arquitectura del sistema](#arquitectura-del-sistema)
+- [Flujo de decisión](#flujo-de-decisión)
+- [Stack tecnológico](#stack-tecnológico)
+- [Cómo ejecutar el proyecto](#cómo-ejecutar-el-proyecto)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Equipo](#equipo)
+- [Documentación](#documentación)
 
 ---
 
 ## Objetivo del proyecto
 
-Hospitales, laboratorios y aseguradoras pierden horas leyendo manualmente informes y recetas para transcribir datos en sistemas heredados. MediFlow recibe un documento clínico (texto, PDF o imagen), lo clasifica, extrae sus datos esenciales con un LLM multimodal, calcula un puntaje de confianza, detecta urgencias médicas y lo enruta al destino correcto — dejando los casos ambiguos o de baja confianza en una cola de revisión humana (Human-in-the-Loop).
+La gestión de documentos clínicos puede requerir una cantidad considerable de trabajo manual para identificar información, transcribir datos y derivar documentos a los procesos correspondientes.
 
-**Principio central: el LLM propone, el sistema decide.** El modelo extrae datos y sugiere tipo de documento y prioridad; el score de confianza y el destino final los calcula código auditable con reglas explícitas, no una frase suelta del modelo.
+MediFlow propone automatizar parte de ese flujo mediante inteligencia artificial, validaciones programáticas y reglas explícitas de decisión.
 
-## Qué hace MediFlow
+El sistema busca recibir documentos clínicos, identificar su categoría, extraer información relevante, detectar inconsistencias y señales de alarma, y facilitar su derivación al destino correspondiente. Los casos ambiguos o que no cumplan los criterios de validación deben quedar disponibles para revisión humana.
 
-1. **Ingiere** el documento clínico en PDF, imagen o texto.
-2. **Clasifica** su categoría (receta, informe de estudio, orden de procedimiento, epicrisis, certificado médico).
-3. **Extrae** datos clínicos y administrativos estructurados (paciente, profesional, diagnóstico/CIE-10, medicamentos, dosis, urgencia).
-4. **Valida** consistencia y calcula un puntaje de confianza sobre la extracción.
-5. **Enruta** automáticamente al destino correspondiente (emergencia médica, auditoría de autorizaciones, farmacia, historia clínica) o a revisión humana si hay ambigüedad.
-6. **Persiste** el documento y la decisión en OCI Object Storage, organizados por estado.
+### Principio de diseño
+
+El modelo propone; el sistema valida y aplica reglas explícitas.
+
+El modelo de lenguaje puede proponer una clasificación y extraer información estructurada. La aplicación debe validar los resultados mediante reglas verificables, calcular indicadores de confianza de la extracción y aplicar criterios de derivación definidos en el sistema.
+
+La confianza de una extracción no equivale a la certeza de un diagnóstico ni garantiza que la información clínica sea correcta.
+
+
+## Qué propone MediFlow
+
+El flujo funcional previsto contempla las siguientes etapas:
+
+1. **Ingesta documental:** recibir documentos en los formatos admitidos por la implementación.
+2. **Clasificación:** identificar la categoría documental, como recetas, informes de estudios, órdenes de procedimientos, epicrisis o certificados médicos.
+3. **Extracción:** estructurar información clínica y administrativa presente en el documento.
+4. **Validación:** comprobar la consistencia de los datos extraídos y, cuando corresponda, contrastarlos con fragmentos del documento original.
+5. **Evaluación de confianza:** calcular un indicador basado en criterios explícitos de validación.
+6. **Identificación de señales de alarma:** aplicar criterios de revisión previamente definidos, sin sustituir la evaluación clínica profesional.
+7. **Derivación:** proponer el destino documental correspondiente o enviar el caso a revisión humana.
+8. **Persistencia y seguimiento:** registrar el documento y el resultado del procesamiento mediante los mecanismos de almacenamiento implementados.
+
+Los formatos admitidos, las categorías documentales, los destinos disponibles y las capacidades efectivamente operativas dependen de la versión implementada.
 
 ## Arquitectura del sistema
+
+La arquitectura objetivo contempla una interfaz web, una API para el procesamiento documental, un grafo de decisión, servicios de inteligencia artificial y componentes de almacenamiento y notificación.
 
 ```mermaid
 flowchart LR
@@ -56,18 +74,24 @@ flowchart LR
     G --> S[("OCI Object Storage")]
     G -->|"caso urgente"| N["n8n"] --> AL["Slack / email"]
 ```
+El diagrama representa la arquitectura conceptual prevista. Las conexiones y los servicios deben contrastarse con la implementación disponible antes de considerarlos operativos.
 
-| Capa | Elección |
-|---|---|
-| Frontend | React + TypeScript (Vite) |
-| API | FastAPI + Pydantic v2 |
-| Orquestación IA | LangGraph — grafo de decisión explícito y auditable |
-| Base de datos | PostgreSQL, contenedor en OCI Compute |
-| Almacenamiento | OCI Object Storage — un bucket, prefijo por estado del documento |
-| Alertas | n8n, solo notificaciones (Slack/email) sobre casos urgentes |
-| Despliegue | Docker Compose sobre OCI Compute (capa Always Free) |
+### Componentes previstos
 
-## Grafo de decisión
+| Capa | Tecnología o componente | Función |
+|---|---|---|
+| Interfaz | React, TypeScript y Vite | Interacción con el usuario |
+| API | FastAPI y Pydantic v2 | Recepción y validación de solicitudes |
+| Orquestación | LangGraph | Organización del flujo de decisión |
+| IA | Google Gemini | Clasificación y extracción asistida |
+| Base de datos | PostgreSQL | Persistencia estructurada prevista |
+| Almacenamiento | OCI Object Storage | Almacenamiento documental previsto |
+| Automatización | n8n | Orquestación de notificaciones |
+| Infraestructura | Docker Compose y OCI Compute | Ejecución y despliegue previstos |
+
+## Flujo de decisión
+
+El siguiente diagrama describe el comportamiento lógico que se busca implementar.
 
 ```mermaid
 flowchart TD
@@ -86,83 +110,138 @@ flowchart TD
     P --> N["notificacion"]
 ```
 
-Cada dato que extrae el modelo lleva su cita textual de origen, y el sistema verifica que esa cita exista en el documento antes de confiar en el dato. Un caso es urgente si lo dice el modelo **o** si aparece un signo de alarma de una lista determinista — en salud, revisar un caso de más es preferible a dejar pasar una urgencia.
+### Trazabilidad y supervisión
+
+Cuando la implementación lo permita, los datos extraídos deben conservar referencias verificables al documento de origen. Las validaciones deben comprobar que las referencias correspondan al contenido recibido.
+
+La identificación de una señal de alarma debe tratarse como un mecanismo de apoyo a la revisión, no como una confirmación de emergencia clínica. Las reglas de derivación, los criterios de confianza y las acciones de seguimiento deben poder auditarse.
+
+Los casos no resueltos por las validaciones automáticas deben quedar sujetos al procedimiento de revisión definido por el equipo.
 
 ## Stack tecnológico
 
+Las siguientes tecnologías forman parte del stack previsto para el proyecto. Su inclusión no implica que todas estén integradas en la versión actual.
+
+### Inteligencia artificial y backend
+
 ![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
-![LangGraph](https://img.shields.io/badge/langgraph-1C3C3C?style=for-the-badge&logo=langgraph&logoColor=white)
-![Python 3.12](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
-![FastAPI](https://img.shields.io/badge/fastapi-109989?style=for-the-badge&logo=FASTAPI&logoColor=white)
-![Pydantic V2](https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=Pydantic&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge)
+
+- **IA:** Google Gemini, para tareas de lenguaje y procesamiento multimodal previstas.
+- **Backend:** Python 3.12, FastAPI y Pydantic v2.
+- **Orquestación:** LangGraph para organizar los nodos y las decisiones del flujo.
+- **Diseño de software:** separación de responsabilidades entre dominio, aplicación y adaptadores, conforme a la arquitectura definida por el equipo.
+
+### Frontend
+
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
-![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-000000?style=for-the-badge&logo=shadcnui&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-green?style=for-the-badge)
-![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=black)
-![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white&logoSize=auto)
-![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 
-- **IA:** Google Gemini (modelo multimodal), LangGraph para el grafo de decisión.
-- **Backend:** Python 3.12, FastAPI, Pydantic v2, arquitectura hexagonal (dominio / aplicación / adaptadores).
-- **Frontend:** React 19 + TypeScript + Vite + Tailwind + shadcn/ui.
-- **Datos:** PostgreSQL 16.
-- **Cloud:** Oracle Cloud Infrastructure — Object Storage y Compute (capa Always Free).
-- **Automatización de alertas:** n8n.
-- **Infra:** Docker Compose, Caddy.
+- React 19.
+- TypeScript.
+- Vite.
+- Tailwind CSS y shadcn/ui.
 
-## Cómo iniciar el proyecto
+### Datos, nube e infraestructura
 
-**Primera etapa del backend:** ver [instrucciones ejecutables](backend/README.md) y
-[contrato y secuencia de implementación](docs/BACKEND_PRIMERA_ETAPA.md).
-En la rama de integración ya se pueden probar los endpoints con IA simulada,
-documentos locales e historial en memoria. Las convenciones siguientes describen el objetivo final.
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Oracle Cloud](https://img.shields.io/badge/Oracle%20Cloud-F80000?style=for-the-badge&logo=oracle&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
 
-> El código todavía no está integrado a `main` (vive en ramas `feat/*`). Esta sección fija la **convención** que va a seguir todo el equipo apenas se integre, para que nadie corra versiones distintas de Python, Node o librerías.
+- PostgreSQL 16.
+- Oracle Cloud Infrastructure (OCI): Object Storage y Compute.
+- Docker Compose para la orquestación de servicios.
+- n8n para automatizaciones y notificaciones.
+- Servidor web y proxy inverso, cuya configuración definitiva debe coincidir con los archivos de infraestructura del repositorio.
 
-### Versionado — regla del equipo
+## Cómo ejecutar el proyecto
 
-| Componente | Versión fija | Cómo se fija |
-|---|---|---|
-| Python | **3.12** | `.python-version` en `backend/` (pyenv) |
-| Dependencias Python | Lockfile, no rangos abiertos | Migrar `requirements.txt` (hoy usa `>=`) a `requirements.lock` generado con `pip-compile`, o pasar a `poetry`/`uv` con lockfile versionado |
-| Node | **LTS** (22.x) | `.nvmrc` en `Frontend/` |
-| Dependencias Node | `package-lock.json` versionado (ya existe) | No usar `npm install` suelto en CI, sí `npm ci` |
+### Primera etapa del backend
 
-**Por qué importa:** con 6 personas en distintos países y máquinas, un `fastapi>=0.115.0` sin límite superior puede instalar una versión distinta en cada laptop y romper algo que "andaba" en la de otro. El lockfile es no negociable antes de escribir la primera línea de dominio.
+Para ejecutar la versión actual, consulta las instrucciones específicas del backend:
 
-### Levantar el entorno (una vez exista `docker-compose.yml`)
+- [README del backend](backend/README.md)
+- [Contrato y secuencia de implementación](docs/BACKEND_PRIMERA_ETAPA.md)
+
+La documentación de esta etapa contempla endpoints con IA simulada, documentos locales e historial en memoria. Consulta los archivos anteriores para conocer los requisitos y comandos efectivos.
+
+### Variables de entorno
+
+Si el backend requiere una clave de API de Gemini, utiliza el archivo de ejemplo que proporcione el repositorio:
 
 ```bash
-git clone https://github.com/<org>/G10-LATAM-equipo-8.git
-cd G10-LATAM-equipo-8
-cp backend/.env.example backend/.env   # completar API key de Gemini
+cp backend/.env.example backend/.env
+```
+
+Completa las variables necesarias según las instrucciones del backend. No publiques claves de API, credenciales ni archivos `.env` con secretos en Git.
+
+### Ejecución con Docker Compose
+
+El siguiente procedimiento es aplicable únicamente cuando el archivo Compose y los servicios correspondientes estén disponibles y configurados:
+
+```bash
 docker compose up --build
 ```
 
-Docker Compose es la única fuente de verdad para versiones en dev y en la VM de OCI — así se evita el "en mi máquina funciona" y el Dockerfile documenta exactamente qué versión de Python y de sistema corre la app.
+Antes de ejecutar el entorno completo, verifica la existencia de `compose.yaml` o `docker-compose.yml`, los Dockerfiles y las variables de entorno requeridas.
+
+No se incluye aquí un comando de clonación porque la URL canónica del repositorio debe confirmarse con el equipo.
+
+## Versionado y reproducibilidad
+
+Para facilitar la colaboración entre integrantes y evitar diferencias entre entornos, el proyecto debe mantener versiones coherentes y dependencias reproducibles.
+
+| Componente | Convención prevista |
+|---|---|
+| Python | 3.12, definido en `.python-version` |
+| Dependencias Python | Versiones reproducibles mediante un archivo de bloqueo |
+| Node.js | Línea LTS acordada por el equipo |
+| Dependencias Node.js | `package-lock.json` versionado |
+| Instalación Node.js en CI | `npm ci` cuando exista un `package-lock.json` compatible |
+| Infraestructura | Configuración versionada y alineada con los servicios reales |
+
+Los archivos de bloqueo deben generarse y mantenerse conforme a la herramienta de gestión de dependencias que adopte el equipo. La configuración documentada debe coincidir con la utilizada para ejecutar y probar el proyecto.
 
 ## Estructura del repositorio
 
-```
-backend/     API (FastAPI), grafo LangGraph, adaptadores, tests
-frontend/    React + TypeScript (Vite)
-n8n/         workflows exportados
-data/        documentos sintéticos + generador
-infra/       Docker Compose, nginx, despliegue OCI
-docs/        instructivo oficial, plan de equipo, decisiones
+La siguiente estructura es orientativa y debe mantenerse sincronizada con el árbol real del repositorio.
+
+```text
+.
+├── backend/     # API, lógica de aplicación, adaptadores y pruebas
+├── frontend/    # Interfaz web con React, TypeScript y Vite
+├── n8n/         # Flujos de automatización exportados
+├── data/        # Datos sintéticos y herramientas de generación
+├── infra/       # Configuración de infraestructura y despliegue
+└── docs/        # Documentación, decisiones y planificación
 ```
 
 ## Equipo
 
-6 integrantes activos organizados por las 4 áreas de "Resultados esperados" del instructivo oficial (IA/Agentes, Backend/Automatización, OCI, Documentación) en vez de por stack. Roles, responsables y cronograma completo en [`docs/plan-equipo.md`](docs/plan-equipo.md).
+El equipo organiza el trabajo en torno a las áreas de resultados esperados del programa: IA y agentes, backend y automatización, infraestructura OCI y documentación.
+
+Consulta el [plan del equipo](docs/plan-equipo.md) para conocer los roles, responsables, cronograma y decisiones de implementación.
 
 ## Documentación del proyecto
 
 | Documento | Contenido |
 |---|---|
+| [`backend/README.md`](backend/README.md) | Instrucciones de ejecución del backend |
 | [`docs/mediflow-agente-autonomo.md`](docs/mediflow-agente-autonomo.md) | Instructivo oficial del hackathon (Alura/Oracle) |
 | [`docs/plan-equipo.md`](docs/plan-equipo.md) | Plan de roles, cronograma y decisiones a validar en el kickoff |
-| [`docs/PLAN_FINAL.md`](docs/PLAN_FINAL.md) | Plan de ejecución detallado: decisiones de arquitectura (ADR), configuración del modelo, cronograma semana a semana, riesgos y checklist de entrega |
+
+---
+
+## Alcance y uso responsable
+
+MediFlow es un prototipo académico. No debe utilizarse para tomar decisiones clínicas reales, diagnosticar enfermedades, prescribir tratamientos ni determinar por sí solo la necesidad de atención de emergencia.
+
+Los datos utilizados durante las pruebas deben ser sintéticos o estar debidamente anonimizados. Cualquier futura utilización con información clínica real requerirá revisar las medidas de seguridad, privacidad, control de acceso, trazabilidad y supervisión humana aplicables.
+
+Las funcionalidades descritas como parte de la arquitectura objetivo deben verificarse contra el código y las pruebas antes de considerarse implementadas.
