@@ -73,6 +73,10 @@ Thumbs.db
 backend/storage/
 .neon
 
+# Artefactos temporales locales de pruebas de almacenamiento OCI
+/backend/.pytest-t23-storage/
+/backend/.pytest-t23-storage-repeat/
+
 # Skills oficiales descargadas: locales/reinstalables, no contenido propio.
 .agents/skills/neon/
 .agents/skills/neon-ai-gateway/
