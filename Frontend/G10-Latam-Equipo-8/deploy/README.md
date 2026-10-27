@@ -33,22 +33,22 @@ Git versiona código y definiciones de despliegue, **no credenciales, bases de d
 | OCI Object Storage | Conservar los bytes de los originales; Neon mantiene las referencias necesarias para recuperarlos. |
 | Caddy | Servir el frontend y enviar `/api/v1` al backend por la red privada de Compose. |
 
-Actualmente `compose.yaml` compila el backend desde `./backend-oci-storage-current-reference.local/backend`, un clon local ignorado por Git. **Un clon nuevo de `main` no traerá ese directorio.** Esa dependencia debe desaparecer antes del despliegue desde Git.
+`compose.yaml` construye el backend desde el código canónico versionado en `backend/`, relativo a la raíz del repositorio (`context: ../../backend`). Usa `Frontend/G10-Latam-Equipo-8/deploy/backend.Dockerfile`, cuya ruta se resuelve relativa a ese contexto. Su archivo `backend.Dockerfile.dockerignore` permanece junto al Dockerfile y define las exclusiones específicas de ese build.
 
-### Distribución propuesta, todavía no aplicada
+### Rutas de build integradas
 
-Mantener el frontend y su Compose donde están reduce cambios en los contextos ya probados. El backend tendría una única definición canónica de su imagen:
+El frontend y su Compose permanecen donde están. El código fuente del backend tiene una única ubicación canónica; el Dockerfile de despliegue se conserva en `deploy/`:
 
 ```text
 backend/
-  Dockerfile
-  Dockerfile.dockerignore
   app/
   pyproject.toml
   uv.lock
   alembic.ini
   migrations/
-Frontend/G10-Latam-Equipo-8/
+Frontend/G10-Latam-Equipo-8/deploy/
+  backend.Dockerfile
+  backend.Dockerfile.dockerignore
   compose.yaml
   deploy/frontend.Dockerfile
   deploy/Caddyfile
@@ -57,14 +57,14 @@ docs/examples/frontend-review/
   historial.json
 ```
 
-Los archivos de partida ya están versionados en la rama del frontend como `deploy/backend.Dockerfile` y `deploy/backend.Dockerfile.dockerignore`. **Sí son cambios de infraestructura del backend**, aunque no modifican la lógica de la API. El equipo debe acordar su traslado a `backend/`, actualizar sus pruebas y evitar dos copias divergentes. No es obligatorio duplicarlos en ambas ramas para que lleguen a `main`.
+`deploy/backend.Dockerfile` y `deploy/backend.Dockerfile.dockerignore` son archivos de infraestructura del backend, aunque no modifican la lógica de la API. Se conservan en `Frontend/G10-Latam-Equipo-8/deploy/`; no hace falta copiarlos a `backend/` porque Compose apunta al Dockerfile desde el contexto canónico.
 
-Con esa distribución, el objetivo del bloque de build del backend sería el siguiente; **no describe el Compose actual ni resuelve por sí solo Neon**:
+El bloque de build del backend usa estas rutas:
 
 ```yaml
 build:
   context: ../../backend
-  dockerfile: Dockerfile
+  dockerfile: ../Frontend/G10-Latam-Equipo-8/deploy/backend.Dockerfile
 ```
 
 Conservar el contexto adicional `reviewfixtures: ../../docs/examples/frontend-review`. Su `.dockerignore` solo permite `historial.json`; el compilador necesita ese fixture canónico sin alterar sus bytes, el import del MVP ni ampliar el contexto a todo el repositorio. Mantener también `VITE_API_URL=/api/v1`, el proxy con prefijo intacto y el backend sin puerto público. Con este mismo origen, no hace falta agregar un origen CORS público para conectar frontend y API.
@@ -74,10 +74,10 @@ Conservar el contexto adicional `reviewfixtures: ../../docs/examples/frontend-re
 | Responsable | Entrega antes de integrar en `main` |
 | --- | --- |
 | Backend | Publicar su fuente acordada en `feature/backend-oci-storage` e incorporarla a `main` después de la entrega del frontend, cuando esté lista. Revisar Dockerfile, exclusiones, archivos privados de Neon, permisos del usuario `10001` y migraciones. El CORS de `eb9afb4` ya está incluido en `9220f50`; no duplicarlo. |
-| Frontend/despliegue | Publicar primero `feat/dashboard-mvp` y luego agregar el frontend a `main`, conservando todos los archivos preexistentes de esta última. Mantener Caddy y el contexto del fixture; no adelantar la configuración del backend. |
-| Integración del equipo | Comprobar la incorporación aditiva del frontend; después revisar la entrega del backend y acordar en `main` las rutas, montajes privados y tarea de migración de un único Compose. Verificar el clon completo antes de desplegar, sin copiar árboles a ciegas ni forzar el push. |
+| Frontend/despliegue | Mantener Caddy, el contexto del fixture y el Compose integrado; el build del backend usa el contexto canónico `../../backend` y el Dockerfile conservado en `deploy/`. |
+| Integración del equipo | Verificar el clon completo y confirmar por separado los requisitos de configuración privada y la tarea de migración antes de desplegar; no copiar árboles a ciegas ni forzar el push. |
 
-La ubicación exacta y las revisiones publicadas deben quedar acordadas antes de modificar Compose. Esta guía no incorpora trabajo todavía no publicado del compañero ni cambia ninguna rama.
+El contexto de build, el Dockerfile y su archivo de exclusiones quedan separados intencionalmente; verificar esas rutas en el clon completo antes de desplegar. Esto no cambia ninguna rama remota ni resuelve por sí solo la configuración de Neon.
 
 ## 3. Neon: requisitos reales del backend actual
 
@@ -89,11 +89,9 @@ No usar Neon `main`/`production` falsificando metadatos o quitando la protecció
 
 ### No alcanza con `REPOSITORY_MODE=postgres` y una URL
 
-`backend/app/infrastructure/settings.py` calcula la raíz mediante `Path(__file__).resolve().parents[3]` y exige **dos archivos privados reales**: `.neon` y `.env.local`. Comprueba que ambos indiquen `development` y que los hosts de las URLs coincidan con la configuración vinculada. No existe una opción `NEON_BRANCH_FILE` en este código.
+La configuración privada del backend debe verificarse contra el código que se despliegue. El Compose actual recibe `BACKEND_CONFIG_FILE` como ruta de `env_file`: Compose lee ese archivo e inyecta sus variables al contenedor; no lo monta como archivo. Esta configuración no declara montajes para `.neon` ni `.env.local`, y esta guía no establece que sean necesarios en runtime.
 
-Con el Dockerfile actual (`WORKDIR /app`, aplicación bajo `/app/app`), esas rutas resultan ser `/.neon` y `/.env.local` dentro del contenedor. `env_file` suministra variables, pero **no crea ni monta esos archivos**. Antes del despliegue, el backend debe fijar un layout de imagen y montajes de solo lectura compatibles con esta validación, probados con UID/GID `10001`.
-
-Los archivos deben provenir del entorno Neon legítimo elegido, permanecer fuera del checkout y de los contextos de build, montarse individualmente en solo lectura y ser legibles únicamente por las identidades que los necesitan. `.env.local` puede contener secretos. No hacerlos legibles para todos ni debilitar los permisos del archivo de runtime actual para resolver un error de acceso.
+No inferir que `env_file` satisface requisitos de archivos privados ni añadir montajes basándose solo en el nombre de una ruta. Antes del despliegue, confirmar con la versión exacta del backend si requiere archivos privados adicionales y cómo deben suministrarse, sin imprimir sus valores ni incorporarlos al checkout o a la imagen.
 
 ### Preparar el esquema es un paso separado
 

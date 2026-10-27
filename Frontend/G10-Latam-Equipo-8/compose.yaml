@@ -33,8 +33,8 @@ services:
   backend:
     image: mediflow/backend:${IMAGE_TAG:-local}
     build:
-      context: ./backend-oci-storage-current-reference.local/backend
-      dockerfile: ../../deploy/backend.Dockerfile
+      context: ../../backend
+      dockerfile: ../Frontend/G10-Latam-Equipo-8/deploy/backend.Dockerfile
     env_file:
       - "${BACKEND_CONFIG_FILE:?Set BACKEND_CONFIG_FILE to a simulated local config or secured runtime config}"
     environment:
