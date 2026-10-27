@@ -90,13 +90,28 @@ Cada dato que extrae el modelo lleva su cita textual de origen, y el sistema ver
 
 ## Stack tecnológico
 
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
+![LangGraph](https://img.shields.io/badge/langgraph-1C3C3C?style=for-the-badge&logo=langgraph&logoColor=white)
+![Python 3.12](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+![FastAPI](https://img.shields.io/badge/fastapi-109989?style=for-the-badge&logo=FASTAPI&logoColor=white)
+![Pydantic V2](https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=Pydantic&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-000000?style=for-the-badge&logo=shadcnui&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-green?style=for-the-badge)
+![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=black)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white&logoSize=auto)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
 - **IA:** Google Gemini (modelo multimodal), LangGraph para el grafo de decisión.
 - **Backend:** Python 3.12, FastAPI, Pydantic v2, arquitectura hexagonal (dominio / aplicación / adaptadores).
 - **Frontend:** React 19 + TypeScript + Vite + Tailwind + shadcn/ui.
 - **Datos:** PostgreSQL 16.
 - **Cloud:** Oracle Cloud Infrastructure — Object Storage y Compute (capa Always Free).
 - **Automatización de alertas:** n8n.
-- **Infra:** Docker Compose, Nginx.
+- **Infra:** Docker Compose, Caddy.
 
 ## Cómo iniciar el proyecto
 
