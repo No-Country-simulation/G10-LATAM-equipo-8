@@ -55,6 +55,7 @@ data/tmp/
 
 # === Herramientas locales / editores ===
 .atl/
+.codegraph/
 .vscode/
 .idea/
 *.swp
@@ -65,3 +66,23 @@ Thumbs.db
 
 # === Logs ===
 *.log
+
+# Entorno y almacenamiento de desarrollo
+.tools/
+.uv-cache/
+backend/storage/
+.neon
+
+# Artefactos temporales locales de pruebas de almacenamiento OCI
+/backend/.pytest-t23-storage/
+/backend/.pytest-t23-storage-repeat/
+
+# Skills oficiales descargadas: locales/reinstalables, no contenido propio.
+.agents/skills/neon/
+.agents/skills/neon-ai-gateway/
+.agents/skills/neon-auth/
+.agents/skills/neon-functions/
+.agents/skills/neon-object-storage/
+.agents/skills/neon-postgres/
+.agents/skills/neon-postgres-branches/
+.agents/skills/neon-postgres-egress-optimizer/

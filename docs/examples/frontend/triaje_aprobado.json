@@ -1,0 +1,57 @@
+{
+  "documento_id": "FRONTEND-REVISION-001",
+  "status": "APPROVED",
+  "canal_origen": "web",
+  "created_at": "2026-10-08T12:00:00Z",
+  "clasificacion": {
+    "tipo_documento": "Informe de Laboratorio",
+    "especialidad": null,
+    "nivel_prioridad": "Rutina",
+    "score_confianza_clasificacion": null
+  },
+  "datos_extraidos": {
+    "paciente": {
+      "nombre": "Demo Sintético",
+      "edad": 30
+    },
+    "medico_solicitante": null,
+    "estudio_realizado": null,
+    "indicacion": null,
+    "diagnostico_principal": null,
+    "cie10_sugerido": null
+  },
+  "decision_enrutamiento": {
+    "destino_principal": "HISTORIA_CLINICA",
+    "requiere_auditoria_humana": false,
+    "justificacion_enrutamiento": "Decision registrada por revision humana",
+    "alerta_urgente": false,
+    "notificacion_generada": null
+  },
+  "audit_reasons": [
+    "UNVERIFIED_BINARY_EVIDENCE",
+    "GEMINI_REQUIRES_HUMAN_REVIEW"
+  ],
+  "almacenamiento": {
+    "proveedor": "neon",
+    "ruta_objeto": "recibidos/00000000000000000000000000000001",
+    "status_backup": "exito"
+  },
+  "almacenamiento_oci": null,
+  "modo_ia": "gemini",
+  "confianza_tipo": "autodeclarada_modelo",
+  "processing_status": "SUCCEEDED",
+  "processing_error": null,
+  "extraction_schema_version": 2,
+  "extraction_provenance": {
+    "provider": "google-gemini",
+    "model": "gemini-3.5-flash-lite",
+    "prompt_version": "mediflow-extraction-v1"
+  },
+  "extraction_evidence": [
+    {
+      "field": "patient_name",
+      "page": 1,
+      "quote": "Paciente Demo Sintético"
+    }
+  ]
+}

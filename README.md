@@ -98,6 +98,11 @@ Cada dato que extrae el modelo lleva su cita textual de origen, y el sistema ver
 
 ## Cómo iniciar el proyecto
 
+**Primera etapa del backend:** ver [instrucciones ejecutables](backend/README.md) y
+[contrato y secuencia de implementación](docs/BACKEND_PRIMERA_ETAPA.md).
+En la rama de integración ya se pueden probar los endpoints con IA simulada,
+documentos locales e historial en memoria. Las convenciones siguientes describen el objetivo final.
+
 > El código todavía no está integrado a `main` (vive en ramas `feat/*`). Esta sección fija la **convención** que va a seguir todo el equipo apenas se integre, para que nadie corra versiones distintas de Python, Node o librerías.
 
 ### Versionado — regla del equipo
