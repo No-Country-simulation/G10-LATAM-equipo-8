@@ -19,7 +19,6 @@ Proyecto académico desarrollado en el marco del programa ONE G10, Hackathon Ora
 
 - [Objetivo del proyecto](#objetivo-del-proyecto)
 - [Qué propone MediFlow](#qué-propone-mediflow)
-- [Estado del proyecto](#estado-del-proyecto)
 - [Arquitectura del sistema](#arquitectura-del-sistema)
 - [Flujo de decisión](#flujo-de-decisión)
 - [Stack tecnológico](#stack-tecnológico)
