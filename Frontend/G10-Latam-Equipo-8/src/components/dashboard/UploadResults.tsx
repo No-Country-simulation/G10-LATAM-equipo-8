@@ -28,24 +28,24 @@ function ConfirmedResult({ result, title, onOpenConfirmedDocument }: ConfirmedRe
   const { document } = result;
 
   return (
-    <section aria-label="Resultado confirmado" className="rounded-lg border border-slate-200 bg-white p-4">
-      <h3 className="font-semibold text-slate-900">{title}</h3>
-      {result.fileName && <p className="mt-1 break-all text-sm text-slate-700">Archivo: {result.fileName}</p>}
-      <p className="break-all text-sm text-slate-700">Documento: {document.documento_id}</p>
-      <p className="text-sm text-slate-700">Revisión: {estadoRevisionLegible(document.status)}</p>
-      <p className="text-sm text-slate-700">
+    <section aria-label="Resultado confirmado" className="rounded-lg border border-border bg-card p-4">
+      <h3 className="font-semibold text-foreground">{title}</h3>
+      {result.fileName && <p className="mt-1 break-all text-sm text-slate-700 dark:text-slate-300">Archivo: {result.fileName}</p>}
+      <p className="break-all text-sm text-slate-700 dark:text-slate-300">Documento: {document.documento_id}</p>
+      <p className="text-sm text-slate-700 dark:text-slate-300">Revisión: {estadoRevisionLegible(document.status)}</p>
+      <p className="text-sm text-slate-700 dark:text-slate-300">
         Procesamiento técnico: {estadoProcesamientoLegible(document.processing_status)}
       </p>
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-slate-700 dark:text-slate-300">
         Prioridad clínica: {prioridadClinicaLegible(document.clasificacion.nivel_prioridad)}
       </p>
       {document.processing_status === "FAILED" && (
-        <p className="mt-2 text-sm text-amber-700">
+        <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
           El servidor registró el documento, pero el procesamiento falló; no es una extracción exitosa.
         </p>
       )}
       {document.processing_error && (
-        <p className="mt-1 wrap-break-word text-sm text-slate-600">
+        <p className="mt-1 wrap-break-word text-sm text-muted-foreground">
           Diagnóstico técnico: {document.processing_error}
         </p>
       )}
@@ -53,7 +53,7 @@ function ConfirmedResult({ result, title, onOpenConfirmedDocument }: ConfirmedRe
         <Button
           type="button"
           variant="link"
-          className="mt-2 h-auto min-h-11 px-0 text-teal-800"
+          className="mt-2 h-auto min-h-11 px-0 text-teal-800 dark:text-teal-300"
           onClick={() => onOpenConfirmedDocument(document)}
         >
           Abrir resultado
@@ -98,9 +98,9 @@ export function UploadResults({ uploadState, presentation, onOpenConfirmedDocume
   if (presentation === "latest") {
     return (
       <details className="mb-4">
-        <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-teal-800">
+        <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-teal-800 dark:text-teal-300">
           Último resultado confirmado
-          {latest.fileName ? <span className="ml-2 break-all font-normal text-slate-600">{latest.fileName}</span> : null}
+          {latest.fileName ? <span className="ml-2 break-all font-normal text-muted-foreground">{latest.fileName}</span> : null}
         </summary>
         <div className="mt-2">
           <ConfirmedResult

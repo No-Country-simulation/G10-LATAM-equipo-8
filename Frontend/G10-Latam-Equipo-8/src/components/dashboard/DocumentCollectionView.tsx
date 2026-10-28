@@ -83,11 +83,11 @@ function CollectionDocumentDetails({
   const priority = document.clasificacion.nivel_prioridad;
   return (
     <>
-      <p className="wrap-break-word text-sm text-slate-700">
-        <span className="font-medium text-slate-900">Motivo:</span> {auditReason(document)}
+      <p className="wrap-break-word text-sm text-slate-700 dark:text-slate-300">
+        <span className="font-medium text-foreground">Motivo:</span> {auditReason(document)}
       </p>
-      <p className="wrap-break-word text-sm text-slate-700">
-        <span className="font-medium text-slate-900">Apoyo:</span>{" "}
+      <p className="wrap-break-word text-sm text-slate-700 dark:text-slate-300">
+        <span className="font-medium text-foreground">Apoyo:</span>{" "}
         {document.decision_enrutamiento.justificacion_enrutamiento}
       </p>
       <div className="flex flex-wrap gap-2">
@@ -103,7 +103,7 @@ function CollectionDocumentDetails({
       </div>
       {showPriority ? (
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-medium text-slate-900">Prioridad clínica:</span>
+          <span className="font-medium text-foreground">Prioridad clínica:</span>
           <Badge variant={priorityVariant(priority)}>{prioridadClinicaLegible(priority)}</Badge>
         </div>
       ) : null}
@@ -171,37 +171,37 @@ export function DocumentCollectionView({
     >
       <header className="flex shrink-0 flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 id="document-collection-title" className="text-2xl font-semibold text-slate-900">
+          <h2 id="document-collection-title" className="text-2xl font-semibold text-foreground">
             {title}
           </h2>
           {kind === "pending" ? (
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-muted-foreground">
               La cantidad pendiente corresponde a auditoría humana y no representa alertas de urgencia clínica.{hasPage ? ` · ${page.total} pendientes de auditoría` : ""}
             </p>
           ) : kind === "all" ? (
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-muted-foreground">
               Historial completo{hasPage ? ` · ${page.total} documentos` : ""}
             </p>
           ) : (
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-muted-foreground">
               Esta página reúne las alertas que necesitan atención inmediata.
             </p>
           )}
         </div>
         {kind === "alerts" && hasPage ? (
-          <p className="text-sm text-slate-600" aria-live="polite">
+          <p className="text-sm text-muted-foreground" aria-live="polite">
             Alertas inmediatas en esta página: {countUrgentAlerts(page.items)}
           </p>
         ) : null}
         {isLoading ? (
-          <p role="status" aria-live="polite" className="text-sm text-slate-600">
+          <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
             {kind === "pending" ? "Cargando la colección solicitada…" : "Cargando página…"}
           </p>
         ) : null}
       </header>
 
-      <div className="grid shrink-0 gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="grid gap-1 text-sm font-medium text-slate-800">
+      <div className="grid shrink-0 gap-3 rounded-lg border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-3">
+        <label className="grid gap-1 text-sm font-medium text-slate-800 dark:text-slate-200">
           Paciente o documento
           <Input
             aria-label="Paciente o documento"
@@ -210,7 +210,7 @@ export function DocumentCollectionView({
             onChange={(event) => onSearchChange(event.currentTarget.value)}
           />
         </label>
-        <label className="grid gap-1 text-sm font-medium text-slate-800">
+        <label className="grid gap-1 text-sm font-medium text-slate-800 dark:text-slate-200">
           Tipo de documento
           <NativeSelect
             aria-label="Tipo de documento"
@@ -224,7 +224,7 @@ export function DocumentCollectionView({
           </NativeSelect>
         </label>
         {kind !== "pending" ? (
-          <label className="grid gap-1 text-sm font-medium text-slate-800">
+          <label className="grid gap-1 text-sm font-medium text-slate-800 dark:text-slate-200">
             Estado de revisión
             <NativeSelect
               aria-label="Estado de revisión"
@@ -238,7 +238,7 @@ export function DocumentCollectionView({
             </NativeSelect>
           </label>
         ) : null}
-        <p className="self-end text-sm text-slate-600 sm:col-span-2 lg:col-span-3">
+        <p className="self-end text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
           Búsqueda y tipo de documento se aplican solo a los registros cargados en esta página.
         </p>
       </div>
@@ -246,7 +246,7 @@ export function DocumentCollectionView({
       {error ? (
         <section
           role="alert"
-          className="flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-700"
+          className="flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 dark:border-red-400 bg-card p-4 text-sm text-red-700 dark:text-red-300"
         >
           <p>
             {kind === "pending" ? "No se pudo cargar la cola de auditoría:" : "No se pudo cargar esta página:"} {error}
@@ -262,24 +262,24 @@ export function DocumentCollectionView({
       ) : null}
 
       {!hasPage && isLoading ? (
-        <p role="status" className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <p role="status" className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
           {kind === "pending" ? "Cargando la colección solicitada…" : "Cargando documentos…"}
         </p>
       ) : null}
       {hasPage && page.items.length === 0 ? (
-        <p role="status" className="rounded-lg border border-slate-200 bg-white p-6 text-slate-700">
+        <p role="status" className="rounded-lg border border-border bg-card p-6 text-slate-700 dark:text-slate-300">
           {emptyMessage}
         </p>
       ) : null}
       {hasPage && page.items.length > 0 && visibleDocuments.length === 0 ? (
-        <div role="status" className="rounded-lg border border-slate-200 bg-white p-6 text-slate-700">
+        <div role="status" className="rounded-lg border border-border bg-card p-6 text-slate-700 dark:text-slate-300">
           {localFiltersActive ? (
             <>
               <p>No hay coincidencias en los documentos cargados de esta página.</p>
               <Button
                 type="button"
                 variant="link"
-                className="mt-2 min-h-11 px-0 text-teal-800"
+                className="mt-2 min-h-11 px-0 text-teal-800 dark:text-teal-300"
                 onClick={() => {
                   onSearchChange("");
                   onDocumentTypeChange("");
@@ -296,7 +296,7 @@ export function DocumentCollectionView({
 
       {hasPage && visibleDocuments.length > 0 ? (
         <>
-          <p className="shrink-0 text-sm text-slate-600" aria-live="polite">
+          <p className="shrink-0 text-sm text-muted-foreground" aria-live="polite">
             Coincidencias en esta página: {visibleDocuments.length}
           </p>
           <div
@@ -308,20 +308,20 @@ export function DocumentCollectionView({
               <Card key={document.documento_id} role="listitem" className="shrink-0">
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-xs text-slate-600">Paciente</p>
-                    <p className="wrap-break-word font-medium text-slate-900">
+                    <p className="text-xs text-muted-foreground">Paciente</p>
+                    <p className="wrap-break-word font-medium text-foreground">
                       {document.datos_extraidos.paciente.nombre ?? "Paciente sin identificar"}
                     </p>
-                    <p className="mt-1 break-all text-sm text-slate-700">
+                    <p className="mt-1 break-all text-sm text-slate-700 dark:text-slate-300">
                       Documento: {document.documento_id}
                     </p>
-                    <p className="mt-1 wrap-break-word text-sm text-slate-700">
+                    <p className="mt-1 wrap-break-word text-sm text-slate-700 dark:text-slate-300">
                       Tipo de documento: {document.clasificacion.tipo_documento ?? "Sin dato"}
                     </p>
                   </div>
                   <CollectionDocumentDetails document={document} />
-                  <div className="text-sm text-slate-700">
-                    <span className="font-medium text-slate-900">Fecha:</span>{" "}
+                  <div className="text-sm text-slate-700 dark:text-slate-300">
+                    <span className="font-medium text-foreground">Fecha:</span>{" "}
                     <time dateTime={document.created_at}>{formatDate(document.created_at)}</time>
                   </div>
                 </CardContent>
@@ -341,7 +341,7 @@ export function DocumentCollectionView({
               </Card>
             ))}
           </div>
-          <div className="hidden min-h-0 flex-1 overflow-auto overscroll-y-contain rounded-xl border border-slate-200 bg-white lg:block">
+          <div className="hidden min-h-0 flex-1 overflow-auto overscroll-y-contain rounded-xl border border-border bg-card lg:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -356,11 +356,11 @@ export function DocumentCollectionView({
                 {visibleDocuments.map((document) => (
                   <TableRow key={document.documento_id}>
                     <TableCell className="min-w-48">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-foreground">
                         {document.datos_extraidos.paciente.nombre ?? "Paciente sin identificar"}
                       </p>
-                      <p className="break-all text-sm text-slate-700">{document.documento_id}</p>
-                      <p className="text-sm text-slate-600">
+                      <p className="break-all text-sm text-slate-700 dark:text-slate-300">{document.documento_id}</p>
+                      <p className="text-sm text-muted-foreground">
                         {document.clasificacion.tipo_documento ?? "Sin dato"}
                       </p>
                     </TableCell>
@@ -369,7 +369,7 @@ export function DocumentCollectionView({
                     </TableCell>
                     <TableCell>
                       <div className="grid justify-items-start gap-1">
-                        <span className="text-xs text-slate-600">Prioridad clínica</span>
+                        <span className="text-xs text-muted-foreground">Prioridad clínica</span>
                         <Badge variant={priorityVariant(document.clasificacion.nivel_prioridad)}>
                           {prioridadClinicaLegible(document.clasificacion.nivel_prioridad)}
                         </Badge>
@@ -403,11 +403,11 @@ export function DocumentCollectionView({
       {hasPage ? (
         <footer className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-slate-700" aria-live="polite">
+            <p className="text-sm text-slate-700 dark:text-slate-300" aria-live="polite">
               Mostrando {pagination.firstItem}–{pagination.lastItem} de {page.total} {paginationDescription}
             </p>
             {kind === "alerts" ? (
-              <p className="text-xs text-slate-600">Paginación y total del historial, no de alertas globales.</p>
+              <p className="text-xs text-muted-foreground">Paginación y total del historial, no de alertas globales.</p>
             ) : null}
           </div>
           <nav aria-label={`Paginación de ${title.toLocaleLowerCase()}`} className="flex items-center gap-2">
