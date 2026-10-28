@@ -81,7 +81,7 @@ export function Sidebar({
   });
 
   return (
-    <aside className="flex min-h-full w-54 shrink-0 flex-col gap-6 border-r border-slate-200 bg-white p-4">
+    <aside className="flex min-h-full w-54 shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar p-4">
       <header className="flex min-h-11 items-center px-2">
         <img
           src={logoMediflow}
@@ -99,10 +99,10 @@ export function Sidebar({
               type="button"
               aria-current={isActive ? "page" : undefined}
               onClick={() => onViewChange(item.target)}
-              className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${
+              className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 dark:focus-visible:outline-teal-300 ${
                 isActive
-                  ? "bg-teal-50 font-medium text-teal-800"
-                  : "text-slate-700 hover:bg-slate-100"
+                  ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                  : "text-slate-700 hover:bg-slate-100 dark:text-sidebar-foreground dark:hover:bg-muted"
               }`}
             >
               <Icon aria-hidden="true" className="size-5 shrink-0" />
@@ -111,7 +111,7 @@ export function Sidebar({
                 <>
                   <span
                     aria-hidden="true"
-                    className="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700"
+                    className="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-muted dark:text-foreground"
                   >
                     {item.count}
                   </span>

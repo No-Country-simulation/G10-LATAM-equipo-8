@@ -107,7 +107,7 @@ test("All documents shows an accessible global badge, including zero, while unkn
   const zero = dashboardRenderer.render({ ...base, allDocumentsCount: 0 });
   assert.match(
     zero,
-    /<span aria-hidden="true" class="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">0<\/span>/,
+    /<span aria-hidden="true"[^>]*>0<\/span>/,
   );
   assert.match(zero, /<span class="sr-only">0 documentos en total<\/span>/);
   assert.match(zero, /0 alertas urgentes en la página de historial cargada/);
@@ -115,7 +115,7 @@ test("All documents shows an accessible global badge, including zero, while unkn
   const populated = dashboardRenderer.render({ ...base, allDocumentsCount: 19 });
   assert.match(
     populated,
-    /<span aria-hidden="true" class="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">19<\/span>/,
+    /<span aria-hidden="true"[^>]*>19<\/span>/,
   );
   assert.match(populated, /<span class="sr-only">19 documentos en total<\/span>/);
 

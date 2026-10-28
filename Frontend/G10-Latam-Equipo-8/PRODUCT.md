@@ -35,7 +35,7 @@ The frontend is a web application used to inspect loaded history and the audit q
 
 ## Brand Commitments
 
-Keep the MediFlow name and user-approved logo (`src/assets/mediflow-logo.png`). The user-approved V2 interface direction is a light, white/slate work surface with teal-700 emphasis and the existing sidebar/list hierarchy, approximated only with documented Tailwind utilities. The four approved Canva references are read-only visual guidance; their layouts are not browser proof or permission to fabricate clinical originals.
+Keep the MediFlow name and user-approved logo (`src/assets/mediflow-logo.png`). The user-approved V2 interface direction is a light, white/slate work surface with teal-700 emphasis and the existing sidebar/list hierarchy, approximated only with documented Tailwind utilities. The requested dark theme extends the same hierarchy and preserves the meaning of alerts and review states. The four approved Canva references are read-only visual guidance; their layouts are not browser proof or permission to fabricate clinical originals.
 
 ## Evidence on Hand
 

@@ -42,9 +42,13 @@ export async function createDashboardRenderer(
       server: { hmr: false, middlewareMode: true, watch: null },
     });
     const module = await server.ssrLoadModule(modulePath);
+    const { ThemeProvider } = await server.ssrLoadModule("/src/theme/ThemeProvider.tsx");
     const Component = module[exportName];
     if (typeof Component !== "function") throw new Error("Requested dashboard component is unavailable");
-    return { render: (props) => renderToStaticMarkup(createElement(Component, props)), close };
+    return {
+      render: (props) => renderToStaticMarkup(createElement(ThemeProvider, null, createElement(Component, props))),
+      close,
+    };
   } catch (error) {
     await close();
     throw error;

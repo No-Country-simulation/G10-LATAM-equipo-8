@@ -34,6 +34,12 @@ Los iconos nuevos se agregan manualmente desde el adaptador local; por ejemplo: 
 
 ---
 
+## Apariencia
+
+El selector del encabezado permite elegir **Claro**, **Oscuro** o **Sistema**. Sin una preferencia guardada se conserva el aspecto claro; en modo Sistema la interfaz sigue los cambios de apariencia del dispositivo. La elección se guarda en el navegador mediante `localStorage` y no se sincroniza entre dispositivos. Si el almacenamiento no está disponible, el selector sigue funcionando durante la sesión.
+
+---
+
 ## 📂 Estructura del Proyecto
 
 El proyecto sigue principios de **Clean Architecture** y **Screaming Architecture**, separando responsabilidades por capas:

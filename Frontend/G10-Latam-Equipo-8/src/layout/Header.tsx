@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Menu, X } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
+import { ThemeSelector } from "@/components/theme/ThemeSelector";
+import { useTheme } from "@/theme/theme-context";
 import {
   Sheet,
   SheetClose,
@@ -32,6 +34,7 @@ export function Header({
   provenance,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
   const provenanceLabel = provenance === "demo" ? "Datos ficticios" : "Modo API";
 
   const changeMobileView = (view: DashboardView) => {
@@ -40,7 +43,7 @@ export function Header({
   };
 
   return (
-    <header className="flex min-h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+    <header className="flex min-h-16 flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-4 py-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <div className="lg:hidden">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -79,15 +82,18 @@ export function Header({
           </Sheet>
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">
+          <p className="truncate text-sm font-semibold text-foreground sm:text-base">
             Triaje documental
           </p>
-          <p className="truncate text-xs text-slate-600 lg:hidden">{pageTitle}</p>
+          <p className="truncate text-xs text-muted-foreground lg:hidden">{pageTitle}</p>
         </div>
       </div>
-      <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 sm:text-sm">
-        {provenanceLabel}
-      </span>
+      <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
+        <ThemeSelector theme={theme} onThemeChange={setTheme} />
+        <span className="shrink-0 rounded-full border border-border bg-background px-3 py-2 text-xs font-medium text-slate-700 dark:text-foreground sm:text-sm">
+          {provenanceLabel}
+        </span>
+      </div>
     </header>
   );
 }
