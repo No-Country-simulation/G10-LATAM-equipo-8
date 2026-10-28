@@ -59,8 +59,8 @@ test("backend image is locked, allowlisted, unprivileged, internal, and single-w
   assert.doesNotMatch(dockerfile, /--reload/);
 
   const backend = serviceBlock(compose, "backend");
-  assert.match(backend, /context:\s+\.\/backend-oci-storage-current-reference\.local\/backend/);
-  assert.match(backend, /dockerfile:\s+\.\.\/\.\.\/deploy\/backend\.Dockerfile/);
+  assert.match(backend, /context:\s+\.\.\/\.\.\/backend[ \t]*$/m);
+  assert.match(backend, /dockerfile:\s+\.\.\/Frontend\/G10-Latam-Equipo-8\/deploy\/backend\.Dockerfile[ \t]*$/m);
   assert.match(backend, /BACKEND_CONFIG_FILE:\?[^}\n]+/);
   assert.match(backend, /STORAGE_DIR:\s*\/var\/lib\/mediflow/);
   assert.match(backend, /\/var\/lib\/mediflow/);
