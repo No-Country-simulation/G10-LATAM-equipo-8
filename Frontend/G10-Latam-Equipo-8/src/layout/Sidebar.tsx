@@ -5,7 +5,7 @@ import {
   TriangleAlert,
   type IconComponent,
 } from "@/components/ui/icons";
-import logoMediflow from "@/assets/mediflow-logo.jpg";
+import logoMediflow from "@/assets/mediflow-logo.png";
 import {
   DASHBOARD_DESTINATIONS,
   isActiveDashboardView,
@@ -86,7 +86,7 @@ export function Sidebar({
         <img
           src={logoMediflow}
           alt="MediFlow"
-          className="h-32 w-full object-cover"
+          className="h-32 w-full object-contain"
         />
       </header>
       <nav aria-label="Navegación principal" className="flex flex-col gap-1">

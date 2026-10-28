@@ -35,12 +35,12 @@ The frontend is a web application used to inspect loaded history and the audit q
 
 ## Brand Commitments
 
-Keep the MediFlow name and installed logo (`src/assets/mediflow-logo.jpg`). The user-approved V2 interface direction is a light, white/slate work surface with teal-700 emphasis and the existing sidebar/list hierarchy, approximated only with documented Tailwind utilities. The four approved Canva references are read-only visual guidance; their layouts are not browser proof or permission to fabricate clinical originals.
+Keep the MediFlow name and user-approved logo (`src/assets/mediflow-logo.png`). The user-approved V2 interface direction is a light, white/slate work surface with teal-700 emphasis and the existing sidebar/list hierarchy, approximated only with documented Tailwind utilities. The four approved Canva references are read-only visual guidance; their layouts are not browser proof or permission to fabricate clinical originals.
 
 ## Evidence on Hand
 
 - `../../docs/examples/frontend-review/historial.json` is the existing synthetic two-record history sample; it does not include original PDF or image bytes.
-- `src/assets/mediflow-logo.jpg` is the existing brand asset.
+- `src/assets/mediflow-logo.png` is the user-approved brand asset.
 - The approved UX brief and four Canva images are reference material, not evidence that the browser implementation matches them.
 
 ## Product Principles
