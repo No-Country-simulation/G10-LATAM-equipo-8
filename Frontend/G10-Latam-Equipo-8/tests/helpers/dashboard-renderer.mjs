@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createElement } from "react";
@@ -9,10 +9,13 @@ import { createServer } from "vite";
 const frontendRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 // Test-owned excluded state only; never read the application's environment files.
-export async function createDashboardRenderer(modulePath, exportName) {
-  const runtimeDirectory = await mkdtemp(path.join(
-    frontendRoot, ".frontend-adjustments-verification.local", "dashboard-render-",
-  ));
+export async function createDashboardRenderer(
+  modulePath,
+  exportName,
+  runtimeParent = path.join(frontendRoot, ".frontend-adjustments-verification.local"),
+) {
+  await mkdir(runtimeParent, { recursive: true });
+  const runtimeDirectory = await mkdtemp(path.join(runtimeParent, "dashboard-render-"));
   let server;
   let closed = false;
   async function close() {
