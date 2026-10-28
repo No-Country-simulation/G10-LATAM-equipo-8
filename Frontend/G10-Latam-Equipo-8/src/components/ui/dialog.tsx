@@ -34,7 +34,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed inset-0 z-50 flex min-h-0 flex-col overflow-hidden border border-slate-200 bg-white text-slate-900 shadow-xl outline-none lg:inset-x-4 lg:inset-y-4 lg:mx-auto lg:max-w-7xl lg:rounded-xl",
+          "fixed inset-0 z-50 flex min-h-0 flex-col overflow-hidden border border-border bg-card text-foreground shadow-xl outline-none lg:inset-x-4 lg:inset-y-4 lg:mx-auto lg:max-w-7xl lg:rounded-xl",
           className,
         )}
         {...props}
@@ -65,7 +65,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-sm text-slate-600", className)}
+      className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
   );

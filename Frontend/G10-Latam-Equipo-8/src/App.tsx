@@ -64,7 +64,7 @@ function App() {
     ? countUrgentAlerts(collections.history.items)
     : null;
   const reviewRefreshErrorNotice = reviewRefreshError ? (
-    <div className="mb-4 flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-4 flex flex-col gap-3 rounded-lg border border-amber-300 dark:border-amber-400 bg-amber-50 dark:bg-amber-950 p-4 text-sm text-amber-900 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
       <p>
         {reviewRefreshError.decisionConfirmed
           ? "La decisión quedó confirmada por el servidor, pero falló la actualización de las colecciones:"
