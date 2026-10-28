@@ -20,7 +20,7 @@ export function ThemeSelector({
   onThemeChange: (theme: ThemePreference) => void;
 }) {
   return (
-    <fieldset className="relative grid w-52 shrink-0 grid-cols-3 rounded-lg border border-border bg-muted p-1">
+    <fieldset className="relative grid min-w-0 w-52 flex-1 grid-cols-3 rounded-lg border border-border bg-muted p-1 sm:flex-none">
       <legend className="sr-only">Tema de apariencia</legend>
       <span aria-hidden="true" className="pointer-events-none absolute inset-1 grid grid-cols-3">
         <span

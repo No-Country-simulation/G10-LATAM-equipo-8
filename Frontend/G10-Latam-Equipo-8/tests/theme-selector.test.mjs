@@ -22,3 +22,17 @@ test("the theme selector exposes three labelled, mutually exclusive radio choice
     await renderer.close();
   }
 });
+
+test("the theme selector can contract on narrow mobile headers", async () => {
+  const renderer = await createDashboardRenderer("/src/components/theme/ThemeSelector.tsx", "ThemeSelector");
+  try {
+    const markup = renderer.render({ theme: "light", onThemeChange() {} });
+    const group = markup.match(/<fieldset\b[^>]*>/)?.[0];
+    assert.ok(group);
+    assert.match(group, /\bmin-w-0\b/);
+    assert.match(group, /\bflex-1\b/);
+    assert.match(group, /\bsm:flex-none\b/);
+  } finally {
+    await renderer.close();
+  }
+});
