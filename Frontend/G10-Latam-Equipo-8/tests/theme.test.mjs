@@ -114,3 +114,13 @@ test("the initial document selects the correct theme before React loads", async 
   });
   assert.equal(dark(), false);
 });
+
+test("dark mode themes native scrollbars without changing light mode", async () => {
+  const css = await readFile(new URL("../src/index.css", import.meta.url), "utf8");
+  const light = css.match(/:root\s*\{([^}]*)\}/)?.[1];
+  const dark = css.match(/\.dark\s*\{([^}]*)\}/)?.[1];
+  assert.ok(light);
+  assert.ok(dark);
+  assert.match(dark, /scrollbar-color:\s*var\(--muted-foreground\)\s+var\(--card\)/);
+  assert.doesNotMatch(light, /scrollbar-color:/);
+});
