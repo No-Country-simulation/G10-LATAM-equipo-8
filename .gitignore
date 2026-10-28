@@ -54,6 +54,8 @@ docker-compose.override.yml
 data/tmp/
 
 # === Herramientas locales / editores ===
+# Ignorar seguimientos nuevos sin dejar de rastrear los existentes.
+/odd/
 .atl/
 .codegraph/
 .vscode/
