@@ -1,0 +1,90 @@
+# === Secretos y credenciales — NUNCA subir ===
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials.json
+service-account*.json
+
+# Oracle Cloud Infrastructure (OCI)
+.oci/
+oci_api_key*.pem
+**/oci_config
+
+# === Python (backend) ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# === Node / React / Vite (frontend) ===
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# === Base de datos ===
+*.sqlite3
+pgdata/
+postgres-data/
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Datasets locales grandes (si no van versionados) ===
+data/tmp/
+
+# === Herramientas locales / editores ===
+# Ignorar seguimientos nuevos sin dejar de rastrear los existentes.
+/odd/
+.atl/
+.codegraph/
+.vscode/
+.idea/
+*.swp
+
+# === Sistema operativo ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+
+# Entorno y almacenamiento de desarrollo
+.tools/
+.uv-cache/
+backend/storage/
+.neon
+
+# Artefactos temporales locales de pruebas de almacenamiento OCI
+/backend/.pytest-t23-storage/
+/backend/.pytest-t23-storage-repeat/
+
+# Skills oficiales descargadas: locales/reinstalables, no contenido propio.
+.agents/skills/neon/
+.agents/skills/neon-ai-gateway/
+.agents/skills/neon-auth/
+.agents/skills/neon-functions/
+.agents/skills/neon-object-storage/
+.agents/skills/neon-postgres/
+.agents/skills/neon-postgres-branches/
+.agents/skills/neon-postgres-egress-optimizer/
