@@ -21,7 +21,7 @@ interface ActivePreview {
 }
 
 const originalDownloadClassName =
-  "inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-teal-700 bg-white px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:w-auto";
+  "inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-teal-700 bg-card px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 dark:border-teal-300 dark:text-teal-300 dark:hover:bg-teal-950 dark:focus-visible:outline-teal-300 sm:w-auto";
 
 export function OriginalDocumentDownload({
   url,
@@ -89,16 +89,16 @@ export function DocumentOriginalViewer({
   return (
     <section className="flex min-h-0 flex-col gap-4 p-4 sm:p-6">
       <header className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-foreground">
           Ver documento original
         </h2>
         {resource.status === "loading" ? (
-          <p role="status" className="text-sm text-slate-600">
+          <p role="status" className="text-sm text-muted-foreground">
             Cargando bytes del original…
           </p>
         ) : null}
         {resource.status === "error" ? (
-          <div role="alert" className="space-y-2 text-sm text-red-800">
+          <div role="alert" className="space-y-2 text-sm text-red-800 dark:text-red-200">
             <p>No se pudo cargar el documento original.</p>
             {provenance === "demo" ? (
               <p>
@@ -112,18 +112,18 @@ export function DocumentOriginalViewer({
         {original ? (
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div className="min-w-0">
-              <dt className="text-xs font-medium text-slate-600">
+              <dt className="text-xs font-medium text-muted-foreground">
                 Nombre recibido en la respuesta
               </dt>
-              <dd className="wrap-break-word text-slate-900">
+              <dd className="wrap-break-word text-foreground">
                 {original.filename ?? "No informado en la respuesta"}
               </dd>
             </div>
             <div className="min-w-0">
-              <dt className="text-xs font-medium text-slate-600">
+              <dt className="text-xs font-medium text-muted-foreground">
                 Tipo de contenido recibido
               </dt>
-              <dd className="wrap-break-word text-slate-900">
+              <dd className="wrap-break-word text-foreground">
                 {original.contentType ?? "No informado en la respuesta"}
               </dd>
             </div>
@@ -131,20 +131,20 @@ export function DocumentOriginalViewer({
         ) : null}
       </header>
 
-      <div className="flex min-h-96 min-w-0 flex-1 items-center justify-center overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="flex min-h-96 min-w-0 flex-1 items-center justify-center overflow-auto rounded-lg border border-border bg-background p-3">
         {resource.status === "loading" ? (
-          <p role="status" className="text-sm text-slate-600">
+          <p role="status" className="text-sm text-muted-foreground">
             Esperando la respuesta del original.
           </p>
         ) : null}
         {resource.status === "error" ? (
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-muted-foreground">
             La vista del original no está disponible. Los datos del documento se
             cargan y muestran por separado.
           </p>
         ) : null}
         {resource.status === "loaded" && !preview ? (
-          <p role="status" className="max-w-prose text-center text-sm text-slate-600">
+          <p role="status" className="max-w-prose text-center text-sm text-muted-foreground">
             No se ofrece vista previa para el tipo de contenido recibido.
           </p>
         ) : null}
@@ -155,7 +155,7 @@ export function DocumentOriginalViewer({
             aria-label={`Vista previa PDF del documento ${documentId}`}
             className="min-h-96 w-full self-stretch"
           >
-            <p className="p-4 text-sm text-slate-700">
+            <p className="p-4 text-sm text-slate-700 dark:text-slate-300">
               El navegador no pudo mostrar el PDF recibido.
             </p>
           </object>

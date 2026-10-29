@@ -46,12 +46,12 @@ function MetadataList({
 }) {
   return (
     <section className="space-y-3">
-      <h4 className="text-sm font-semibold text-slate-800">{title}</h4>
+      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{title}</h4>
       <dl className="grid gap-3 sm:grid-cols-2">
         {fields.map((field) => (
           <div key={field.label} className="min-w-0 space-y-1">
-            <dt className="text-xs font-medium text-slate-600">{field.label}</dt>
-            <dd className="wrap-break-word text-sm text-slate-900">
+            <dt className="text-xs font-medium text-muted-foreground">{field.label}</dt>
+            <dd className="wrap-break-word text-sm text-foreground">
               {readonlyMetadataValue(field)}
             </dd>
           </div>
@@ -83,23 +83,23 @@ function ReviewField({
 
   if (!editable) {
     return (
-      <div className="space-y-1 border-b border-slate-200 py-3 last:border-b-0">
-        <p className="text-sm font-medium text-slate-800">{field.label}</p>
-        <p className="text-xs text-slate-600">Valor original</p>
-        <p className="wrap-break-word text-sm text-slate-900">{field.originalValue}</p>
+      <div className="space-y-1 border-b border-border py-3 last:border-b-0">
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{field.label}</p>
+        <p className="text-xs text-muted-foreground">Valor original</p>
+        <p className="wrap-break-word text-sm text-foreground">{field.originalValue}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 border-b border-slate-200 py-4 last:border-b-0">
+    <div className="space-y-3 border-b border-border py-4 last:border-b-0">
       <div className="space-y-1">
-        <p className="text-sm font-medium text-slate-800">{field.label}</p>
-        <p className="text-xs text-slate-600">Valor recibido</p>
-        <p className="wrap-break-word text-sm text-slate-900">{field.originalValue}</p>
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{field.label}</p>
+        <p className="text-xs text-muted-foreground">Valor recibido</p>
+        <p className="wrap-break-word text-sm text-foreground">{field.originalValue}</p>
       </div>
       <div className="space-y-2">
-        <label htmlFor={id} className="block text-sm font-medium text-slate-800">
+        <label htmlFor={id} className="block text-sm font-medium text-slate-800 dark:text-slate-200">
           Propuesta del revisor · {field.label}
         </label>
         {field.key === "priority" ? (
@@ -140,7 +140,7 @@ function ReviewField({
           />
         )}
         {localOnly ? (
-          <p id={noteId} className="text-xs text-slate-600">
+          <p id={noteId} className="text-xs text-muted-foreground">
             Solo local · no se envía al servidor.
           </p>
         ) : null}
@@ -155,7 +155,7 @@ function ReviewField({
               Proponer edad como Sin dato
             </Button>
             {ageExplicitlyCleared ? (
-              <p role="status" className="text-xs text-slate-600">
+              <p role="status" className="text-xs text-muted-foreground">
                 Se propone un valor nulo explícito; todavía no se envía.
               </p>
             ) : null}
@@ -208,8 +208,8 @@ export function ReviewDocumentFields({
       }
     >
       <header className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900">Datos extraídos</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="text-lg font-semibold text-foreground">Datos extraídos</h2>
+        <p className="text-sm text-muted-foreground">
           El valor recibido permanece visible junto a una propuesta separada.
         </p>
       </header>
@@ -217,7 +217,7 @@ export function ReviewDocumentFields({
       {eligibility.state === "failed" ? (
         <section
           role="alert"
-          className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+          className="space-y-2 rounded-lg border border-amber-300 dark:border-amber-400 bg-amber-50 dark:bg-amber-950 p-4 text-sm text-amber-900 dark:text-amber-200"
         >
           <h3 className="font-semibold">Revisar procesamiento</h3>
           <p>
@@ -237,7 +237,7 @@ export function ReviewDocumentFields({
       ) : eligibility.state === "processing" ? (
         <section
           role="status"
-          className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"
+          className="space-y-2 rounded-lg border border-border bg-background p-4 text-sm text-slate-700 dark:text-slate-300"
         >
           <h3 className="font-semibold">Procesamiento pendiente</h3>
           <p>
@@ -246,14 +246,14 @@ export function ReviewDocumentFields({
           </p>
         </section>
       ) : eligibility.state === "readonly" ? (
-        <p role="status" className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+        <p role="status" className="rounded-lg bg-background p-3 text-sm text-slate-700 dark:text-slate-300">
           Este documento no admite edición en su estado actual.
         </p>
       ) : null}
 
       {canEnableEditing && !editable ? (
-        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm text-slate-700">
+        <div className="space-y-3 rounded-lg border border-border bg-background p-4">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
             Los campos se muestran en solo lectura. Si necesitas proponer una
             corrección, activa la edición.
           </p>
@@ -271,7 +271,7 @@ export function ReviewDocumentFields({
       ) : null}
 
       {editable ? (
-        <p className="rounded-lg border border-teal-200 bg-teal-50 p-3 text-sm text-teal-900">
+        <p className="rounded-lg border border-teal-200 dark:border-teal-400 bg-teal-50 dark:bg-teal-950 p-3 text-sm text-teal-900 dark:text-teal-200">
           Las propuestas de esta vista no se guardan ni se envían al servidor.
         </p>
       ) : null}
@@ -279,11 +279,11 @@ export function ReviewDocumentFields({
       <section aria-labelledby={`${idPrefix}-patient-heading`} className="space-y-3">
         <h3
           id={`${idPrefix}-patient-heading`}
-          className="text-base font-semibold text-teal-800"
+          className="text-base font-semibold text-teal-800 dark:text-teal-300"
         >
           Datos del paciente
         </h3>
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-border">
           {renderField(presentation.patient.name)}
           {renderField(presentation.patient.age)}
         </div>
@@ -292,11 +292,11 @@ export function ReviewDocumentFields({
       <section aria-labelledby={`${idPrefix}-doctor-heading`} className="space-y-3">
         <h3
           id={`${idPrefix}-doctor-heading`}
-          className="text-base font-semibold text-teal-800"
+          className="text-base font-semibold text-teal-800 dark:text-teal-300"
         >
           Médico referente
         </h3>
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-border">
           {renderField(presentation.referringDoctor.name)}
           {renderField(presentation.referringDoctor.registration)}
         </div>
@@ -305,11 +305,11 @@ export function ReviewDocumentFields({
       <section aria-labelledby={`${idPrefix}-study-heading`} className="space-y-3">
         <h3
           id={`${idPrefix}-study-heading`}
-          className="text-base font-semibold text-teal-800"
+          className="text-base font-semibold text-teal-800 dark:text-teal-300"
         >
           Datos del estudio
         </h3>
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-border">
           {renderField(presentation.study.performed)}
           {renderField(presentation.study.indication)}
           {renderField(presentation.study.diagnosis)}
@@ -323,20 +323,20 @@ export function ReviewDocumentFields({
       >
         <h3
           id={`${idPrefix}-classification-heading`}
-          className="text-base font-semibold text-teal-800"
+          className="text-base font-semibold text-teal-800 dark:text-teal-300"
         >
           Clasificación
         </h3>
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-border">
           {renderField(presentation.classification.documentType)}
           {renderField(presentation.classification.priority)}
           {!editable ? (
-            <div className="space-y-1 border-b border-slate-200 py-3 last:border-b-0">
-              <p className="text-sm font-medium text-slate-800">
+            <div className="space-y-1 border-b border-border py-3 last:border-b-0">
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
                 Especialidad (reservada)
               </p>
-              <p className="text-xs text-slate-600">Solo lectura</p>
-              <p className="text-sm text-slate-900">
+              <p className="text-xs text-muted-foreground">Solo lectura</p>
+              <p className="text-sm text-foreground">
                 {presentation.readOnly.specialty.value}
               </p>
             </div>
@@ -345,16 +345,16 @@ export function ReviewDocumentFields({
       </section>
 
       {editable ? (
-        <div className="space-y-3 border-t border-slate-200 pt-5">
-          <h3 className="text-base font-semibold text-slate-900">
+        <div className="space-y-3 border-t border-border pt-5">
+          <h3 className="text-base font-semibold text-foreground">
             Metadatos de solo lectura
           </h3>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             Los identificadores, estados, auditoría, almacenamiento y procedencia
             no son campos de corrección.
           </p>
-          <details className="rounded-lg border border-slate-200 px-4">
-            <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-slate-800">
+          <details className="rounded-lg border border-border px-4">
+            <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-slate-800 dark:text-slate-200">
               Ver metadatos técnicos
             </summary>
             <div className="space-y-6 pb-4">
@@ -375,25 +375,25 @@ export function ReviewDocumentFields({
                 fields={[presentation.readOnly.specialty]}
               />
               <section className="space-y-3">
-                <h4 className="text-sm font-semibold text-slate-800">
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   Evidencia de extracción recibida
                 </h4>
                 {presentation.readOnly.extractionEvidence.length === 0 ? (
-                  <p className="text-sm text-slate-600">Sin dato</p>
+                  <p className="text-sm text-muted-foreground">Sin dato</p>
                 ) : (
                   <ul className="space-y-3">
                     {presentation.readOnly.extractionEvidence.map((evidence, index) => (
                       <li
                         key={`${evidence.field}-${index}`}
-                        className="space-y-1 border-b border-slate-200 pb-3 last:border-b-0"
+                        className="space-y-1 border-b border-border pb-3 last:border-b-0"
                       >
-                        <p className="text-sm font-medium text-slate-800">
+                        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
                           Campo: {evidence.field}
                         </p>
-                        <p className="text-xs text-slate-600">
+                        <p className="text-xs text-muted-foreground">
                           Página informada: {evidence.page}
                         </p>
-                        <p className="wrap-break-word text-sm text-slate-900">
+                        <p className="wrap-break-word text-sm text-foreground">
                           Cita recibida: {evidence.quote}
                         </p>
                       </li>
@@ -405,8 +405,8 @@ export function ReviewDocumentFields({
           </details>
         </div>
       ) : (
-        <details className="space-y-3 border-t border-slate-200 pt-4">
-          <summary className="min-h-11 cursor-pointer text-base font-semibold text-slate-900">
+        <details className="space-y-3 border-t border-border pt-4">
+          <summary className="min-h-11 cursor-pointer text-base font-semibold text-foreground">
             Metadatos de solo lectura
           </summary>
           <div className="space-y-6 pb-4">
@@ -426,15 +426,15 @@ export function ReviewDocumentFields({
             {presentation.readOnly.extractionEvidence.map((evidence, index) => (
               <section
                 key={`${evidence.field}-${index}`}
-                className="space-y-1 border-b border-slate-200 pb-3 last:border-b-0"
+                className="space-y-1 border-b border-border pb-3 last:border-b-0"
               >
-                <h4 className="text-sm font-semibold text-slate-800">
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   Evidencia recibida · {evidence.field}
                 </h4>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-muted-foreground">
                   Página informada: {evidence.page}
                 </p>
-                <p className="wrap-break-word text-sm text-slate-900">
+                <p className="wrap-break-word text-sm text-foreground">
                   Cita recibida: {evidence.quote}
                 </p>
               </section>

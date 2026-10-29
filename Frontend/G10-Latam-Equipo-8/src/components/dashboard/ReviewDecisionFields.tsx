@@ -70,30 +70,30 @@ export function ReviewDecisionFields({
   return (
     <section
       aria-labelledby="review-decision-heading"
-      className="space-y-5 border-t border-slate-200 p-4 sm:p-6"
+      className="space-y-5 border-t border-border p-4 sm:p-6"
     >
       <header className="space-y-1">
-        <h2 id="review-decision-heading" className="text-base font-semibold text-slate-900">
+        <h2 id="review-decision-heading" className="text-base font-semibold text-foreground">
           Decisión de revisión
         </h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           El servidor registra la decisión y el destino; no confirma que el documento se haya enviado.
         </p>
       </header>
 
       {!canApprove && canReject ? (
-        <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+        <p className="rounded-lg border border-amber-300 dark:border-amber-400 bg-amber-50 dark:bg-amber-950 p-4 text-sm text-amber-900 dark:text-amber-200">
           No hay una extracción verificable para aprobar. El rechazo confirmado sigue disponible.
         </p>
       ) : null}
       {!canApprove && !canReject ? (
-        <p role="status" className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+        <p role="status" className="rounded-lg bg-background p-3 text-sm text-slate-700 dark:text-slate-300">
           Este documento no admite una decisión en su estado actual.
         </p>
       ) : null}
 
       <div className="space-y-2">
-        <label htmlFor={reviewerId} className="block text-sm font-medium text-slate-800">
+        <label htmlFor={reviewerId} className="block text-sm font-medium text-slate-800 dark:text-slate-200">
           Revisor declarado
         </label>
         <Input
@@ -107,7 +107,7 @@ export function ReviewDecisionFields({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor={commentId} className="block text-sm font-medium text-slate-800">
+        <label htmlFor={commentId} className="block text-sm font-medium text-slate-800 dark:text-slate-200">
           {rejectionConfirmationOpen ? "Motivo del rechazo" : "Comentario de la revisión"}
         </label>
         <Textarea
@@ -118,7 +118,7 @@ export function ReviewDecisionFields({
           disabled={locked || (!canApprove && !canReject)}
           onChange={(event) => onFieldChange("comment", event.currentTarget.value)}
         />
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-muted-foreground">
           El comentario es obligatorio. Se registra como motivo del rechazo cuando confirmas esa acción.
         </p>
       </div>
@@ -126,7 +126,7 @@ export function ReviewDecisionFields({
       {!rejectionConfirmationOpen && canApprove ? (
         <>
           <div className="space-y-2">
-            <label htmlFor={destinationId} className="block text-sm font-medium text-slate-800">
+            <label htmlFor={destinationId} className="block text-sm font-medium text-slate-800 dark:text-slate-200">
               Destino final
             </label>
             <NativeSelect
@@ -144,7 +144,7 @@ export function ReviewDecisionFields({
             </NativeSelect>
           </div>
 
-          <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800">
+          <label className="flex items-start gap-3 rounded-lg border border-border bg-background p-4 text-sm text-slate-800 dark:text-slate-200">
             <Checkbox
               checked={snapshot.form.verified}
               disabled={locked}
@@ -152,7 +152,7 @@ export function ReviewDecisionFields({
             />
             <span className="space-y-1">
               <span className="block font-medium">Confirmo la revisión de los datos y la decisión.</span>
-              <span className="block text-xs text-slate-600">
+              <span className="block text-xs text-muted-foreground">
                 El revisor, el comentario y el destino final siguen siendo obligatorios. Cualquier cambio invalida esta verificación.
               </span>
             </span>
@@ -161,22 +161,22 @@ export function ReviewDecisionFields({
       ) : null}
 
       {snapshot.phase === "submitting" ? (
-        <p role="status" className="text-sm text-slate-700">
+        <p role="status" className="text-sm text-slate-700 dark:text-slate-300">
           Enviando decisión… No cierres esta revisión.
         </p>
       ) : null}
       {snapshot.phase === "reloading-conflict" ? (
-        <p role="status" className="text-sm text-slate-700">
+        <p role="status" className="text-sm text-slate-700 dark:text-slate-300">
           Volviendo a leer el documento después del conflicto…
         </p>
       ) : null}
       {snapshot.phase === "error" && snapshot.error ? (
-        <p role="alert" className="wrap-break-word rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="wrap-break-word rounded-lg border border-red-200 dark:border-red-400 bg-red-50 dark:bg-red-950 p-3 text-sm text-red-800 dark:text-red-200">
           No se confirmó la decisión: {snapshot.error}
         </p>
       ) : null}
       {snapshot.phase === "conflict" && snapshot.error ? (
-        <div role="alert" className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        <div role="alert" className="space-y-2 rounded-lg border border-amber-300 dark:border-amber-400 bg-amber-50 dark:bg-amber-950 p-3 text-sm text-amber-900 dark:text-amber-200">
           <p>{snapshot.error} No se enviará otra decisión desde esta revisión.</p>
           {snapshot.latestDocument ? (
             <p>
@@ -188,17 +188,17 @@ export function ReviewDecisionFields({
         </div>
       ) : null}
       {snapshot.phase === "uncertain" && snapshot.error ? (
-        <p role="alert" className="wrap-break-word rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="wrap-break-word rounded-lg border border-red-200 dark:border-red-400 bg-red-50 dark:bg-red-950 p-3 text-sm text-red-800 dark:text-red-200">
           {snapshot.error}
         </p>
       ) : null}
       {snapshot.phase === "confirmed" ? (
-        <p role="status" className="text-sm text-teal-800">
+        <p role="status" className="text-sm text-teal-800 dark:text-teal-300">
           La decisión quedó confirmada por el servidor.
         </p>
       ) : null}
       {snapshot.phase === "confirmed-refresh-error" && snapshot.error ? (
-        <p role="alert" className="wrap-break-word rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        <p role="alert" className="wrap-break-word rounded-lg border border-amber-300 dark:border-amber-400 bg-amber-50 dark:bg-amber-950 p-3 text-sm text-amber-900 dark:text-amber-200">
           La decisión quedó confirmada, pero no se actualizaron las colecciones: {snapshot.error}
         </p>
       ) : null}
@@ -206,12 +206,12 @@ export function ReviewDecisionFields({
       {rejectionConfirmationOpen ? (
         <section
           aria-labelledby="reject-document-heading"
-          className="space-y-3 rounded-lg border border-red-200 bg-red-50 p-4"
+          className="space-y-3 rounded-lg border border-red-200 dark:border-red-400 bg-red-50 dark:bg-red-950 p-4"
         >
-          <h3 id="reject-document-heading" className="text-sm font-semibold text-red-900">
+          <h3 id="reject-document-heading" className="text-sm font-semibold text-red-900 dark:text-red-200">
             Rechazar documento
           </h3>
-          <p className="text-sm text-red-800">
+          <p className="text-sm text-red-800 dark:text-red-200">
             Confirma el motivo escrito y el revisor declarado. Las propuestas locales no se aplican al rechazo.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">

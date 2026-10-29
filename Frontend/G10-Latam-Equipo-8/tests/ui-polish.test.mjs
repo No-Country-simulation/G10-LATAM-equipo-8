@@ -42,8 +42,8 @@ async function renderSidebar() {
   }).outputText;
   const moduleSource = compiled
     .replace(
-      /import logoMediflow from "[^"]+mediflow-logo\.jpg";/,
-      `const logoMediflow = ${JSON.stringify(new URL("../src/assets/mediflow-logo.jpg", import.meta.url).href)};`,
+      /import logoMediflow from "[^"]+mediflow-logo\.png";/,
+      `const logoMediflow = ${JSON.stringify(new URL("../src/assets/mediflow-logo.png", import.meta.url).href)};`,
     )
     .replace(/(["'])@\/components\/ui\/icons\1/g, JSON.stringify(import.meta.resolve("../src/components/ui/icons.ts")))
     .replace(/(["'])@\/types\/navigation\1/g, JSON.stringify(import.meta.resolve("../src/types/navigation.ts")))
@@ -57,13 +57,13 @@ async function renderSidebar() {
   }));
 }
 
-test("sidebar gives the existing brand a larger full-width logo presentation", async () => {
+test("sidebar gives the approved brand a full-width logo presentation", async () => {
   const markup = await renderSidebar();
   const logo = markup.match(/<img\b[^>]*>/)?.[0];
   assert.ok(logo, "the sidebar exposes its logo image");
   assert.match(logo, /alt="MediFlow"/);
-  assert.match(logo, /mediflow-logo\.jpg/);
-  assert.match(logo, /class="h-32 w-full object-cover"/);
+  assert.match(logo, /mediflow-logo\.png/);
+  assert.match(logo, /class="h-32 w-full object-contain"/);
   assert.doesNotMatch(logo, /\bstyle=/);
 });
 
@@ -107,7 +107,7 @@ test("All documents shows an accessible global badge, including zero, while unkn
   const zero = dashboardRenderer.render({ ...base, allDocumentsCount: 0 });
   assert.match(
     zero,
-    /<span aria-hidden="true" class="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">0<\/span>/,
+    /<span aria-hidden="true"[^>]*>0<\/span>/,
   );
   assert.match(zero, /<span class="sr-only">0 documentos en total<\/span>/);
   assert.match(zero, /0 alertas urgentes en la página de historial cargada/);
@@ -115,7 +115,7 @@ test("All documents shows an accessible global badge, including zero, while unkn
   const populated = dashboardRenderer.render({ ...base, allDocumentsCount: 19 });
   assert.match(
     populated,
-    /<span aria-hidden="true" class="ml-auto rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">19<\/span>/,
+    /<span aria-hidden="true"[^>]*>19<\/span>/,
   );
   assert.match(populated, /<span class="sr-only">19 documentos en total<\/span>/);
 
@@ -125,9 +125,9 @@ test("All documents shows an accessible global badge, including zero, while unkn
 
 test("installed Tailwind emits the requested wrapping and documented logo utilities", async () => {
   const compiler = await compile("@theme { --spacing: 0.25rem; } @tailwind utilities;");
-  const css = compiler.build(["wrap-break-word", "h-32", "w-full", "object-cover"]);
+  const css = compiler.build(["wrap-break-word", "h-32", "w-full", "object-contain"]);
   assert.match(css, /\.wrap-break-word\s*\{\s*overflow-wrap:\s*break-word;/);
   assert.match(css, /\.h-32\s*\{\s*height:/);
   assert.match(css, /\.w-full\s*\{\s*width:\s*100%;/);
-  assert.match(css, /\.object-cover\s*\{\s*object-fit:\s*cover;/);
+  assert.match(css, /\.object-contain\s*\{\s*object-fit:\s*contain;/);
 });

@@ -73,23 +73,23 @@ function ReviewEventsContent({
   return (
     <section
       aria-labelledby="review-events-heading"
-      className="space-y-3 border-t border-slate-200 pt-5"
+      className="space-y-3 border-t border-border pt-5"
     >
-      <h2 id="review-events-heading" className="text-base font-semibold text-slate-900">
+      <h2 id="review-events-heading" className="text-base font-semibold text-foreground">
         Revisiones registradas
       </h2>
       {resource.status === "loading" ? (
-        <p role="status" className="text-sm text-slate-600">
+        <p role="status" className="text-sm text-muted-foreground">
           Cargando eventos de revisión…
         </p>
       ) : null}
       {resource.status === "error" ? (
-        <p role="alert" className="wrap-break-word text-sm text-red-800">
+        <p role="alert" className="wrap-break-word text-sm text-red-800 dark:text-red-200">
           No se pudo cargar el historial de revisiones: {resource.error}
         </p>
       ) : null}
       {resource.status === "loaded" && resource.value.length === 0 ? (
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           No hay eventos de revisión registrados para este documento.
         </p>
       ) : null}
@@ -98,31 +98,31 @@ function ReviewEventsContent({
           {resource.value.map((event) => (
             <li
               key={event.review_id}
-              className="space-y-2 border-b border-slate-200 pb-4 last:border-b-0"
+              className="space-y-2 border-b border-border pb-4 last:border-b-0"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-sm font-semibold text-slate-900">
+                <h3 className="text-sm font-semibold text-foreground">
                   {reviewActionLabel(event.action)}
                 </h3>
                 <time
                   dateTime={event.created_at}
-                  className="text-xs text-slate-600"
+                  className="text-xs text-muted-foreground"
                 >
                   {event.created_at}
                 </time>
               </div>
-              <p className="text-sm text-slate-700">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 Revisor declarado: {event.reviewer}
               </p>
-              <p className="wrap-break-word text-sm text-slate-700">
+              <p className="wrap-break-word text-sm text-slate-700 dark:text-slate-300">
                 Comentario: {displayReviewValue(event.comment)}
               </p>
               <dl className="grid gap-2 text-sm sm:grid-cols-2">
                 <div>
-                  <dt className="text-xs font-medium text-slate-600">
+                  <dt className="text-xs font-medium text-muted-foreground">
                     Estado de revisión
                   </dt>
-                  <dd className="wrap-break-word text-slate-900">
+                  <dd className="wrap-break-word text-foreground">
                     {statusTransitionLabel(
                       event.previous_status,
                       event.new_status,
@@ -130,20 +130,20 @@ function ReviewEventsContent({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium text-slate-600">
+                  <dt className="text-xs font-medium text-muted-foreground">
                     Destino registrado
                   </dt>
-                  <dd className="wrap-break-word text-slate-900">
+                  <dd className="wrap-break-word text-foreground">
                     {event.previous_destination} → {event.new_destination}
                   </dd>
                 </div>
               </dl>
               <div className="space-y-1">
-                <h4 className="text-xs font-medium text-slate-600">
+                <h4 className="text-xs font-medium text-muted-foreground">
                   Correcciones registradas
                 </h4>
                 {event.corrections.length === 0 ? (
-                  <p className="text-sm text-slate-700">
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
                     Sin correcciones registradas.
                   </p>
                 ) : (
@@ -151,7 +151,7 @@ function ReviewEventsContent({
                     {event.corrections.map((correction, index) => (
                       <li
                         key={`${correction.field}-${index}`}
-                        className="wrap-break-word text-sm text-slate-700"
+                        className="wrap-break-word text-sm text-slate-700 dark:text-slate-300"
                       >
                         {correctionLabels[correction.field] ?? correction.field}: {displayReviewValue(correction.before)} → {displayReviewValue(correction.after)}
                       </li>
@@ -357,17 +357,17 @@ export function DocumentReviewDialog({
         }}
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:contents">
-        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 p-4 sm:p-6">
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border p-4 sm:p-6">
           <div className="min-w-0 space-y-1">
             <DialogTitle>Revisar documento</DialogTitle>
             <DialogDescription id="document-review-description" className="wrap-anywhere">
               {displayReviewValue(context.datos_extraidos.paciente.nombre)} · {documentId}
             </DialogDescription>
-            <p className="wrap-break-word text-sm text-slate-600">
+            <p className="wrap-break-word text-sm text-muted-foreground">
               Estado: {reviewStatusLabel(context.status)} · Procesamiento:{" "}
               {processingStatusLabel(context.processing_status)}
             </p>
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
               Prioridad clínica: {eligibility.priorityLabel}
             </p>
           </div>
@@ -391,11 +391,11 @@ export function DocumentReviewDialog({
             <div className="mx-auto w-full max-w-2xl space-y-3">
               <h2
                 id="discard-review-heading"
-                className="text-xl font-semibold text-slate-900"
+                className="text-xl font-semibold text-foreground"
               >
                 ¿Descartar las propuestas locales?
               </h2>
-              <p className="text-sm text-slate-700">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 Hay cambios sin guardar. Descartarlos cierra esta revisión; no
                 modifica el documento ni envía datos al servidor.
               </p>
@@ -422,8 +422,8 @@ export function DocumentReviewDialog({
           </section>
         ) : (
           <>
-            <section className="shrink-0 space-y-3 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
-              <h2 className="text-sm font-semibold text-slate-900">
+            <section className="shrink-0 space-y-3 border-b border-border bg-background px-4 py-3 sm:px-6">
+              <h2 className="text-sm font-semibold text-foreground">
                 Motivos de revisión
               </h2>
               {context.audit_reasons.length > 0 ? (
@@ -431,14 +431,14 @@ export function DocumentReviewDialog({
                   {context.audit_reasons.map((reason, index) => (
                     <li
                       key={`${reason}-${index}`}
-                      className="min-w-0 max-w-full wrap-anywhere rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"
+                      className="min-w-0 max-w-full wrap-anywhere rounded-md border border-border bg-card px-3 py-2 text-sm text-slate-800 dark:text-slate-200"
                     >
                       {auditReasonLabel(reason)}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   No hay motivos de auditoría declarados.
                 </p>
               )}
@@ -468,14 +468,14 @@ export function DocumentReviewDialog({
                 >
                   <div className="space-y-6">
                     {resources.detail.status === "loading" ? (
-                      <p role="status" className="p-6 text-sm text-slate-600">
+                      <p role="status" className="p-6 text-sm text-muted-foreground">
                         Cargando detalle del documento…
                       </p>
                     ) : null}
                     {resources.detail.status === "error" ? (
                       <p
                         role="alert"
-                        className="m-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+                        className="m-4 rounded-lg border border-red-200 dark:border-red-400 bg-red-50 dark:bg-red-950 p-4 text-sm text-red-800 dark:text-red-200"
                       >
                         No se pudo cargar el detalle: {resources.detail.error} Se
                         conserva el contexto de la bandeja y no se habilita la edición.
@@ -520,10 +520,10 @@ export function DocumentReviewDialog({
         )}
         </div>
         {!confirmDiscard ? (
-          <footer className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <footer className="flex shrink-0 flex-col gap-3 border-t border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p
               role={closeBlocked ? "status" : undefined}
-              className="text-sm text-slate-600"
+              className="text-sm text-muted-foreground"
             >
               {closeBlocked
                 ? "Hay una acción en curso; el cierre está bloqueado."

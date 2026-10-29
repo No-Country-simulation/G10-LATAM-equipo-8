@@ -25,7 +25,7 @@ export function DashboardLayout({
   provenance,
 }: Props) {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 lg:h-screen lg:flex-row lg:overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-background lg:h-screen lg:flex-row lg:overflow-hidden">
       <div className="hidden shrink-0 lg:flex">
         <Sidebar
           activeView={activeView}
@@ -49,7 +49,7 @@ export function DashboardLayout({
           aria-label={pageTitle}
           tabIndex={-1}
           data-review-collection-focus
-          className="flex min-h-0 flex-1 flex-col gap-4 bg-slate-50 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:p-6 lg:overflow-y-auto"
+          className="flex min-h-0 flex-1 flex-col gap-4 bg-background p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 dark:focus-visible:outline-teal-300 sm:p-6 lg:overflow-y-auto"
         >
           <h1 className="sr-only">{pageTitle}</h1>
           {children}
